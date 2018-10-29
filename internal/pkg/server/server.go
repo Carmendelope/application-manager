@@ -5,7 +5,9 @@
 package server
 
 import (
+	"github.com/nalej/application-manager/internal/pkg/server/application"
 	"github.com/nalej/grpc-application-go"
+	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-utils/pkg/tools"
 	"fmt"
@@ -61,7 +63,7 @@ func (s *Service) Run() error {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("invalid configuration")
 	}
 	s.Configuration.Print()
-	_, cErr = s.GetClients()
+	clients, cErr := s.GetClients()
 	if cErr != nil{
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create clients")
 	}
@@ -72,8 +74,11 @@ func (s *Service) Run() error {
 	}
 
 	// Create handlers
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient)
+	handler := application.NewHandler(manager)
 
 	grpcServer := grpc.NewServer()
+	grpc_application_manager_go.RegisterApplicationManagerServer(grpcServer, handler)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)
