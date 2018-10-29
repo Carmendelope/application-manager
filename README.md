@@ -10,3 +10,4 @@ The following table contains the variables that activate the integration tests
 | ------------- | ------------- |------------- |
 | RUN_INTEGRATION_TEST  | true | Run integration tests |
 | IT_SM_ADDRESS  | localhost:8800 | System Model Address |
+| IT_CONDUCTOR_ADDRESS | localhost:5000 | Conductor Address |

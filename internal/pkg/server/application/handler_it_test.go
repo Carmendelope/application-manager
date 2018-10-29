@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) 2018 Nalej - All Rights Reserved
+ */
+
+/*
+RUN_INTEGRATION_TEST=true
+IT_SM_ADDRESS=localhost:8800
+IT_CONDUCTOR_ADDRESS=localhost:5000
+ */
+
 package application
 
 import (
@@ -5,9 +15,10 @@ import (
 	"fmt"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/grpc-application-go"
+	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-organization-go"
-	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/grpc-utils/pkg/test"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -72,9 +83,10 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 	var (
 		systemModelAddress = os.Getenv("IT_SM_ADDRESS")
+		conductorAddress = os.Getenv("IT_CONDUCTOR_ADDRESS")
 	)
 
-	if systemModelAddress == "" {
+	if systemModelAddress == "" || conductorAddress == "" {
 		ginkgo.Fail("missing environment variables")
 	}
 
@@ -101,6 +113,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		smConn = utils.GetConnection(systemModelAddress)
 		orgClient = grpc_organization_go.NewOrganizationsClient(smConn)
 		appClient = grpc_application_go.NewApplicationsClient(smConn)
+		conductorConn = utils.GetConnection(conductorAddress)
 		conductorClient = grpc_conductor_go.NewConductorClient(conductorConn)
 
 		test.LaunchServer(server, listener)
@@ -162,12 +175,28 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			Description:          "Test deploy from app mananager IT",
 		}
 	    response, err := client.Deploy(context.Background(), deployRequest)
+	    if err != nil {
+	    	fmt.Println(conversions.ToDerror(err).DebugReport())
+		}
 	    gomega.Expect(err).To(gomega.Succeed())
 	    gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
 	})
 
 	ginkgo.PIt("should be able to undeploy a running instance", func(){
-
+		deployRequest := &grpc_application_manager_go.DeployRequest{
+			OrganizationId:       targetAppDescriptor.OrganizationId,
+			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+			Name:                 "test-deploy-app-manager",
+			Description:          "Test deploy from app mananager IT",
+		}
+		response, err := client.Deploy(context.Background(), deployRequest)
+		gomega.Expect(err).To(gomega.Succeed())
+		gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+		instanceID := &grpc_application_go.AppInstanceId{
+			OrganizationId:       targetOrganization.OrganizationId,
+			AppInstanceId:        response.AppInstanceId,
+		}
+		client.Undeploy(context.Background(), instanceID)
 	})
 
 	ginkgo.It("should be able to get a running application instance", func(){

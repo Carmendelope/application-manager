@@ -98,6 +98,7 @@
   digest = "1:05c1a54c80e2d88b6af8f6e3af68ded6ef7f5aea9a28873fb68edc72ea798581"
   name = "github.com/nalej/grpc-utils"
   packages = [
+    "pkg/conversions",
     "pkg/test",
     "pkg/tools",
   ]
@@ -248,7 +249,10 @@
   branch = "master"
   digest = "1:9364d3be9cc361435af722c6dd9040c83f23c58a9797e56141878ef2382388c7"
   name = "google.golang.org/genproto"
-  packages = ["googleapis/rpc/status"]
+  packages = [
+    "googleapis/rpc/errdetails",
+    "googleapis/rpc/status",
+  ]
   pruneopts = ""
   revision = "8b5d7a19e2d98fbad9aaf9c599776bf066d7c70f"
 
@@ -322,8 +326,10 @@
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
     "github.com/nalej/grpc-application-manager-go",
+    "github.com/nalej/grpc-common-go",
     "github.com/nalej/grpc-conductor-go",
     "github.com/nalej/grpc-organization-go",
+    "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
     "github.com/nalej/grpc-utils/pkg/tools",
     "github.com/onsi/ginkgo",
