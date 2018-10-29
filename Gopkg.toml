@@ -1,0 +1,39 @@
+[[constraint]]
+    name="github.com/rs/zerolog"
+    version="v1.8.0"
+
+[[constraint]]
+    name="github.com/spf13/cobra"
+    version="v0.0.3"
+
+[[constraint]]
+    name="github.com/onsi/ginkgo"
+    version="v1.6.0"
+
+[[constraint]]
+    name="github.com/onsi/gomega"
+    version="v1.4.2"
+
+[[override]]
+  source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
+  name = "gopkg.in/fsnotify.v1"
+
+[[constraint]]
+    name="github.com/nalej/derrors"
+    version="v2.0.0"
+
+[[constraint]]
+    name="github.com/nalej/grpc-application-go"
+    version="v0.0.16"
+
+[[constraint]]
+    name="github.com/nalej/grpc-conductor-go"
+    version="v0.0.46"
+
+[[constraint]]
+    name="github.com/nalej/grpc-organization-go"
+    version="v0.0.8"
+
+[[constraint]]
+    name="github.com/nalej/grpc-common-go"
+    version="v0.0.9"
