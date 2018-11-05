@@ -1,0 +1,17 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: application-manager
+  labels:
+    cluster: management
+    component: application-manager
+  namespace: nalej
+spec:
+  selector:
+    cluster: management
+    component: application-manager
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 8910
+    targetPort: 8910
