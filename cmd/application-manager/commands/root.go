@@ -18,9 +18,9 @@ var debugLevel bool
 var consoleLogging bool
 
 var rootCmd = &cobra.Command{
-	Use:   "example",
-	Short: "Example of a cobra command",
-	Long:  `A long explanation about what is a cobra command`,
+	Use:   "application-manager",
+	Short: "Application Manager API",
+	Long:  `The applicatoin manager is responsible of application related operations`,
 	Version: "unknown-version",
 
 	Run: func(cmd *cobra.Command, args []string) {

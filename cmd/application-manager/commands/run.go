@@ -27,7 +27,7 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().IntVar(&config.Port, "port", 8920, "Port to launch the Public API")
+	runCmd.Flags().IntVar(&config.Port, "port", 8910, "Port to launch the Public API")
 	runCmd.PersistentFlags().StringVar(&config.SystemModelAddress, "systemModelAddress", "localhost:8800",
 		"System Model address (host:port)")
 	runCmd.PersistentFlags().StringVar(&config.ConductorAddress, "conductorAddress", "localhost:5000",
