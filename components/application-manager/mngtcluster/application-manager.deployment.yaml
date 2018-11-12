@@ -24,12 +24,14 @@ spec:
         component: application-manager
     spec:
       containers:
-      - name: example
+      - name: application-manager
         image: nalej/application-manager:VERSION
         imagePullPolicy: IfNotPresent
         args:
         - "run"
         - "--debug"
+        - "--systemModelAddress=system-model.nalej:8800"
+        - "--conductorAddress=conductor.nalej:5000"
         securityContext:
           runAsUser: 2000
       imagePullSecrets:
