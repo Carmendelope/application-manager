@@ -13,6 +13,7 @@ import (
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/rs/zerolog/log"
 )
 
 // Handler structure for the user requests.
@@ -27,6 +28,8 @@ func NewHandler(manager Manager) *Handler{
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
 func (h * Handler) AddAppDescriptor(ctx context.Context, addDescriptorRequest *grpc_application_go.AddAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
+	log.Debug().Str("organizationID", addDescriptorRequest.OrganizationId).
+		Str("name", addDescriptorRequest.Name).Msg("add application descriptor")
 	vErr := entities.ValidAddAppDescriptorRequest(addDescriptorRequest)
 	if vErr != nil{
 		return nil, conversions.ToGRPCError(vErr)
@@ -54,6 +57,8 @@ func (h * Handler) GetAppDescriptor(ctx context.Context, appDescriptorID *grpc_a
 
 // Deploy an application descriptor.
 func (h * Handler) Deploy(ctx context.Context, deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_conductor_go.DeploymentResponse, error) {
+	log.Debug().Str("organizationID", deployRequest.OrganizationId).
+		Str("appDescriptorId", deployRequest.AppDescriptorId).Msg("deploy application")
 	vErr := entities.ValidDeployRequest(deployRequest)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
@@ -63,6 +68,8 @@ func (h * Handler) Deploy(ctx context.Context, deployRequest *grpc_application_m
 
 // Undeploy a running application instance.
 func (h * Handler) Undeploy(ctx context.Context, appInstanceID *grpc_application_go.AppInstanceId) (*grpc_common_go.Success, error) {
+	log.Debug().Str("organizationID", appInstanceID.OrganizationId).
+		Str("appInstanceId", appInstanceID.AppInstanceId).Msg("undeploy application")
 	vErr := entities.ValidAppInstanceID(appInstanceID)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
