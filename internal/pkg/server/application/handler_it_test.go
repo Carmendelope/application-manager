@@ -167,6 +167,16 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	    gomega.Expect(retrieved.AppDescriptorId).Should(gomega.Equal(targetAppDescriptor.AppDescriptorId))
 	})
 
+	ginkgo.It("should be able to delete a descriptor without instances", func(){
+		appDescriptorID := &grpc_application_go.AppDescriptorId{
+			OrganizationId:       targetAppDescriptor.OrganizationId,
+			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+		}
+		success, err := client.RemoveAppDescriptor(context.Background(), appDescriptorID)
+		gomega.Expect(err).To(gomega.Succeed())
+		gomega.Expect(success).ShouldNot(gomega.BeNil())
+	})
+
 	ginkgo.It("should be able to deploy an instance", func(){
 		deployRequest := &grpc_application_manager_go.DeployRequest{
 			OrganizationId:       targetAppDescriptor.OrganizationId,
@@ -180,6 +190,29 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		}
 	    gomega.Expect(err).To(gomega.Succeed())
 	    gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+	})
+
+	ginkgo.It("should not be able to delete a descriptor with instances", func(){
+		deployRequest := &grpc_application_manager_go.DeployRequest{
+			OrganizationId:       targetAppDescriptor.OrganizationId,
+			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+			Name:                 "test-deploy-app-manager",
+			Description:          "Test deploy from app mananager IT",
+		}
+		response, err := client.Deploy(context.Background(), deployRequest)
+		if err != nil {
+			fmt.Println(conversions.ToDerror(err).DebugReport())
+		}
+		gomega.Expect(err).To(gomega.Succeed())
+		gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+
+		appDescriptorID := &grpc_application_go.AppDescriptorId{
+			OrganizationId:       targetAppDescriptor.OrganizationId,
+			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+		}
+		success, err := client.RemoveAppDescriptor(context.Background(), appDescriptorID)
+		gomega.Expect(err).To(gomega.HaveOccurred())
+		gomega.Expect(success).Should(gomega.BeNil())
 	})
 
 	ginkgo.PIt("should be able to undeploy a running instance", func(){
