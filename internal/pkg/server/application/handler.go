@@ -55,6 +55,15 @@ func (h * Handler) GetAppDescriptor(ctx context.Context, appDescriptorID *grpc_a
 	return h.Manager.GetAppDescriptor(appDescriptorID)
 }
 
+// RemoveAppDescriptor removes an application descriptor from the system.
+func (h*Handler) RemoveAppDescriptor(ctx context.Context, appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_common_go.Success, error){
+	vErr := entities.ValidAppDescriptorID(appDescriptorID)
+	if vErr != nil{
+		return nil, conversions.ToGRPCError(vErr)
+	}
+	return h.Manager.RemoveAppDescriptor(appDescriptorID)
+}
+
 // Deploy an application descriptor.
 func (h * Handler) Deploy(ctx context.Context, deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_conductor_go.DeploymentResponse, error) {
 	log.Debug().Str("organizationID", deployRequest.OrganizationId).

@@ -1,5 +1,5 @@
 ###
-# Application example
+# Application manager deployment
 ###
 
 kind: Deployment

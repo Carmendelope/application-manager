@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-common-go"
@@ -32,12 +33,30 @@ func (m * Manager) AddAppDescriptor(addDescriptorRequest *grpc_application_go.Ad
 
 // ListAppDescriptors retrieves a list of application descriptors.
 func (m * Manager) ListAppDescriptors(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_go.AppDescriptorList, error) {
-	return m.appClient.GetAppDescriptors(context.Background(), organizationID)
+	return m.appClient.ListAppDescriptors(context.Background(), organizationID)
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
 func (m * Manager) GetAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppDescriptor, error) {
 	return m.appClient.GetAppDescriptor(context.Background(), appDescriptorID)
+}
+
+// RemoveAppDescriptor removes an application descriptor from the system.
+func (m * Manager)  RemoveAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_common_go.Success, error) {
+	// Check if there are instances running with that descriptor
+	orgID := &grpc_organization_go.OrganizationId{
+		OrganizationId: appDescriptorID.OrganizationId,
+	}
+	instances, err := m.appClient.ListAppInstances(context.Background(), orgID)
+	if err != nil{
+		return nil, err
+	}
+	for _, inst := range instances.Instances {
+		if inst.AppDescriptorId == appDescriptorID.AppDescriptorId {
+			return nil, derrors.NewFailedPreconditionError("application instances must be removed before deleting the descriptor")
+		}
+	}
+	return m.appClient.RemoveAppDescriptor(context.Background(), appDescriptorID)
 }
 
 // Deploy an application descriptor.
@@ -70,7 +89,7 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 
 // ListAppInstances retrieves a list of application descriptors.
 func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_go.AppInstanceList, error) {
-	return m.appClient.GetAppInstances(context.Background(), organizationID)
+	return m.appClient.ListAppInstances(context.Background(), organizationID)
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
