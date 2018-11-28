@@ -61,9 +61,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 // Undeploy a running application instance.
 func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_common_go.Success, error) {
-	// TODO NP-223 Add organization Id to the message.
 	undeployRequest := &grpc_conductor_go.UndeployRequest{
-		InstaceId:            appInstanceID.AppInstanceId,
+		OrganizationId:       appInstanceID.OrganizationId,
+		AppInstanceId:            appInstanceID.AppInstanceId,
 	}
 	return  m.conductorClient.Undeploy(context.Background(), undeployRequest)
 }
