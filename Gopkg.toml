@@ -24,11 +24,11 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-go"
-    version="v0.0.16"
+    version="v0.0.21"
 
 [[constraint]]
     name="github.com/nalej/grpc-application-manager-go"
-    version="v0.0.1"
+    version="v0.0.6"
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"
@@ -36,7 +36,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-organization-go"
-    version="v0.0.8"
+    version="v0.0.12"
 
 [[constraint]]
     name="github.com/nalej/grpc-common-go"

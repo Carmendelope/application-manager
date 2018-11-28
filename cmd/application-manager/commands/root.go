@@ -20,7 +20,7 @@ var consoleLogging bool
 var rootCmd = &cobra.Command{
 	Use:   "application-manager",
 	Short: "Application Manager API",
-	Long:  `The applicatoin manager is responsible of application related operations`,
+	Long:  `The application manager is responsible of application related operations`,
 	Version: "unknown-version",
 
 	Run: func(cmd *cobra.Command, args []string) {
