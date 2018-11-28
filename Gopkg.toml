@@ -32,7 +32,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"
-    version="v0.0.53"
+    version="v0.0.61"
 
 [[constraint]]
     name="github.com/nalej/grpc-organization-go"
