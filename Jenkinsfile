@@ -6,6 +6,7 @@ def packagePath = "src/github.com/nalej/${packageName}"
 pipeline {
     agent { node { label 'golang' } }
     options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
         checkoutToSubdirectory("${packagePath}")
     }
 
