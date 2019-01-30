@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019 Nalej - All Rights Reserved
+ */
+
 package application
 
 import (
@@ -9,6 +13,7 @@ import (
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-organization-go"
+	"github.com/nalej/grpc-utils/pkg/conversions"
 	"math/rand"
 )
 
@@ -95,4 +100,28 @@ func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.Organiz
 // GetAppDescriptor retrieves a given application descriptor.
 func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.AppInstance, error) {
 	return m.appClient.GetAppInstance(context.Background(), appInstanceID)
+}
+
+func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplications, error){
+	orgID := &grpc_organization_go.OrganizationId{
+		OrganizationId:       filter.OrganizationId,
+	}
+	// TODO allow filtering on the list request
+	allApps, err := m.appClient.ListAppInstances(context.Background(), orgID)
+	if err != nil{
+		return nil, err
+	}
+	filtered, fErr := ApplyFilter(allApps, filter)
+	if fErr != nil{
+		return nil, conversions.ToGRPCError(fErr)
+	}
+	result, fErr := ToApplicationLabelsList(filtered)
+	if fErr != nil{
+		return nil, conversions.ToGRPCError(fErr)
+	}
+	return result, nil
+}
+
+func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.RetrieveEndpointsRequest) (*grpc_application_manager_go.ApplicationEndpoints, error){
+
 }

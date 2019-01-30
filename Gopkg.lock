@@ -47,55 +47,55 @@
   version = "v2.0.0"
 
 [[projects]]
-  digest = "1:bc4800005c800749f618d231533af60e52b79366c769c84e8f253cdab973d03b"
+  digest = "1:20f598b92b4dccb04e04bff00ac3a917023f02213e5183f8d171b820b9288ba9"
   name = "github.com/nalej/grpc-application-go"
   packages = ["."]
   pruneopts = ""
-  revision = "0d848b00fc4fb40ba871291279d20418c6808f0f"
-  version = "v0.0.21"
+  revision = "ef56ef206b789be24f35823ac55afa9b4703bd8b"
+  version = "v0.0.42"
 
 [[projects]]
-  digest = "1:00419ed33c8e648ce613dcb66388486685583a2f6e4b3b17e17af2b81115358f"
+  digest = "1:bc0ddc3b7d248c928347ef88db5a3802c4388c169992bdff6f65673253e63f7c"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
   pruneopts = ""
-  revision = "44348fda05752a65c4a867a4e4c92c4de4a74be4"
-  version = "v0.0.6"
+  revision = "627ae0ca926a9968f7e3fd1862eda41a387d823b"
+  version = "v0.0.25"
 
 [[projects]]
-  digest = "1:9243bfe5d57a78cd5cd88ea48bff788649f92bac1a5b4a451b800a9c0eb92e29"
+  digest = "1:44f7426538411ea9f774f96e3b102decc9f549b188e55e29ecc15be69542a96b"
   name = "github.com/nalej/grpc-common-go"
   packages = ["."]
   pruneopts = ""
-  revision = "afbeabffafbb2ad8bee5c6d6909064da4fe7a44e"
-  version = "v0.0.13"
+  revision = "e1513decc4192934536180d456748a4c3dec0245"
+  version = "v0.0.30"
 
 [[projects]]
-  digest = "1:b181f4f111e5c6c81923376386b4c0196ca571675d77955ec90de242a08d1b8a"
+  digest = "1:e4891b7e05d4786ca43f1f87f3cf117b59c7cc949860cd60990adcc5063540f2"
   name = "github.com/nalej/grpc-conductor-go"
   packages = ["."]
   pruneopts = ""
-  revision = "7a7fc6cc26782cbbbdf8ea5d1a86cca416fdf39f"
-  version = "v0.0.62"
+  revision = "3955e1481d10aebe85ec8c52ffaff635eeb5fe0e"
+  version = "v0.0.75"
 
 [[projects]]
-  digest = "1:112e99fe12939daca383555639072424b082551732c0e31bbd5d637bf1f8b780"
+  digest = "1:6bd0e397a6fee6e75b0dbdb381cc83a4cea4317f27fe8fdac2ff6706016a601f"
   name = "github.com/nalej/grpc-infrastructure-go"
   packages = ["."]
   pruneopts = ""
-  revision = "be538c5e39e5feee76ab2b50236945ccea6ab0a2"
-  version = "v0.0.14"
+  revision = "7961bfc23a902158e985b182b3f3726ce07775f1"
+  version = "v0.0.30"
 
 [[projects]]
-  digest = "1:f67ef4fca5de50942bba5c4dc70ecf9a86ab360dc7b9d3780ebe39547dfe8e5b"
+  digest = "1:9921e275160e1559963d6452a918027db3563746fd03f63369ab104c0fbf16bf"
   name = "github.com/nalej/grpc-organization-go"
   packages = ["."]
   pruneopts = ""
-  revision = "fa03342ed5416ef844e295e2675368169a877ff0"
-  version = "v0.0.12"
+  revision = "c571882666c05213df408ae9da8ab08f71a7a7bb"
+  version = "v0.0.28"
 
 [[projects]]
-  digest = "1:05c1a54c80e2d88b6af8f6e3af68ded6ef7f5aea9a28873fb68edc72ea798581"
+  digest = "1:a55e0792c0a632d14fc0f7a1c4b55ed2973189c2267d7197c2e13b1a44371466"
   name = "github.com/nalej/grpc-utils"
   packages = [
     "pkg/conversions",
@@ -103,8 +103,8 @@
     "pkg/tools",
   ]
   pruneopts = ""
-  revision = "5dd4662c03100806b57763212966a72e0c4b85e5"
-  version = "v1.1.0"
+  revision = "3763d699ec598000c8095dc4d2e86a3ec0a169ff"
+  version = "v1.3.1"
 
 [[projects]]
   digest = "1:a754db3c70741eeaeba73ec4cd970dc8918d06ced993d24891e9c0386d74f588"
@@ -185,7 +185,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4ac199b027ed34460ec4e0a92c882156f561e78cd046fef095e50f867462435a"
+  digest = "1:1e9704e5379e68ac473c28aeb3f7e7cd4036ae8a246bf0285b5ebdbb8e0cfacf"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -200,15 +200,15 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
+  revision = "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
 
 [[projects]]
   branch = "master"
-  digest = "1:303c0ee48d6229a2423950f41b3ccb5a2067dc4c7b65f8863cfbd962bef05a85"
+  digest = "1:74735405accc0bed59f47aaa35f1d0bc47a193a8da4fe71d8151906fa00efa7f"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "62eef0e2fa9b2c385f7b2778e763486da6880d37"
+  revision = "302c3dd5f1cc82baae8e44d9c3178e89b6e2b345"
 
 [[projects]]
   digest = "1:5acd3512b047305d49e8763eef7ba423901e85d5dd2fd1e71778a0ea8de10bd4"
@@ -247,34 +247,39 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:212d4045ef941b209a154001718705dc723bd77e0200fcea36d15ec87ed49dec"
+  digest = "1:96ad251f71dd69e0f15071720f9970f599f075b28fa96ebd8a547dcd04435856"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/rpc/errdetails",
     "googleapis/rpc/status",
   ]
   pruneopts = ""
-  revision = "b5d43981345bdb2c233eb4bf3277847b48c6fdc6"
+  revision = "8ac453e89fca495c0d17f98932642f392e2a11f3"
 
 [[projects]]
-  digest = "1:1293087271e314cfa2b3decededba2ecba0ff327e7b7809e00f73f616449191c"
+  digest = "1:39d4d828b87d58d114fdc211f0638f32dcae84019fe17d6b48f9b697f4b60213"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
     "codes",
     "connectivity",
     "credentials",
+    "credentials/internal",
     "encoding",
     "encoding/proto",
     "grpclog",
     "internal",
     "internal/backoff",
+    "internal/binarylog",
     "internal/channelz",
     "internal/envconfig",
     "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/syscall",
     "internal/transport",
     "keepalive",
     "metadata",
@@ -291,8 +296,8 @@
     "test/bufconn",
   ]
   pruneopts = ""
-  revision = "2e463a05d100327ca47ac218281906921038fd95"
-  version = "v1.16.0"
+  revision = "a02b0774206b209466313a0b525d2c738fe407eb"
+  version = "v1.18.0"
 
 [[projects]]
   digest = "1:eb53021a8aa3f599d29c7102e65026242bdedce998a54837dc67f14b6a97c5fd"
@@ -312,12 +317,12 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
+  digest = "1:cedccf16b71e86db87a24f8d4c70b0a855872eb967cb906a66b95de56aefbd0d"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = ""
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
 
 [solve-meta]
   analyzer-name = "dep"
