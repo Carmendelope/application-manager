@@ -87,21 +87,3 @@ func ToApplicationLabelsList(appList *grpc_application_go.AppInstanceList) (*grp
 	}, nil
 
 }
-
-func ToApplicationEndPointsList(appList *grpc_application_go.AppInstanceList) (*grpc_application_manager_go.ApplicationEndpoints, derrors.Error) {
-/*
-	endPoints := make([]*grpc_application_manager_go.ApplicationClusterEndpoints, 0)
-
-	for _, app := range appList.Instances {
-		clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
-			DeviceControllerUrl: app.
-		}
-		endPoints = append(endPoints, clusterEndPoint)
-	}
-
-	return &grpc_application_manager_go.TargetApplications{
-		Applications:applications,
-	}, nil
-*/
-return nil, nil
-}
