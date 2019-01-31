@@ -104,7 +104,7 @@ func (h * Handler) GetAppInstance(ctx context.Context, appInstanceID *grpc_appli
 	return h.Manager.GetAppInstance(appInstanceID)
 }
 
-func (h * Handler) RetrieveTargetApplications(ctx context.Context, filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplications, error){
+func (h * Handler) RetrieveTargetApplications(ctx context.Context, filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplicationList, error){
 	vErr := entities.ValidAppFilter(filter)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
@@ -112,8 +112,8 @@ func (h * Handler) RetrieveTargetApplications(ctx context.Context, filter *grpc_
 	return h.Manager.RetrieveTargetApplications(filter)
 }
 
-func (h * Handler) RetrieveEndpoints(ctx context.Context, request *grpc_application_manager_go.RetrieveEndpointsRequest) (*grpc_application_manager_go.ApplicationEndpoints, error){
-	vErr := entities.ValidRetrieveEndpointsRequest(request)
+func (h * Handler) RetrieveEndpoints(ctx context.Context, filter *grpc_application_manager_go.RetrieveEndpointsRequest) (*grpc_application_manager_go.ApplicationEndpoints, error){
+	vErr := entities.ValidRetrieveEndpointsRequest(filter)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
+	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-utils/pkg/tools"
 	"fmt"
 	"github.com/nalej/derrors"
@@ -36,6 +37,7 @@ func NewService(conf Config) *Service {
 type Clients struct {
 	AppClient grpc_application_go.ApplicationsClient
 	ConductorClient grpc_conductor_go.ConductorClient
+	ClusterClient grpc_infrastructure_go.ClustersClient
 }
 
 // GetClients creates the required connections with the remote clients.
@@ -52,8 +54,9 @@ func (s * Service) GetClients() (* Clients, derrors.Error) {
 
 	aClient := grpc_application_go.NewApplicationsClient(smConn)
 	cClient := grpc_conductor_go.NewConductorClient(conductorConn)
+	clClient := grpc_infrastructure_go.NewClustersClient(smConn)
 
-	return &Clients{aClient, cClient}, nil
+	return &Clients{aClient, cClient, clClient}, nil
 }
 
 // Run the service, launch the REST service handler.
@@ -74,7 +77,7 @@ func (s *Service) Run() error {
 	}
 
 	// Create handlers
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient)
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient)
 	handler := application.NewHandler(manager)
 
 	grpcServer := grpc.NewServer()

@@ -13,10 +13,12 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
+	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/grpc-utils/pkg/test"
@@ -98,6 +100,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	var orgClient grpc_organization_go.OrganizationsClient
 	var appClient grpc_application_go.ApplicationsClient
 	var conductorClient grpc_conductor_go.ConductorClient
+	var clusterClient grpc_infrastructure_go.ClustersClient
 	var smConn * grpc.ClientConn
 	var conductorConn * grpc.ClientConn
 	var client grpc_application_manager_go.ApplicationManagerClient
@@ -115,11 +118,12 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		appClient = grpc_application_go.NewApplicationsClient(smConn)
 		conductorConn = utils.GetConnection(conductorAddress)
 		conductorClient = grpc_conductor_go.NewConductorClient(conductorConn)
+		clusterClient = grpc_infrastructure_go.NewClustersClient(smConn)
 
 		test.LaunchServer(server, listener)
 
 		// Register the service
-		manager := NewManager(appClient, conductorClient)
+		manager := NewManager(appClient, conductorClient, clusterClient)
 		handler := NewHandler(manager)
 		grpc_application_manager_go.RegisterApplicationManagerServer(server, handler)
 
@@ -133,140 +137,355 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		listener.Close()
 	})
 
-	ginkgo.BeforeEach(func(){
-		ginkgo.By("creating target entities", func(){
-			// Initial data
-			targetOrganization = CreateOrganization("app-manager-it", orgClient)
-			targetAppDescriptor = CreateAppDescriptor("app-manager-it", targetOrganization.OrganizationId, appClient)
+	ginkgo.Context("App decriptors and instances", func(){
+		ginkgo.BeforeEach(func(){
+			ginkgo.By("creating target entities", func(){
+				// Initial data
+				targetOrganization = CreateOrganization("app-manager-it", orgClient)
+				targetAppDescriptor = CreateAppDescriptor("app-manager-it", targetOrganization.OrganizationId, appClient)
+			})
+		})
+
+		ginkgo.It("Should be able to add a new application descriptor", func(){
+			added, err := client.AddAppDescriptor(context.Background(),
+				GetAddAppDescriptorRequest("add-test", targetOrganization.OrganizationId))
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
+		})
+
+		ginkgo.It("should be able to list existing app descriptors", func(){
+			organizationID := &grpc_organization_go.OrganizationId{
+				OrganizationId:       targetOrganization.OrganizationId,
+			}
+			descriptors, err := client.ListAppDescriptors(context.Background(), organizationID)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(len(descriptors.Descriptors)).Should(gomega.Equal(1))
+		})
+
+		ginkgo.It("should be able to get an existing app descriptor", func(){
+			appDescriptorID := &grpc_application_go.AppDescriptorId{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+			}
+			retrieved, err := client.GetAppDescriptor(context.Background(), appDescriptorID)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(retrieved.AppDescriptorId).Should(gomega.Equal(targetAppDescriptor.AppDescriptorId))
+		})
+
+		ginkgo.It("should be able to delete a descriptor without instances", func(){
+			appDescriptorID := &grpc_application_go.AppDescriptorId{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+			}
+			success, err := client.RemoveAppDescriptor(context.Background(), appDescriptorID)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(success).ShouldNot(gomega.BeNil())
+		})
+
+		ginkgo.It("should be able to deploy an instance", func(){
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+				Name:                 "test-deploy-app-manager",
+				Description:          "Test deploy from app mananager IT",
+			}
+			response, err := client.Deploy(context.Background(), deployRequest)
+			if err != nil {
+				fmt.Println(conversions.ToDerror(err).DebugReport())
+			}
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+		})
+
+		ginkgo.It("should not be able to delete a descriptor with instances", func(){
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+				Name:                 "test-deploy-app-manager",
+				Description:          "Test deploy from app mananager IT",
+			}
+			response, err := client.Deploy(context.Background(), deployRequest)
+			if err != nil {
+				fmt.Println(conversions.ToDerror(err).DebugReport())
+			}
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+
+			appDescriptorID := &grpc_application_go.AppDescriptorId{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+			}
+			success, err := client.RemoveAppDescriptor(context.Background(), appDescriptorID)
+			gomega.Expect(err).To(gomega.HaveOccurred())
+			gomega.Expect(success).Should(gomega.BeNil())
+		})
+
+		ginkgo.PIt("should be able to undeploy a running instance", func(){
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+				Name:                 "test-deploy-app-manager",
+				Description:          "Test deploy from app mananager IT",
+			}
+			response, err := client.Deploy(context.Background(), deployRequest)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+			instanceID := &grpc_application_go.AppInstanceId{
+				OrganizationId:       targetOrganization.OrganizationId,
+				AppInstanceId:        response.AppInstanceId,
+			}
+			client.Undeploy(context.Background(), instanceID)
+		})
+
+		ginkgo.It("should be able to get a running application instance", func(){
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+				Name:                 "test-deploy-app-manager",
+				Description:          "Test deploy from app mananager IT",
+			}
+			response, err := client.Deploy(context.Background(), deployRequest)
+			gomega.Expect(err).To(gomega.Succeed())
+
+			appInstanceID := &grpc_application_go.AppInstanceId{
+				OrganizationId:       targetOrganization.OrganizationId,
+				AppInstanceId:        response.AppInstanceId,
+			}
+
+			retrieved, err := client.GetAppInstance(context.Background(), appInstanceID)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(retrieved.AppInstanceId).Should(gomega.Equal(response.AppInstanceId))
+		})
+
+		ginkgo.It("should be able to list running applications", func(){
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
+				Name:                 "test-deploy-app-manager",
+				Description:          "Test deploy from app mananager IT",
+			}
+			_, err := client.Deploy(context.Background(), deployRequest)
+			gomega.Expect(err).To(gomega.Succeed())
+			organizationID := &grpc_organization_go.OrganizationId{
+				OrganizationId:       targetOrganization.OrganizationId,
+			}
+			instances, err := client.ListAppInstances(context.Background(), organizationID)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(len(instances.Instances)).Should(gomega.Equal(1))
 		})
 	})
 
-	ginkgo.It("Should be able to add a new application descriptor", func(){
-	    added, err := client.AddAppDescriptor(context.Background(),
-	    	GetAddAppDescriptorRequest("add-test", targetOrganization.OrganizationId))
-	    gomega.Expect(err).To(gomega.Succeed())
-	    gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
-	})
+	ginkgo.Context("Devices", func(){
+		ginkgo.BeforeEach(func() {
+			targetOrganization = CreateOrganization("app-manager-it(device)", orgClient)
+		})
 
-	ginkgo.It("should be able to list existing app descriptors", func(){
-		organizationID := &grpc_organization_go.OrganizationId{
-			OrganizationId:       targetOrganization.OrganizationId,
-		}
-	    descriptors, err := client.ListAppDescriptors(context.Background(), organizationID)
-	    gomega.Expect(err).To(gomega.Succeed())
-	    gomega.Expect(len(descriptors.Descriptors)).Should(gomega.Equal(1))
-	})
+		// -- RetrieveTargetApplications
+		ginkgo.It("Should be able to retrieve target applications", func(){
 
-	ginkgo.It("should be able to get an existing app descriptor", func(){
-		appDescriptorID := &grpc_application_go.AppDescriptorId{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-		}
-	    retrieved, err := client.GetAppDescriptor(context.Background(), appDescriptorID)
-	    gomega.Expect(err).To(gomega.Succeed())
-	    gomega.Expect(retrieved.AppDescriptorId).Should(gomega.Equal(targetAppDescriptor.AppDescriptorId))
-	})
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
 
-	ginkgo.It("should be able to delete a descriptor without instances", func(){
-		appDescriptorID := &grpc_application_go.AppDescriptorId{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-		}
-		success, err := client.RemoveAppDescriptor(context.Background(), appDescriptorID)
-		gomega.Expect(err).To(gomega.Succeed())
-		gomega.Expect(success).ShouldNot(gomega.BeNil())
-	})
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
 
-	ginkgo.It("should be able to deploy an instance", func(){
-		deployRequest := &grpc_application_manager_go.DeployRequest{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-			Name:                 "test-deploy-app-manager",
-			Description:          "Test deploy from app mananager IT",
-		}
-	    response, err := client.Deploy(context.Background(), deployRequest)
-	    if err != nil {
-	    	fmt.Println(conversions.ToDerror(err).DebugReport())
-		}
-	    gomega.Expect(err).To(gomega.Succeed())
-	    gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
-	})
+			filters := &grpc_application_manager_go.ApplicationFilter{
+				OrganizationId: targetOrganization.OrganizationId,
+				DeviceGroupId: deviceGroupId[0],
+				MatchLabels: map[string]string{"l1":"v1"},
+			}
+			// RetrieveTargetApplications
+			request, err := client.RetrieveTargetApplications(context.Background(), filters)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(request).NotTo(gomega.BeNil())
+			gomega.Expect(len(request.Applications)).Should(gomega.Equal(1))
 
-	ginkgo.It("should not be able to delete a descriptor with instances", func(){
-		deployRequest := &grpc_application_manager_go.DeployRequest{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-			Name:                 "test-deploy-app-manager",
-			Description:          "Test deploy from app mananager IT",
-		}
-		response, err := client.Deploy(context.Background(), deployRequest)
-		if err != nil {
-			fmt.Println(conversions.ToDerror(err).DebugReport())
-		}
-		gomega.Expect(err).To(gomega.Succeed())
-		gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+		})
+		ginkgo.It("Should be able to retrieve target applications without labels filering", func(){
 
-		appDescriptorID := &grpc_application_go.AppDescriptorId{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-		}
-		success, err := client.RemoveAppDescriptor(context.Background(), appDescriptorID)
-		gomega.Expect(err).To(gomega.HaveOccurred())
-		gomega.Expect(success).Should(gomega.BeNil())
-	})
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
 
-	ginkgo.PIt("should be able to undeploy a running instance", func(){
-		deployRequest := &grpc_application_manager_go.DeployRequest{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-			Name:                 "test-deploy-app-manager",
-			Description:          "Test deploy from app mananager IT",
-		}
-		response, err := client.Deploy(context.Background(), deployRequest)
-		gomega.Expect(err).To(gomega.Succeed())
-		gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
-		instanceID := &grpc_application_go.AppInstanceId{
-			OrganizationId:       targetOrganization.OrganizationId,
-			AppInstanceId:        response.AppInstanceId,
-		}
-		client.Undeploy(context.Background(), instanceID)
-	})
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
 
-	ginkgo.It("should be able to get a running application instance", func(){
-		deployRequest := &grpc_application_manager_go.DeployRequest{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-			Name:                 "test-deploy-app-manager",
-			Description:          "Test deploy from app mananager IT",
-		}
-		response, err := client.Deploy(context.Background(), deployRequest)
-		gomega.Expect(err).To(gomega.Succeed())
+			filters := &grpc_application_manager_go.ApplicationFilter{
+				OrganizationId: targetOrganization.OrganizationId,
+				DeviceGroupId: deviceGroupId[0],
+				MatchLabels: map[string]string{},
+			}
+			// RetrieveTargetApplications
+			request, err := client.RetrieveTargetApplications(context.Background(), filters)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(request).NotTo(gomega.BeNil())
+			gomega.Expect(len(request.Applications)).Should(gomega.Equal(1))
 
-		appInstanceID := &grpc_application_go.AppInstanceId{
-			OrganizationId:       targetOrganization.OrganizationId,
-			AppInstanceId:        response.AppInstanceId,
-		}
+		})
+		ginkgo.It("Should not be able to retrieve target applications of a non existing organization", func(){
 
-		retrieved, err := client.GetAppInstance(context.Background(), appInstanceID)
-		gomega.Expect(err).To(gomega.Succeed())
-		gomega.Expect(retrieved.AppInstanceId).Should(gomega.Equal(response.AppInstanceId))
-	})
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
 
-	ginkgo.It("should be able to list running applications", func(){
-		deployRequest := &grpc_application_manager_go.DeployRequest{
-			OrganizationId:       targetAppDescriptor.OrganizationId,
-			AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
-			Name:                 "test-deploy-app-manager",
-			Description:          "Test deploy from app mananager IT",
-		}
-		_, err := client.Deploy(context.Background(), deployRequest)
-		gomega.Expect(err).To(gomega.Succeed())
-		organizationID := &grpc_organization_go.OrganizationId{
-			OrganizationId:       targetOrganization.OrganizationId,
-		}
-		instances, err := client.ListAppInstances(context.Background(), organizationID)
-		gomega.Expect(err).To(gomega.Succeed())
-		gomega.Expect(len(instances.Instances)).Should(gomega.Equal(1))
+			filters := &grpc_application_manager_go.ApplicationFilter{
+				OrganizationId: uuid.New().String(),
+				DeviceGroupId: deviceGroupId[0],
+				MatchLabels: map[string]string{"l1":"v1"},
+			}
+			// RetrieveTargetApplications
+			_, err := client.RetrieveTargetApplications(context.Background(), filters)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+
+		})
+		ginkgo.It("Should be able to retrieve an empty list (no match deviceGroupId)", func(){
+
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
+
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
+
+			filters := &grpc_application_manager_go.ApplicationFilter{
+				OrganizationId: targetOrganization.OrganizationId,
+				DeviceGroupId: uuid.New().String(),
+				MatchLabels: map[string]string{"l1":"v1"},
+			}
+			// RetrieveTargetApplications
+			request, err := client.RetrieveTargetApplications(context.Background(), filters)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(request).NotTo(gomega.BeNil())
+			gomega.Expect(len(request.Applications)).Should(gomega.Equal(0))
+
+		})
+		ginkgo.It("Should be able to retrieve an empty list (no match labels)", func(){
+
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
+
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
+
+			filters := &grpc_application_manager_go.ApplicationFilter{
+				OrganizationId: targetOrganization.OrganizationId,
+				DeviceGroupId: deviceGroupId[0],
+				MatchLabels: map[string]string{"l1":"v2"},
+			}
+			// RetrieveTargetApplications
+			request, err := client.RetrieveTargetApplications(context.Background(), filters)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(request).NotTo(gomega.BeNil())
+			gomega.Expect(len(request.Applications)).Should(gomega.Equal(0))
+
+		})
+
+		// -- RetrieveEndpoints(ctx context.Context, filter *grpc_application_manager_go.RetrieveEndpointsRequest)
+		ginkgo.It("Should be able to retrieve endpoints", func(){
+
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
+
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
+
+			// add cluster
+			cluster, err := clusterClient.AddCluster(context.Background(), &grpc_infrastructure_go.AddClusterRequest{
+				RequestId: uuid.New().String(),
+				OrganizationId: targetOrganization.OrganizationId,
+				Name:"test cluster",
+				Description: "Test cluster description",
+				Hostname: "URL_daisho",
+				ControlPlaneHostname: "ControlPlaneHostname",
+				Labels: map[string]string {"label1": "eti1"},
+			})
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(cluster).NotTo(gomega.BeNil())
+
+			// update service status
+			sucess, err := appClient.UpdateServiceStatus(context.Background(), &grpc_application_go.UpdateServiceStatusRequest{
+				OrganizationId: targetOrganization.OrganizationId,
+				AppInstanceId: instAdded.AppInstanceId,
+				ServiceId: instAdded.Services[0].ServiceId,
+				Status: grpc_application_go.ServiceStatus_SERVICE_RUNNING,
+				Endpoints: []string{"endpoint1", "endpoint2", "endpoint3"},
+				DeployedOnClusterId: cluster.ClusterId,
+			})
+			gomega.Expect(sucess).NotTo(gomega.BeNil())
+			gomega.Expect(err).To(gomega.Succeed())
+
+			filter := &grpc_application_manager_go.RetrieveEndpointsRequest{
+				OrganizationId: targetOrganization.OrganizationId,
+				AppInstanceId: instAdded.AppInstanceId,
+			}
+			endPoints, err := client.RetrieveEndpoints(context.Background(), filter)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(endPoints).NotTo(gomega.BeNil())
+
+		})
+		ginkgo.It("Should be able to retrieve an empty endpoints (service is waiting)", func(){
+
+			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
+
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
+
+			filter := &grpc_application_manager_go.RetrieveEndpointsRequest{
+				OrganizationId: targetOrganization.OrganizationId,
+				AppInstanceId: instAdded.AppInstanceId,
+			}
+			endPoints, err := client.RetrieveEndpoints(context.Background(), filter)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(endPoints).NotTo(gomega.BeNil())
+			gomega.Expect(endPoints.ClusterEndpoints).Should(gomega.BeEmpty())
+
+		})
+
 	})
 
 })

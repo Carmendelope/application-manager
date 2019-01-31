@@ -17,6 +17,14 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:a25a2c5ae694b01713fb6cd03c3b1ac1ccc1902b9f0a922680a88ec254f968e1"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = ""
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:b3c5b95e56c06f5aa72cb2500e6ee5f44fcd122872d4fec2023a488e561218bc"
   name = "github.com/hpcloud/tail"
   packages = [
@@ -55,12 +63,12 @@
   version = "v0.0.42"
 
 [[projects]]
-  digest = "1:bc0ddc3b7d248c928347ef88db5a3802c4388c169992bdff6f65673253e63f7c"
+  digest = "1:3beba8ce88e0d1530caecdf0fb78e79001dd5865c0eff8c584f3930d6859edeb"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
   pruneopts = ""
-  revision = "627ae0ca926a9968f7e3fd1862eda41a387d823b"
-  version = "v0.0.25"
+  revision = "7011ae066b591ed8147d63a47f56aa0cc478f409"
+  version = "v0.0.26"
 
 [[projects]]
   digest = "1:44f7426538411ea9f774f96e3b102decc9f549b188e55e29ecc15be69542a96b"
@@ -204,11 +212,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74735405accc0bed59f47aaa35f1d0bc47a193a8da4fe71d8151906fa00efa7f"
+  digest = "1:71d52943b1ff6a49989bc0eb674aeb46c159845beffd20470a1ee68d8e985532"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "302c3dd5f1cc82baae8e44d9c3178e89b6e2b345"
+  revision = "aca44879d5644da7c5b8ec6a1115e9b6ea6c40d9"
 
 [[projects]]
   digest = "1:5acd3512b047305d49e8763eef7ba423901e85d5dd2fd1e71778a0ea8de10bd4"
@@ -328,11 +336,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/google/uuid",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
     "github.com/nalej/grpc-application-manager-go",
     "github.com/nalej/grpc-common-go",
     "github.com/nalej/grpc-conductor-go",
+    "github.com/nalej/grpc-infrastructure-go",
     "github.com/nalej/grpc-organization-go",
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
