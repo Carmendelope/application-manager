@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2019 Nalej - All Rights Reserved
+ */
+
 package entities
 
 import (
@@ -12,6 +16,7 @@ const emptyOrganizationId = "organization_id cannot be empty"
 const emptyDescriptorId = "app_descriptor_id cannot be empty"
 const emptyInstanceId = "app_instance_id cannot be empty"
 const emptyName = "name cannot be empty"
+const emptyDeviceGroupId = "device_group_id cannot be empty"
 
 
 func ValidOrganizationId(organizationID *grpc_organization_go.OrganizationId) derrors.Error {
@@ -76,5 +81,27 @@ func ValidDeployRequest(deployRequest *grpc_application_manager_go.DeployRequest
 		return derrors.NewInvalidArgumentError(emptyName)
 	}
 
+	return nil
+}
+
+func ValidAppFilter (filter *grpc_application_manager_go.ApplicationFilter) derrors.Error{
+	if filter.OrganizationId == ""{
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+
+	if filter.DeviceGroupId == ""{
+		return derrors.NewInvalidArgumentError(emptyDeviceGroupId)
+	}
+	return nil
+}
+
+func ValidRetrieveEndpointsRequest (request *grpc_application_manager_go.RetrieveEndpointsRequest) derrors.Error{
+	if request.OrganizationId == ""{
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+
+	if request.AppInstanceId == ""{
+		return derrors.NewInvalidArgumentError(emptyInstanceId)
+	}
 	return nil
 }
