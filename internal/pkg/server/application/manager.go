@@ -139,28 +139,29 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 	appClusterEndPoints := make ([]*grpc_application_manager_go.ApplicationClusterEndpoints, 0)
 
 	//foreach serviceInstance in appInstance -> get endPoints and DeployedClusterId
-	for _, service := range instance.Services {
+	for _, group := range instance.Groups {
+		for _, service := range group.ServiceInstances {
 
-		// get the clusterHost (if the service is RUNNING)
-		if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING {
+			// get the clusterHost (if the service is RUNNING)
+			if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING {
 
-			clusterId := &grpc_infrastructure_go.ClusterId{
-				OrganizationId: request.OrganizationId,
-				ClusterId:      service.DeployedOnClusterId,
-			}
-			cluster, err := m.clusterClient.GetCluster(context.Background(), clusterId)
-			if err != nil {
-				return nil, err
-			}
+				clusterId := &grpc_infrastructure_go.ClusterId{
+					OrganizationId: request.OrganizationId,
+					ClusterId:      service.DeployedOnClusterId,
+				}
+				cluster, err := m.clusterClient.GetCluster(context.Background(), clusterId)
+				if err != nil {
+					return nil, err
+				}
 
-			clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
-				DeviceControllerUrl: cluster.Hostname,
-				Endpoints:           service.Endpoints,
+				clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
+					DeviceControllerUrl: cluster.Hostname,
+					Endpoints:           service.Endpoints,
+				}
+				appClusterEndPoints = append(appClusterEndPoints, clusterEndPoint)
 			}
-			appClusterEndPoints = append(appClusterEndPoints, clusterEndPoint)
 		}
 	}
-
 
 	return  &grpc_application_manager_go.ApplicationEndpoints{
 		ClusterEndpoints: appClusterEndPoints,
