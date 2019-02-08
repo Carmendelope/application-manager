@@ -5,7 +5,6 @@
 package entities
 
 import (
-	"fmt"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
