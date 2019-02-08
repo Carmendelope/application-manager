@@ -5,6 +5,7 @@
 package entities
 
 import (
+	"fmt"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
@@ -40,8 +41,16 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 		return derrors.NewInvalidArgumentError(emptyName)
 	}
 
+	// At least one service group
 	if len(toAdd.Groups) == 0 {
-		return derrors.NewInvalidArgumentError("expecting at least one group")
+		return derrors.NewInvalidArgumentError("expecting at least one service group")
+	}
+
+	// Every service group must have at least one service
+	for _, g := range toAdd.Groups {
+		if len(g.Services) == 0 {
+			return derrors.NewInvalidArgumentError("service group must have at least one service").WithParams(g.Name)
+		}
 	}
 
 	return nil
