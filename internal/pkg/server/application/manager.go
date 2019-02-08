@@ -48,6 +48,11 @@ func (m * Manager) GetAppDescriptor(appDescriptorID *grpc_application_go.AppDesc
 	return m.appClient.GetAppDescriptor(context.Background(), appDescriptorID)
 }
 
+// UpdateAppDescriptor allows the user to update the information of a registered descriptor.
+func (m * Manager) UpdateAppDescriptor(request *grpc_application_go.UpdateAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
+	return m.appClient.UpdateAppDescriptor(context.Background(), request)
+}
+
 // RemoveAppDescriptor removes an application descriptor from the system.
 func (m * Manager)  RemoveAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_common_go.Success, error) {
 	// Check if there are instances running with that descriptor
@@ -139,28 +144,29 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 	appClusterEndPoints := make ([]*grpc_application_manager_go.ApplicationClusterEndpoints, 0)
 
 	//foreach serviceInstance in appInstance -> get endPoints and DeployedClusterId
-	for _, service := range instance.Services {
+	for _, group := range instance.Groups {
+		for _, service := range group.ServiceInstances {
 
-		// get the clusterHost (if the service is RUNNING)
-		if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING {
+			// get the clusterHost (if the service is RUNNING)
+			if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING {
 
-			clusterId := &grpc_infrastructure_go.ClusterId{
-				OrganizationId: request.OrganizationId,
-				ClusterId:      service.DeployedOnClusterId,
-			}
-			cluster, err := m.clusterClient.GetCluster(context.Background(), clusterId)
-			if err != nil {
-				return nil, err
-			}
+				clusterId := &grpc_infrastructure_go.ClusterId{
+					OrganizationId: request.OrganizationId,
+					ClusterId:      service.DeployedOnClusterId,
+				}
+				cluster, err := m.clusterClient.GetCluster(context.Background(), clusterId)
+				if err != nil {
+					return nil, err
+				}
 
-			clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
-				DeviceControllerUrl: cluster.Hostname,
-				Endpoints:           service.Endpoints,
+				clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
+					DeviceControllerUrl: cluster.Hostname,
+					Endpoints:           service.Endpoints,
+				}
+				appClusterEndPoints = append(appClusterEndPoints, clusterEndPoint)
 			}
-			appClusterEndPoints = append(appClusterEndPoints, clusterEndPoint)
 		}
 	}
-
 
 	return  &grpc_application_manager_go.ApplicationEndpoints{
 		ClusterEndpoints: appClusterEndPoints,
