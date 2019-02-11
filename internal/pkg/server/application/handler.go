@@ -129,4 +129,3 @@ func (h * Handler) RetrieveEndpoints(ctx context.Context, filter *grpc_applicati
 	}
 	return h.Manager.RetrieveEndpoints(filter)
 }
-
