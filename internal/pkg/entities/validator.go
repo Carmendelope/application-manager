@@ -5,7 +5,6 @@
 package entities
 
 import (
-	"fmt"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
@@ -18,6 +17,7 @@ const emptyDescriptorId = "app_descriptor_id cannot be empty"
 const emptyInstanceId = "app_instance_id cannot be empty"
 const emptyName = "name cannot be empty"
 const emptyDeviceGroupId = "device_group_id cannot be empty"
+const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
 
 
 func ValidOrganizationId(organizationID *grpc_organization_go.OrganizationId) derrors.Error {
@@ -48,7 +48,7 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 	// Every service group must have at least one service
 	for _, g := range toAdd.Groups {
 		if len(g.Services) == 0 {
-			return derrors.NewInvalidArgumentError(fmt.Sprintf("service group %d must have at least one service",g.Name))
+			return derrors.NewInvalidArgumentError("service group must have at least one service").WithParams(g.Name)
 		}
 	}
 
@@ -62,6 +62,16 @@ func ValidAppDescriptorID(descriptorID * grpc_application_go.AppDescriptorId) de
 
 	if descriptorID.AppDescriptorId == "" {
 		return derrors.NewInvalidArgumentError(emptyDescriptorId)
+	}
+	return nil
+}
+
+func ValidUpdateAppDescriptorRequest(request * grpc_application_go.UpdateAppDescriptorRequest) derrors.Error{
+	if request.OrganizationId == "" {
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+	if request.AppDescriptorId == ""{
+		return derrors.NewInvalidArgumentError(emptyAppDescriptorId)
 	}
 	return nil
 }

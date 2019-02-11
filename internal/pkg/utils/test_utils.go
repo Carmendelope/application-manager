@@ -40,21 +40,38 @@ func CreateTestAppInstance(organizationID string, appDescriptorID string, appIns
 		AppDescriptorId:      appDescriptorID,
 		RuleId:               "rule1",
 		Name:                 "",
-		SourceServiceId:      "service1",
-		SourcePort:           80,
+		TargetServiceGroupName:      "g1",
+		TargetServiceName: "service1",
+		TargetPort:           80,
 		Access:               grpc_application_go.PortAccess_DEVICE_GROUP,
 		DeviceGroups:         groups,
 		XXX_NoUnkeyedLiteral: struct{}{},
 		XXX_unrecognized:     nil,
 		XXX_sizecache:        0,
 	}
+
+	groupInstance := &grpc_application_go.ServiceGroupInstance{
+		OrganizationId:         organizationID,
+		AppDescriptorId:        appDescriptorID,
+		AppInstanceId:          appInstanceID,
+		ServiceGroupId:         "g1",
+		ServiceGroupInstanceId: "gi1",
+		Name:                   "",
+		ServiceInstances:       []*grpc_application_go.ServiceInstance{service},
+		Policy:                 0,
+		Status:                 0,
+		Metadata:               nil,
+		Specs:                  nil,
+		Labels:                 nil,
+	}
+
 	return &grpc_application_go.AppInstance{
 		OrganizationId:  organizationID,
 		AppDescriptorId: appDescriptorID,
 		AppInstanceId:   appInstanceID,
 		Labels:          labels,
 		Rules:           []*grpc_application_go.SecurityRule{sr},
-		Services:        []*grpc_application_go.ServiceInstance{service},
+		Groups: []*grpc_application_go.ServiceGroupInstance{groupInstance},
 	}
 }
 
@@ -72,7 +89,6 @@ func CreateAddAppDescriptorRequest(organizationID string, groups []string, label
 		OrganizationId:       organizationID,
 		ServiceId:            uuid.New().String(),
 		Name:                 "Service-test",
-		Description:          "minimal IT nginx",
 		Type:                 grpc_application_go.ServiceType_DOCKER,
 		Image:                "nginx:1.12",
 		Specs:                &grpc_application_go.DeploySpecs{
@@ -88,18 +104,25 @@ func CreateAddAppDescriptorRequest(organizationID string, groups []string, label
 	}
 	rules = append(rules, rule)
 
+	group := &grpc_application_go.ServiceGroup{
+		OrganizationId:       organizationID,
+		ServiceGroupId:       uuid.New().String(),
+		Name:                 "g1",
+		Services:             []*grpc_application_go.Service{service},
+		Policy:               0,
+		Specs:                nil,
+		Labels:               nil,
+	}
 
 	toAdd := &grpc_application_go.AddAppDescriptorRequest{
 		RequestId:            fmt.Sprintf("application-manager-it-%d", ginkgo.GinkgoRandomSeed()),
 		OrganizationId:       organizationID,
 		Name:                 fmt.Sprintf("app-manager-it-%d", ginkgo.GinkgoRandomSeed()),
-		Description:          "Device app descriptor descriptor",
 		ConfigurationOptions: nil,
 		EnvironmentVariables: nil,
 		Labels:               labels,
 		Rules:                rules,
-		Groups:               nil,
-		Services:             []*grpc_application_go.Service{service},
+		Groups:               []*grpc_application_go.ServiceGroup{group},
 	}
 	return toAdd
 }

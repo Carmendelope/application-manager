@@ -34,9 +34,8 @@ import (
 func GetAddAppDescriptorRequest(name string, organizationID string) * grpc_application_go.AddAppDescriptorRequest{
 	service := &grpc_application_go.Service{
 		OrganizationId:       organizationID,
-		ServiceId:            "1",
+		ServiceId:            "s1",
 		Name:                 "minimal-nginx",
-		Description:          "minimal IT nginx",
 		Type:                 grpc_application_go.ServiceType_DOCKER,
 		Image:                "nginx:1.12",
 		Specs:                &grpc_application_go.DeploySpecs{
@@ -44,17 +43,24 @@ func GetAddAppDescriptorRequest(name string, organizationID string) * grpc_appli
 		},
 	}
 
+	group := &grpc_application_go.ServiceGroup{
+		OrganizationId:       organizationID,
+		Name:                 "g1",
+		Services:             []*grpc_application_go.Service{service},
+		Policy:               0,
+		Specs:                nil,
+		Labels:               nil,
+	}
+
 	toAdd := &grpc_application_go.AddAppDescriptorRequest{
 		RequestId:            fmt.Sprintf("application-manager-it-%d", ginkgo.GinkgoRandomSeed()),
 		OrganizationId:       organizationID,
 		Name:                 fmt.Sprintf("%s-app-manager-it-%d", name, ginkgo.GinkgoRandomSeed()),
-		Description:          "IT minimal descriptor",
 		ConfigurationOptions: nil,
 		EnvironmentVariables: nil,
 		Labels:               nil,
 		Rules:                nil,
-		Groups:               nil,
-		Services:             []*grpc_application_go.Service{service},
+		Groups:               []*grpc_application_go.ServiceGroup{group},
 	}
 	return toAdd
 }
@@ -438,16 +444,21 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(cluster).NotTo(gomega.BeNil())
 
+			ei := &grpc_application_go.EndpointInstance{
+				Type:                 0,
+				Fqdn:                 "target.instance",
+			}
 			// update service status
-			sucess, err := appClient.UpdateServiceStatus(context.Background(), &grpc_application_go.UpdateServiceStatusRequest{
+			success, err := appClient.UpdateServiceStatus(context.Background(), &grpc_application_go.UpdateServiceStatusRequest{
 				OrganizationId: targetOrganization.OrganizationId,
 				AppInstanceId: instAdded.AppInstanceId,
-				ServiceId: instAdded.Services[0].ServiceId,
+				ServiceGroupInstanceId: instAdded.Groups[0].ServiceGroupInstanceId,
+				ServiceInstanceId: instAdded.Groups[0].ServiceInstances[0].ServiceId,
 				Status: grpc_application_go.ServiceStatus_SERVICE_RUNNING,
-				Endpoints: []string{"endpoint1", "endpoint2", "endpoint3"},
+				Endpoints: []*grpc_application_go.EndpointInstance{ei},
 				DeployedOnClusterId: cluster.ClusterId,
 			})
-			gomega.Expect(sucess).NotTo(gomega.BeNil())
+			gomega.Expect(success).NotTo(gomega.BeNil())
 			gomega.Expect(err).To(gomega.Succeed())
 
 			filter := &grpc_application_manager_go.RetrieveEndpointsRequest{

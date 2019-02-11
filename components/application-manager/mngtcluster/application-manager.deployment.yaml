@@ -9,7 +9,7 @@ metadata:
     cluster: management
     component: application-manager
   name: application-manager
-  namespace: nalej
+  namespace: __NPH_NAMESPACE
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -25,13 +25,13 @@ spec:
     spec:
       containers:
       - name: application-manager
-        image: nalejregistry.azurecr.io/nalej/application-manager:VERSION
+        image: __NPH_REGISTRY.azurecr.io/__NPH_REGISTRY_NAMESPACE/application-manager:__NPH_VERSION
         imagePullPolicy: Always
         args:
         - "run"
         - "--debug"
-        - "--systemModelAddress=system-model.nalej:8800"
-        - "--conductorAddress=conductor.nalej:5000"
+        - "--systemModelAddress=system-model.__NPH_NAMESPACE:8800"
+        - "--conductorAddress=conductor.__NPH_NAMESPACE:5000"
         securityContext:
           runAsUser: 2000
       imagePullSecrets:
