@@ -332,6 +332,19 @@
   revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
   version = "v2.2.2"
 
+[[projects]]
+  branch = "master"
+  digest = "1:3f289db6424854206ab68bc86d9360d0238203bcac47ab9566fe628e360ea828"
+  name = "k8s.io/apimachinery"
+  packages = [
+    "pkg/util/errors",
+    "pkg/util/sets",
+    "pkg/util/validation",
+    "pkg/util/validation/field",
+  ]
+  pruneopts = ""
+  revision = "f05b8decd79cf55449e1e5b2cc9f14496ba6b942"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -355,6 +368,7 @@
     "google.golang.org/grpc",
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/test/bufconn",
+    "k8s.io/apimachinery/pkg/util/validation",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
