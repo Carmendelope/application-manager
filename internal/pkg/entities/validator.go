@@ -5,10 +5,12 @@
 package entities
 
 import (
+	"fmt"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-organization-go"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const emptyRequestId = "request_id cannot be empty"
@@ -51,7 +53,46 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 			return derrors.NewInvalidArgumentError("service group must have at least one service").WithParams(g.Name)
 		}
 	}
+	derr :=  ValidateAppRequestForNames(toAdd)
+	return derr
+}
 
+// ValidateDescriptor checks validity of object names, ports name, port numbers  meeting Kubernetes specs.
+func  ValidateAppRequestForNames(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+	var errs []string
+	// for each group
+	for _, group := range toAdd.Groups {
+		for _,service := range group.Services {
+			// Validate service name
+			kerr := validation.IsDNS1123Label(service.Name)
+			if len(kerr) > 0 {
+				errs = append(errs, "serviceName", service.Name)
+				errs = append(errs, kerr...)
+			}
+			// validate Exposed Port Name and Number
+			for _,port := range service.ExposedPorts {
+				kerr = validation.IsValidPortName(port.Name)
+				if len(kerr) > 0 {
+					errs = append(errs,"PortName", port.Name)
+					errs = append(errs, kerr...)
+				}
+				kerr = validation.IsValidPortNum(int(port.ExposedPort))
+				if len(kerr) > 0 {
+					errs = append(errs, "ExposedPort")
+					errs = append(errs, kerr...)
+				}
+				kerr = validation.IsValidPortNum(int(port.InternalPort))
+				if len(kerr) > 0 {
+					errs = append(errs, "InternalPort")
+					errs = append(errs, kerr...)
+				}
+			}
+		}
+	}
+	if len(errs) > 0 {
+		err := derrors.NewFailedPreconditionError(fmt.Sprintf("%s: %v","App descriptor validation failed",errs))
+		return err
+	}
 	return nil
 }
 
