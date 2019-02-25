@@ -33,7 +33,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"
-    version="v0.0.81"
+    version="v0.0.84"
 
 [[constraint]]
     name="github.com/nalej/grpc-organization-go"
@@ -42,6 +42,10 @@
 [[constraint]]
     name="github.com/nalej/grpc-common-go"
     version="v0.0.30"
+
+[[constraint]]
+    name="github.com/nalej/grpc-infrastructure-go"
+    version="v0.0.32"
 
 [[constraint]]
   name = "github.com/google/uuid"
