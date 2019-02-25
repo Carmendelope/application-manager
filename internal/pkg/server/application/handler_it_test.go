@@ -436,7 +436,6 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				RequestId: uuid.New().String(),
 				OrganizationId: targetOrganization.OrganizationId,
 				Name:"test cluster",
-				Description: "Test cluster description",
 				Hostname: "URL_daisho",
 				ControlPlaneHostname: "ControlPlaneHostname",
 				Labels: map[string]string {"label1": "eti1"},

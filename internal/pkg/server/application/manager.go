@@ -148,7 +148,8 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 		for _, service := range group.ServiceInstances {
 
 			// get the clusterHost (if the service is RUNNING)
-			if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING {
+			if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING  &&
+				len(service.Endpoints) > 0  { // the service has endpoints
 
 				clusterId := &grpc_infrastructure_go.ClusterId{
 					OrganizationId: request.OrganizationId,
