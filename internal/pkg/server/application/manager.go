@@ -161,7 +161,7 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 				}
 
 				clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
-					DeviceControllerUrl: cluster.Hostname,
+					DeviceControllerUrl: fmt.Sprintf("device-controller.%s", cluster.Hostname),
 					Endpoints:           service.Endpoints,
 				}
 				appClusterEndPoints = append(appClusterEndPoints, clusterEndPoint)
