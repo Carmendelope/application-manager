@@ -18,6 +18,7 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
+	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
@@ -107,6 +108,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	var appClient grpc_application_go.ApplicationsClient
 	var conductorClient grpc_conductor_go.ConductorClient
 	var clusterClient grpc_infrastructure_go.ClustersClient
+	var deviceClient grpc_device_go.DevicesClient
 	var smConn * grpc.ClientConn
 	var conductorConn * grpc.ClientConn
 	var client grpc_application_manager_go.ApplicationManagerClient
@@ -114,6 +116,9 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	// Target organization.
 	var targetOrganization *grpc_organization_go.Organization
 	var targetAppDescriptor *grpc_application_go.AppDescriptor
+
+	var deviceGroupNames  []string
+	var deviceGroupIds []string
 
 	ginkgo.BeforeSuite(func() {
 		listener = test.GetDefaultListener()
@@ -125,6 +130,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		conductorConn = utils.GetConnection(conductorAddress)
 		conductorClient = grpc_conductor_go.NewConductorClient(conductorConn)
 		clusterClient = grpc_infrastructure_go.NewClustersClient(smConn)
+		deviceClient = grpc_device_go.NewDevicesClient(smConn)
 
 		test.LaunchServer(server, listener)
 
@@ -284,14 +290,31 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	ginkgo.Context("Devices", func(){
 		ginkgo.BeforeEach(func() {
 			targetOrganization = CreateOrganization("app-manager-it(device)", orgClient)
+			deviceGroupNames = []string{"dg1", "dg2", "dg3"}
+			deviceGroupIds = make([]string, 0)
+
+			for _, dg := range deviceGroupNames {
+				// create deviceGroup
+				added, err := deviceClient.AddDeviceGroup(context.Background(), &grpc_device_go.AddDeviceGroupRequest{
+					RequestId: uuid.New().String(),
+					OrganizationId: targetOrganization.OrganizationId,
+					Name: dg,
+					Labels: map[string]string{"l1": "v1"},
+				})
+				gomega.Expect(err).To(gomega.Succeed())
+				gomega.Expect(added).NotTo(gomega.BeNil())
+
+				deviceGroupIds = append(deviceGroupIds, added.DeviceGroupId)
+
+			}
 		})
 
 		// -- RetrieveTargetApplications
 		ginkgo.It("Should be able to retrieve target applications", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
+
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -305,7 +328,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: deviceGroupId[0],
+				DeviceGroupId: deviceGroupIds[0],
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -317,9 +340,8 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 		ginkgo.It("Should be able to retrieve target applications without labels filering", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -333,7 +355,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: deviceGroupId[0],
+				DeviceGroupId: deviceGroupIds[0],
 				MatchLabels: map[string]string{},
 			}
 			// RetrieveTargetApplications
@@ -345,11 +367,9 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 		ginkgo.It("Should not be able to retrieve target applications of a non existing organization", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
-
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: uuid.New().String(),
-				DeviceGroupId: deviceGroupId[0],
+				DeviceGroupId: uuid.New().String(),
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -359,9 +379,8 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 		ginkgo.It("Should be able to retrieve an empty list (no match deviceGroupId)", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -387,9 +406,8 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 		ginkgo.It("Should be able to retrieve an empty list (no match labels)", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -403,7 +421,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: deviceGroupId[0],
+				DeviceGroupId: uuid.New().String(),
 				MatchLabels: map[string]string{"l1":"v2"},
 			}
 			// RetrieveTargetApplications
@@ -415,11 +433,10 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 
 		// -- RetrieveEndpoints(ctx context.Context, filter *grpc_application_manager_go.RetrieveEndpointsRequest)
-		ginkgo.It("Should be able to retrieve endpoints", func(){
+		ginkgo.FIt("Should be able to retrieve endpoints", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -452,7 +469,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				OrganizationId: targetOrganization.OrganizationId,
 				AppInstanceId: instAdded.AppInstanceId,
 				ServiceGroupInstanceId: instAdded.Groups[0].ServiceGroupInstanceId,
-				ServiceInstanceId: instAdded.Groups[0].ServiceInstances[0].ServiceId,
+				ServiceInstanceId: instAdded.Groups[0].ServiceInstances[0].ServiceInstanceId,
 				Status: grpc_application_go.ServiceStatus_SERVICE_RUNNING,
 				Endpoints: []*grpc_application_go.EndpointInstance{ei},
 				DeployedOnClusterId: cluster.ClusterId,
@@ -469,11 +486,10 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(endPoints).NotTo(gomega.BeNil())
 
 		})
-		ginkgo.It("Should be able to retrieve an empty endpoints (service is waiting)", func(){
+		ginkgo.FIt("Should be able to retrieve an empty endpoints (service is waiting)", func(){
 
-			deviceGroupId := []string{uuid.New().String(), uuid.New().String(), uuid.New().String()}
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupId,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
