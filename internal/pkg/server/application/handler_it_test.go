@@ -433,7 +433,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 
 		// -- RetrieveEndpoints(ctx context.Context, filter *grpc_application_manager_go.RetrieveEndpointsRequest)
-		ginkgo.FIt("Should be able to retrieve endpoints", func(){
+		ginkgo.It("Should be able to retrieve endpoints", func(){
 
 			// create descriptor
 			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
@@ -486,7 +486,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(endPoints).NotTo(gomega.BeNil())
 
 		})
-		ginkgo.FIt("Should be able to retrieve an empty endpoints (service is waiting)", func(){
+		ginkgo.It("Should be able to retrieve an empty endpoints (service is waiting)", func(){
 
 			// create descriptor
 			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
