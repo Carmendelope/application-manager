@@ -40,11 +40,12 @@ func CreateTestAppInstance(organizationID string, appDescriptorID string, appIns
 		AppDescriptorId:      appDescriptorID,
 		RuleId:               "rule1",
 		Name:                 "",
-		TargetServiceGroupName:      "g1",
+		TargetServiceGroupName: "g1",
 		TargetServiceName: "service1",
 		TargetPort:           80,
 		Access:               grpc_application_go.PortAccess_DEVICE_GROUP,
-		DeviceGroups:         groups,
+		DeviceGroupNames:       groups,
+		DeviceGroupIds:			groups,
 		XXX_NoUnkeyedLiteral: struct{}{},
 		XXX_unrecognized:     nil,
 		XXX_sizecache:        0,
@@ -88,7 +89,7 @@ func CreateAddAppDescriptorRequest(organizationID string, groups []string, label
 	service := &grpc_application_go.Service{
 		OrganizationId:       organizationID,
 		ServiceId:            uuid.New().String(),
-		Name:                 "Service-test",
+		Name:                 "ervice-test",
 		Type:                 grpc_application_go.ServiceType_DOCKER,
 		Image:                "nginx:1.12",
 		Specs:                &grpc_application_go.DeploySpecs{
@@ -100,7 +101,7 @@ func CreateAddAppDescriptorRequest(organizationID string, groups []string, label
 		OrganizationId: organizationID,
 		Name: "SecurityRule (it)",
 		Access: grpc_application_go.PortAccess_DEVICE_GROUP,
-		DeviceGroups: groups,
+		DeviceGroupNames: groups,
 	}
 	rules = append(rules, rule)
 
