@@ -40,7 +40,7 @@ var _ = ginkgo.Describe("Application Descriptor Validations", func() {
 			err := entities.ValidDescriptorLogic(appDescriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
-		ginkgo.It("should not pass the validation (service to service rule)", func(){
+		ginkgo.PIt("should not pass the validation (service to service rule)", func(){
 			appDescriptor := utils.CreateAppDescriptorServiceToService()
 			err := entities.ValidDescriptorLogic(appDescriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())

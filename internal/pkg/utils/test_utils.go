@@ -128,8 +128,6 @@ func CreateAddAppDescriptorRequest(organizationID string, groups []string, label
 	return toAdd
 }
 
-
-
 func CreateFullAppDescriptor()* grpc_application_go.AddAppDescriptorRequest{
 
 	return &grpc_application_go.AddAppDescriptorRequest {
@@ -141,7 +139,7 @@ func CreateFullAppDescriptor()* grpc_application_go.AddAppDescriptorRequest{
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -150,7 +148,7 @@ func CreateFullAppDescriptor()* grpc_application_go.AddAppDescriptorRequest{
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -187,7 +185,7 @@ func CreateAppDescriptorWithRepeatedGroup()* grpc_application_go.AddAppDescripto
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -196,7 +194,7 @@ func CreateAppDescriptorWithRepeatedGroup()* grpc_application_go.AddAppDescripto
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -229,7 +227,7 @@ func CreateAppDescriptorWithRepeatedService()* grpc_application_go.AddAppDescrip
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service1"},
 
@@ -238,7 +236,7 @@ func CreateAppDescriptorWithRepeatedService()* grpc_application_go.AddAppDescrip
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -271,7 +269,7 @@ func CreateAppDescriptorWrongGroupInRule()* grpc_application_go.AddAppDescriptor
 				Name: "rule1",
 				TargetServiceGroupName: "g7",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -280,7 +278,7 @@ func CreateAppDescriptorWrongGroupInRule()* grpc_application_go.AddAppDescriptor
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -312,7 +310,7 @@ func CreateAppDescriptorWrongDeployAfter()* grpc_application_go.AddAppDescriptor
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -321,7 +319,7 @@ func CreateAppDescriptorWrongDeployAfter()* grpc_application_go.AddAppDescriptor
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -353,7 +351,7 @@ func CreateAppDescriptorWrongGroupDeploySpecs()* grpc_application_go.AddAppDescr
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -362,7 +360,7 @@ func CreateAppDescriptorWrongGroupDeploySpecs()* grpc_application_go.AddAppDescr
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -398,7 +396,7 @@ func CreateAppDescriptorServiceToService()* grpc_application_go.AddAppDescriptor
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -407,7 +405,7 @@ func CreateAppDescriptorServiceToService()* grpc_application_go.AddAppDescriptor
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 1,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -443,7 +441,7 @@ func CreateAppDescriptorWrongEnvironmentVariables()* grpc_application_go.AddAppD
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -452,7 +450,7 @@ func CreateAppDescriptorWrongEnvironmentVariables()* grpc_application_go.AddAppD
 				Name: "rule2",
 				TargetServiceGroupName: "g2",
 				TargetServiceName:"service3",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g1",
 				AuthServices: []string{"service1", "service2"},
 			},
@@ -489,7 +487,7 @@ func CreateAppDescriptorWithDeviceRules()* grpc_application_go.AddAppDescriptorR
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 
@@ -533,7 +531,7 @@ func CreateAppDescriptorWithWrongDeviceRules()* grpc_application_go.AddAppDescri
 				Name: "rule1",
 				TargetServiceGroupName: "g1",
 				TargetServiceName:"service1",
-				Access: 0,
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
 				AuthServiceGroupName: "g2",
 				AuthServices: []string{"service3"},
 

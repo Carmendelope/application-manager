@@ -228,10 +228,6 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 	// - Rules refer to existing services
 	for _, rule := range appDescriptor.Rules{
 
-		if rule.Access == grpc_application_go.PortAccess_APP_SERVICES{
-			return derrors.NewFailedPreconditionError("Service to service restrictions are not supported yet")
-		}
-
 		_, exists := appGroups[rule.TargetServiceGroupName]
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
@@ -241,16 +237,8 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 			return derrors.NewFailedPreconditionError("Service Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
 		}
 
-		// For rules referring to device group access no AuthServiceGroupName should be specified or expected.
-		if rule.Access == grpc_application_go.PortAccess_DEVICE_GROUP {
-			if rule.AuthServiceGroupName != ""{
-				return derrors.NewFailedPreconditionError("Auth Service Group Name should no be specified for device group access rules")
-			}
-			if len(rule.AuthServices) > 0  {
-				return derrors.NewFailedPreconditionError("Auth Services should no be specified for device group access rules")
-			}
-
-		}else{
+		// only rules referring to PortAccess_APP_SERVICES AuthServiceGroupName and AuthServiceName should be specified or expected.
+		if rule.Access == grpc_application_go.PortAccess_APP_SERVICES {
 			_, exists = appGroups[rule.AuthServiceGroupName]
 			if ! exists {
 				return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
@@ -261,8 +249,14 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 					return derrors.NewFailedPreconditionError("Service Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
 				}
 			}
+		}else{
+			if rule.AuthServiceGroupName != ""{
+				return derrors.NewFailedPreconditionError("Auth Service Group Name should no be specified for selected access rule")
+			}
+			if len(rule.AuthServices) > 0  {
+				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule")
+			}
 		}
-
 	}
 
 	return nil
