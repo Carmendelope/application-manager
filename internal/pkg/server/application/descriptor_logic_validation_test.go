@@ -46,7 +46,17 @@ var _ = ginkgo.Describe("Application Descriptor Validations", func() {
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
 		ginkgo.It("should not pass the validation (wrong environment variables)", func(){
-			appDescriptor := utils.CreateAppDescriptorWrongEnvironmetVariables()
+			appDescriptor := utils.CreateAppDescriptorWrongEnvironmentVariables()
+			err := entities.ValidDescriptorLogic(appDescriptor)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+		ginkgo.It("should pass the validation (device group access)", func(){
+			appDescriptor := utils.CreateAppDescriptorWithDeviceRules()
+			err := entities.ValidDescriptorLogic(appDescriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+		})
+		ginkgo.It("should not pass the validation (wrong device group access)", func(){
+			appDescriptor := utils.CreateAppDescriptorWithWrongDeviceRules()
 			err := entities.ValidDescriptorLogic(appDescriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
