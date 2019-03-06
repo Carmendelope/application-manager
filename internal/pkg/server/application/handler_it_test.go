@@ -513,5 +513,4 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		})
 
 	})
-
 })
