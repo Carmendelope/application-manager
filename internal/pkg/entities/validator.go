@@ -11,6 +11,7 @@ import (
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-organization-go"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"strings"
 )
 
 const emptyRequestId = "request_id cannot be empty"
@@ -20,6 +21,8 @@ const emptyInstanceId = "app_instance_id cannot be empty"
 const emptyName = "name cannot be empty"
 const emptyDeviceGroupId = "device_group_id cannot be empty"
 const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
+
+const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 
 
 func ValidOrganizationId(organizationID *grpc_organization_go.OrganizationId) derrors.Error {
@@ -53,8 +56,15 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 			return derrors.NewInvalidArgumentError("service group must have at least one service").WithParams(g.Name)
 		}
 	}
-	derr :=  ValidateAppRequestForNames(toAdd)
-	return derr
+	err :=  ValidateAppRequestForNames(toAdd)
+
+	if err != nil {
+		return err
+	}
+
+	// logic validation
+	err = ValidDescriptorLogic(toAdd)
+	return err
 }
 
 // ValidateDescriptor checks validity of object names, ports name, port numbers  meeting Kubernetes specs.
@@ -163,5 +173,154 @@ func ValidRetrieveEndpointsRequest (request *grpc_application_manager_go.Retriev
 	if request.AppInstanceId == ""{
 		return derrors.NewInvalidArgumentError(emptyInstanceId)
 	}
+	return nil
+}
+
+func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool) derrors.Error {
+
+	// - Environment variables must be checked with existing service names
+	// TODO: the enviroment variables only looks the service name (servicegroup should be included)
+	for _, value := range appDescriptor.EnvironmentVariables {
+		serviceValue := strings.Trim(value, " ")
+		if strings.Index(serviceValue, NalejEnvironmentVariablePrefix) == 0 {
+			// check the service exists.
+			pos := strings.Index(serviceValue, ":")
+			if pos == -1 {
+				pos = len(serviceValue)
+			}
+			nalejService :=value[len(NalejEnvironmentVariablePrefix):pos]
+
+			// find the service
+			_, exists := appServices[strings.ToLower(nalejService)]
+			if !exists {
+				return derrors.NewFailedPreconditionError("Environment variable error, service does not exist").WithParams(value)
+			}
+		}
+	}
+	return nil
+}
+
+func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool) derrors.Error{
+
+	// TODO: the DeployAfter only looks the service name (servicegroup should be included)
+	// - Deploy after should point to existing services
+	for _, group := range appDescriptor.Groups{
+		for _, service := range group.Services {
+			for _, after := range service.DeployAfter {
+				_, exists := appServices[after]
+				if ! exists {
+					return derrors.NewFailedPreconditionError("Service indicated in deploy after field does not exist").WithParams(after)
+				}
+			}
+		}
+		// - Multireplicate set cannot be set with number of replicas
+		if group.Specs != nil {
+			if group.Specs.MultiClusterReplica && group.Specs.NumReplicas > 0 {
+				return derrors.NewFailedPreconditionError("Multireplicate set cannot be set with number of replicas").WithParams(group.Name)
+			}
+		}
+	}
+	return nil
+}
+
+func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool, appGroups map[string]bool) derrors.Error{
+
+	// - Rules refer to existing services
+	for _, rule := range appDescriptor.Rules{
+
+		_, exists := appGroups[rule.TargetServiceGroupName]
+		if ! exists {
+			return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
+		}
+		_, exists = appServices[rule.TargetServiceName]
+		if ! exists {
+			return derrors.NewFailedPreconditionError("Service Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
+		}
+
+		// only rules referring to PortAccess_APP_SERVICES AuthServiceGroupName and AuthServiceName should be specified or expected.
+		if rule.Access == grpc_application_go.PortAccess_APP_SERVICES {
+			_, exists = appGroups[rule.AuthServiceGroupName]
+			if ! exists {
+				return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
+			}
+			for _, serviceName := range rule.AuthServices {
+				_, exists = appServices[serviceName]
+				if ! exists {
+					return derrors.NewFailedPreconditionError("Service Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
+				}
+			}
+		}else{
+			if rule.AuthServiceGroupName != ""{
+				return derrors.NewFailedPreconditionError("Auth Service Group Name should no be specified for selected access rule")
+			}
+			if len(rule.AuthServices) > 0  {
+				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule")
+			}
+		}
+	}
+
+	return nil
+}
+
+// ValidAppDescriptor checks validity related to the descriptor logic
+func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+
+	/*
+	   	- Rules refer to existing services
+		- Rules specifying service to service restrictions are not supported yet ???
+		- Service and service group name are uniq
+		- Environment variables must be checked with existing service names
+		- Deploy after should point to existing services
+		- Multireplicate set cannot be set with number of replicas
+	 */
+
+	 // TODO: the service should be unique per group, not unique in the descriptor
+	appServices := make(map[string]bool)
+	appGroups := make(map[string]bool)
+
+	// - Service and service group name are uniq (and they cannot be empty)
+	for _, appGroup := range appDescriptor.Groups {
+		if appGroup.Name == "" {
+			return derrors.NewFailedPreconditionError("Service Group Name cannot be empty")
+		}
+		_, exists := appGroups[appGroup.Name]
+		if exists {
+			return derrors.NewFailedPreconditionError("Service Group Name defined twice").WithParams(appGroup.Name)
+		}
+
+		for _, service := range appGroup.Services {
+			if service.Name == "" {
+				return derrors.NewFailedPreconditionError("Service Name cannot be empty")
+			}
+			_ , exists := appServices[service.Name]
+			if exists {
+				return derrors.NewFailedPreconditionError("Service Name defined twice").WithParams(appGroup.Name, service.Name)
+			}
+			appServices[service.Name] = true
+
+		}
+		appGroups[appGroup.Name] = true
+	}
+
+	// - Rules refer to existing services
+	err := ValidAppDescriptorRules(appDescriptor, appServices, appGroups)
+	if err != nil {
+		return err
+	}
+
+	// ValidGroupSpecs:
+	// - Deploy after should point to existing services
+	// - Multireplicate set cannot be set with number of replicas
+	err = ValidAppDescriptorGroupSpecs(appDescriptor, appServices)
+	if err != nil {
+		return err
+	}
+
+	// - Environment variables must be checked with existing service names
+	err = ValidAppDescriptorEnvironmentVariables(appDescriptor, appServices)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
