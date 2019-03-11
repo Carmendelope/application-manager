@@ -239,22 +239,23 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 
 		// only rules referring to PortAccess_APP_SERVICES AuthServiceGroupName and AuthServiceName should be specified or expected.
 		if rule.Access == grpc_application_go.PortAccess_APP_SERVICES {
+
 			_, exists = appGroups[rule.AuthServiceGroupName]
 			if ! exists {
-				return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
+				return derrors.NewFailedPreconditionError("Auth Service Group Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName)
 			}
 			for _, serviceName := range rule.AuthServices {
 				_, exists = appServices[serviceName]
 				if ! exists {
-					return derrors.NewFailedPreconditionError("Service Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
+					return derrors.NewFailedPreconditionError("Auth Service Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
 				}
 			}
 		}else{
 			if rule.AuthServiceGroupName != ""{
-				return derrors.NewFailedPreconditionError("Auth Service Group Name should no be specified for selected access rule")
+				return derrors.NewFailedPreconditionError("Auth Service Group Name should no be specified for selected access rule").WithParams(rule.Name)
 			}
 			if len(rule.AuthServices) > 0  {
-				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule")
+				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule").WithParams(rule.Name)
 			}
 		}
 	}
