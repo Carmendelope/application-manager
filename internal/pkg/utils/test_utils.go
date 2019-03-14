@@ -174,6 +174,36 @@ func CreateFullAppDescriptor()* grpc_application_go.AddAppDescriptorRequest{
 	}
 }
 
+func CreateAppDescriptorWithoutGroups()* grpc_application_go.AddAppDescriptorRequest{
+
+	return &grpc_application_go.AddAppDescriptorRequest {
+		RequestId: 		uuid.New().String(),
+		OrganizationId:	uuid.New().String(),
+		Name: 			"descriptor-test",
+		Rules: 			[]*grpc_application_go.SecurityRule{
+			{
+				Name: "rule1",
+				TargetServiceGroupName: "g1",
+				TargetServiceName:"service1",
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
+				AuthServiceGroupName: "g2",
+				AuthServices: []string{"service3"},
+
+			},
+			{
+				Name: "rule2",
+				TargetServiceGroupName: "g2",
+				TargetServiceName:"service3",
+				Access: grpc_application_go.PortAccess_APP_SERVICES,
+				AuthServiceGroupName: "g1",
+				AuthServices: []string{"service1", "service2"},
+			},
+		},
+		Groups: 		[]*grpc_application_go.ServiceGroup{},
+		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
+	}
+}
+
 func CreateAppDescriptorWithRepeatedGroup()* grpc_application_go.AddAppDescriptorRequest{
 
 	return &grpc_application_go.AddAppDescriptorRequest {

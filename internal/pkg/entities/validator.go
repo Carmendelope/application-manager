@@ -230,11 +230,11 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 
 		_, exists := appGroups[rule.TargetServiceGroupName]
 		if ! exists {
-			return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
+			return derrors.NewFailedPreconditionError("Target Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.TargetServiceGroupName)
 		}
 		_, exists = appServices[rule.TargetServiceName]
 		if ! exists {
-			return derrors.NewFailedPreconditionError("Service Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
+			return derrors.NewFailedPreconditionError("Target Service Name in rule not found in services definition").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
 		}
 
 		// only rules referring to PortAccess_APP_SERVICES AuthServiceGroupName and AuthServiceName should be specified or expected.
@@ -242,12 +242,12 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 
 			_, exists = appGroups[rule.AuthServiceGroupName]
 			if ! exists {
-				return derrors.NewFailedPreconditionError("Auth Service Group Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName)
+				return derrors.NewFailedPreconditionError("Auth Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.AuthServiceGroupName)
 			}
 			for _, serviceName := range rule.AuthServices {
 				_, exists = appServices[serviceName]
 				if ! exists {
-					return derrors.NewFailedPreconditionError("Auth Service Name in rule not defined").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
+					return derrors.NewFailedPreconditionError("Auth Service Name in rule not found in services definition").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
 				}
 			}
 		}else{
@@ -256,6 +256,12 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 			}
 			if len(rule.AuthServices) > 0  {
 				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule").WithParams(rule.Name)
+			}
+			if rule.Access == grpc_application_go.PortAccess_DEVICE_GROUP{
+				// at least should be defined one device
+				if rule.DeviceGroupNames == nil || len(rule.DeviceGroupNames) <= 0 {
+					return derrors.NewFailedPreconditionError("Device group names in rule not defined").WithParams(rule.Name)
+				}
 			}
 		}
 	}
@@ -278,6 +284,11 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 	 // TODO: the service should be unique per group, not unique in the descriptor
 	appServices := make(map[string]bool)
 	appGroups := make(map[string]bool)
+
+	// at least one group should be defined
+	if appDescriptor.Groups == nil || len (appDescriptor.Groups) <=0 {
+		return derrors.NewFailedPreconditionError("at least one group should be defined")
+	}
 
 	// - Service and service group name are uniq (and they cannot be empty)
 	for _, appGroup := range appDescriptor.Groups {
