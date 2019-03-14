@@ -60,7 +60,7 @@ var _ = ginkgo.Describe("Application Descriptor Validations", func() {
 			err := entities.ValidDescriptorLogic(appDescriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
-		ginkgo.FIt("should not pass the validation (app descriptor without groups)", func(){
+		ginkgo.It("should not pass the validation (app descriptor without groups)", func(){
 			appDescriptor := utils.CreateAppDescriptorWithoutGroups()
 			err := entities.ValidDescriptorLogic(appDescriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())
