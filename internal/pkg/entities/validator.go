@@ -228,6 +228,11 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 	// - Rules refer to existing services
 	for _, rule := range appDescriptor.Rules{
 
+		// RuleId is filed by system model
+		if rule.RuleId != "" {
+			return derrors.NewFailedPreconditionError("Rule Id cannot be filled").WithParams(rule.Name)
+		}
+
 		_, exists := appGroups[rule.TargetServiceGroupName]
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Service Group Name in rule not defined").WithParams(rule.Name, rule.TargetServiceGroupName)
@@ -258,6 +263,11 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule").WithParams(rule.Name)
 			}
 		}
+
+		// RuleIds is filled by system-model
+		if rule.DeviceGroupIds != nil && len(rule.DeviceGroupIds) > 0 {
+			return derrors.NewFailedPreconditionError("Device Group Ids cannot be filled").WithParams(rule.Name)
+		}
 	}
 
 	return nil
@@ -281,9 +291,16 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 
 	// - Service and service group name are uniq (and they cannot be empty)
 	for _, appGroup := range appDescriptor.Groups {
+
 		if appGroup.Name == "" {
 			return derrors.NewFailedPreconditionError("Service Group Name cannot be empty")
 		}
+
+		// ServiceGroupId is filled by system-model
+		if appGroup.ServiceGroupId != ""{
+			return derrors.NewFailedPreconditionError("Service Group Id cannot be filled").WithParams(appGroup.Name)
+		}
+
 		_, exists := appGroups[appGroup.Name]
 		if exists {
 			return derrors.NewFailedPreconditionError("Service Group Name defined twice").WithParams(appGroup.Name)
@@ -293,11 +310,25 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 			if service.Name == "" {
 				return derrors.NewFailedPreconditionError("Service Name cannot be empty")
 			}
+			// ServiceId is filled by system-model
+			if service.ServiceId != "" {
+				return derrors.NewFailedPreconditionError("Service Id cannot be filled").WithParams(service.Name)
+			}
+
 			_ , exists := appServices[service.Name]
 			if exists {
 				return derrors.NewFailedPreconditionError("Service Name defined twice").WithParams(appGroup.Name, service.Name)
 			}
 			appServices[service.Name] = true
+
+			// ConfigFiledId is filled by system-model
+			if service.Configs != nil && len(service.Configs) > 0 {
+				for _, config := range service.Configs {
+					if config.ConfigFileId != "" {
+						return derrors.NewFailedPreconditionError("Config File Id cannot be filled").WithParams(config.Name)
+					}
+				}
+			}
 
 		}
 		appGroups[appGroup.Name] = true
