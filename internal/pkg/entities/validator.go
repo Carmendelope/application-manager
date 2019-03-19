@@ -325,6 +325,9 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 			if service.ServiceId != "" {
 				return derrors.NewFailedPreconditionError("Service Id cannot be filled").WithParams(service.Name)
 			}
+			if service.ServiceGroupId != "" {
+				return derrors.NewFailedPreconditionError("Service Group Id cannot be filled").WithParams(service.Name)
+			}
 
 			_ , exists := appServices[service.Name]
 			if exists {
