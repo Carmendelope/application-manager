@@ -20,8 +20,8 @@ func compareDeviceGroupId (instance *grpc_application_go.AppInstance, filter *gr
 
 	for _, rule := range instance.Rules {
 		if rule.Access == grpc_application_go.PortAccess_DEVICE_GROUP {
-			for _, groupId := range rule.DeviceGroupIds {
-				if groupId == filter.DeviceGroupId {
+			for _, groupName := range rule.DeviceGroupNames {
+				if groupName == filter.DeviceGroupName {
 					return true
 				}
 			}

@@ -107,7 +107,6 @@ func CreateAddAppDescriptorRequest(organizationID string, groups []string, label
 
 	group := &grpc_application_go.ServiceGroup{
 		OrganizationId:       organizationID,
-		ServiceGroupId:       uuid.New().String(),
 		Name:                 "g1",
 		Services:             []*grpc_application_go.Service{service},
 		Policy:               0,

@@ -35,7 +35,6 @@ import (
 func GetAddAppDescriptorRequest(name string, organizationID string) * grpc_application_go.AddAppDescriptorRequest{
 	service := &grpc_application_go.Service{
 		OrganizationId:       organizationID,
-		ServiceId:            "s1",
 		Name:                 "minimal-nginx",
 		Type:                 grpc_application_go.ServiceType_DOCKER,
 		Image:                "nginx:1.12",
@@ -328,7 +327,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: deviceGroupIds[0],
+				DeviceGroupName: deviceGroupNames[0],
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -355,7 +354,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: deviceGroupIds[0],
+				DeviceGroupName: deviceGroupNames[0],
 				MatchLabels: map[string]string{},
 			}
 			// RetrieveTargetApplications
@@ -369,7 +368,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: uuid.New().String(),
-				DeviceGroupId: uuid.New().String(),
+				DeviceGroupName: uuid.New().String(),
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -394,7 +393,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: uuid.New().String(),
+				DeviceGroupName: uuid.New().String(),
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -421,7 +420,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupId: uuid.New().String(),
+				DeviceGroupName: uuid.New().String(),
 				MatchLabels: map[string]string{"l1":"v2"},
 			}
 			// RetrieveTargetApplications
@@ -448,6 +447,16 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(instAdded).NotTo(gomega.BeNil())
 
+			list, err := appClient.AddServiceGroupInstances(context.Background(), &grpc_application_go.AddServiceGroupInstancesRequest{
+				OrganizationId: targetOrganization.OrganizationId,
+				AppDescriptorId: added.AppDescriptorId,
+				AppInstanceId: instAdded.AppInstanceId,
+				ServiceGroupId: added.Groups[0].ServiceGroupId,
+				NumInstances: 1,
+			})
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(list).NotTo(gomega.BeNil())
+
 			// add cluster
 			cluster, err := clusterClient.AddCluster(context.Background(), &grpc_infrastructure_go.AddClusterRequest{
 				RequestId: uuid.New().String(),
@@ -460,16 +469,19 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(cluster).NotTo(gomega.BeNil())
 
+
 			ei := &grpc_application_go.EndpointInstance{
 				Type:                 0,
 				Fqdn:                 "target.instance",
 			}
+
+
 			// update service status
 			success, err := appClient.UpdateServiceStatus(context.Background(), &grpc_application_go.UpdateServiceStatusRequest{
 				OrganizationId: targetOrganization.OrganizationId,
 				AppInstanceId: instAdded.AppInstanceId,
-				ServiceGroupInstanceId: instAdded.Groups[0].ServiceGroupInstanceId,
-				ServiceInstanceId: instAdded.Groups[0].ServiceInstances[0].ServiceInstanceId,
+				ServiceGroupInstanceId: list.ServiceGroupInstances[0].ServiceGroupInstanceId,
+				ServiceInstanceId: list.ServiceGroupInstances[0].ServiceInstances[0].ServiceInstanceId,
 				Status: grpc_application_go.ServiceStatus_SERVICE_RUNNING,
 				Endpoints: []*grpc_application_go.EndpointInstance{ei},
 				DeployedOnClusterId: cluster.ClusterId,
