@@ -30,19 +30,19 @@ var _ = ginkgo.Describe("Endpoints utils", func() {
 
 		var emptyFilter = &grpc_application_manager_go.ApplicationFilter{
 			OrganizationId:       "org1",
-			DeviceGroupId:        "desc1",
+			DeviceGroupName:        "desc1",
 			MatchLabels:          nil,
 		}
 
 		var noMatchGroupFilter = &grpc_application_manager_go.ApplicationFilter{
 			OrganizationId:       "org1",
-			DeviceGroupId:        "g2",
+			DeviceGroupName:        "g2",
 			MatchLabels:          map[string]string{"l1":"v1"},
 		}
 
 		var noMatchLabelFilter = &grpc_application_manager_go.ApplicationFilter{
 			OrganizationId:       "org1",
-			DeviceGroupId:        "g1",
+			DeviceGroupName:        "g1",
 			MatchLabels:          map[string]string{"l4":"v4"},
 		}
 
@@ -71,7 +71,7 @@ var _ = ginkgo.Describe("Endpoints utils", func() {
 		ginkgo.It("should return all apps on empty labels filter with proper group", func(){
 			var filter = &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId:       "org1",
-				DeviceGroupId:        "g1",
+				DeviceGroupName:        "g1",
 				MatchLabels:          nil,
 			}
 
@@ -83,7 +83,7 @@ var _ = ginkgo.Describe("Endpoints utils", func() {
 		ginkgo.It("should filter applications based on labels", func(){
 			var filter = &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId:       "org1",
-				DeviceGroupId:        "g1",
+				DeviceGroupName:        "g1",
 				MatchLabels:          map[string]string{"l1":"v1"},
 			}
 			result := ApplyFilter(allApps, filter)
