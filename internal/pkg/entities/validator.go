@@ -19,7 +19,7 @@ const emptyOrganizationId = "organization_id cannot be empty"
 const emptyDescriptorId = "app_descriptor_id cannot be empty"
 const emptyInstanceId = "app_instance_id cannot be empty"
 const emptyName = "name cannot be empty"
-const emptyDeviceGroupId = "device_group_id cannot be empty"
+const emptyDeviceGroupName = "device_group_name cannot be empty"
 const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
@@ -159,6 +159,9 @@ func ValidAppFilter (filter *grpc_application_manager_go.ApplicationFilter) derr
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
+	if filter.DeviceGroupName == ""{
+		return derrors.NewInvalidArgumentError(emptyDeviceGroupName)
+	}
 	return nil
 }
 
