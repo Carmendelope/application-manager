@@ -159,9 +159,6 @@ func ValidAppFilter (filter *grpc_application_manager_go.ApplicationFilter) derr
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
-	if filter.DeviceGroupId == ""{
-		return derrors.NewInvalidArgumentError(emptyDeviceGroupId)
-	}
 	return nil
 }
 
@@ -215,7 +212,7 @@ func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDesc
 		}
 		// - Multireplicate set cannot be set with number of replicas
 		if group.Specs != nil {
-			if group.Specs.MultiClusterReplica && group.Specs.NumReplicas > 0 {
+			if group.Specs.MultiClusterReplica && group.Specs.Replicas > 0 {
 				return derrors.NewFailedPreconditionError("Multireplicate set cannot be set with number of replicas").WithParams(group.Name)
 			}
 		}
