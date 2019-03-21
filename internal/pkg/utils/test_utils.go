@@ -159,7 +159,7 @@ func CreateFullAppDescriptor()* grpc_application_go.AddAppDescriptorRequest{
 					{Name: "service1",},
 					{Name: "service2",},},
 				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					NumReplicas: 3,
+					Replicas: 3,
 					MultiClusterReplica: false,
 				},
 			},
@@ -401,7 +401,7 @@ func CreateAppDescriptorWrongGroupDeploySpecs()* grpc_application_go.AddAppDescr
 					{Name: "service1",},
 					{Name: "service2",},},
 				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					NumReplicas: 3,
+					Replicas: 3,
 					MultiClusterReplica: true,
 				},
 			},
@@ -446,7 +446,7 @@ func CreateAppDescriptorServiceToService()* grpc_application_go.AddAppDescriptor
 					{Name: "service1",},
 					{Name: "service2",},},
 				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					NumReplicas: 3,
+					Replicas: 3,
 					MultiClusterReplica: false,
 				},
 			},
@@ -491,7 +491,7 @@ func CreateAppDescriptorWrongEnvironmentVariables()* grpc_application_go.AddAppD
 					{Name: "service1",},
 					{Name: "service2",},},
 				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					NumReplicas: 3,
+					Replicas: 3,
 					MultiClusterReplica: false,
 				},
 			},
@@ -536,7 +536,7 @@ func CreateAppDescriptorWithDeviceRules()* grpc_application_go.AddAppDescriptorR
 					{Name: "service1",},
 					{Name: "service2",},},
 				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					NumReplicas: 3,
+					Replicas: 3,
 					MultiClusterReplica: false,
 				},
 			},
@@ -582,7 +582,7 @@ func CreateAppDescriptorWithWrongDeviceRules()* grpc_application_go.AddAppDescri
 					{Name: "service1",},
 					{Name: "service2",},},
 				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					NumReplicas: 3,
+					Replicas: 3,
 					MultiClusterReplica: false,
 				},
 			},
