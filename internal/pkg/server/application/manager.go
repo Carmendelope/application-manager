@@ -12,6 +12,7 @@ import (
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-conductor-go"
+	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
@@ -22,15 +23,17 @@ import (
 type Manager struct {
 	appClient       grpc_application_go.ApplicationsClient
 	conductorClient grpc_conductor_go.ConductorClient
-	clusterClient grpc_infrastructure_go.ClustersClient
+	clusterClient   grpc_infrastructure_go.ClustersClient
+	deviceClient    grpc_device_go.DevicesClient
 }
 
 // NewManager creates a Manager using a set of clients.
 func NewManager(
 	appClient grpc_application_go.ApplicationsClient,
 	conductorClient grpc_conductor_go.ConductorClient,
-	clusterClient grpc_infrastructure_go.ClustersClient) Manager {
-	return Manager{appClient, conductorClient, clusterClient}
+	clusterClient grpc_infrastructure_go.ClustersClient,
+	deviceClient grpc_device_go.DevicesClient) Manager {
+	return Manager{appClient, conductorClient, clusterClient, deviceClient}
 }
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
@@ -111,6 +114,17 @@ func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstance
 
 func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplicationList, error){
 
+	// check if the device_group_id and device_group_name are correct
+	group, err := m.deviceClient.GetDeviceGroup(context.Background(), &grpc_device_go.DeviceGroupId{
+		OrganizationId: filter.OrganizationId,
+		DeviceGroupId: filter.DeviceGroupId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if group.Name != filter.DeviceGroupName {
+		return nil, conversions.ToGRPCError(derrors.NewPermissionDeniedError("cannot access device_group_name"))
+	}
 
 	orgID := &grpc_organization_go.OrganizationId{
 		OrganizationId:       filter.OrganizationId,
