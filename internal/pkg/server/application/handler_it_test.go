@@ -134,7 +134,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		test.LaunchServer(server, listener)
 
 		// Register the service
-		manager := NewManager(appClient, conductorClient, clusterClient)
+		manager := NewManager(appClient, conductorClient, clusterClient, deviceClient)
 		handler := NewHandler(manager)
 		grpc_application_manager_go.RegisterApplicationManagerServer(server, handler)
 
@@ -325,9 +325,11 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(instAdded).NotTo(gomega.BeNil())
 
+
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
 				DeviceGroupName: deviceGroupNames[0],
+				DeviceGroupId: deviceGroupIds[0],
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -355,6 +357,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
 				DeviceGroupName: deviceGroupNames[0],
+				DeviceGroupId: deviceGroupIds[0],
 				MatchLabels: map[string]string{},
 			}
 			// RetrieveTargetApplications
@@ -369,6 +372,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: uuid.New().String(),
 				DeviceGroupName: uuid.New().String(),
+				DeviceGroupId:uuid.New().String(),
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -379,7 +383,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		ginkgo.It("Should be able to retrieve an empty list (no match deviceGroupId)", func(){
 
 			// create descriptor
-			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, []string{deviceGroupNames[2]},
 				map[string]string{"l1":"v1", "l2":"v2"})
 			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -393,7 +397,8 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupName: uuid.New().String(),
+				DeviceGroupName: deviceGroupNames[1],
+				DeviceGroupId: deviceGroupIds[1],
 				MatchLabels: map[string]string{"l1":"v1"},
 			}
 			// RetrieveTargetApplications
@@ -420,7 +425,8 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 
 			filters := &grpc_application_manager_go.ApplicationFilter{
 				OrganizationId: targetOrganization.OrganizationId,
-				DeviceGroupName: uuid.New().String(),
+				DeviceGroupName: deviceGroupNames[0],
+				DeviceGroupId: deviceGroupIds[0],
 				MatchLabels: map[string]string{"l1":"v2"},
 			}
 			// RetrieveTargetApplications
@@ -428,6 +434,32 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(request).NotTo(gomega.BeNil())
 			gomega.Expect(len(request.Applications)).Should(gomega.Equal(0))
+
+		})
+		ginkgo.It("Should be able return an error when the deviceGroupID does not match the deviceGroupName", func(){
+
+			// create descriptor
+			descriptor := utils.CreateAddAppDescriptorRequest(targetOrganization.OrganizationId, deviceGroupNames,
+				map[string]string{"l1":"v1", "l2":"v2"})
+			added, err := appClient.AddAppDescriptor(context.Background(), descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added).NotTo(gomega.BeNil())
+
+			// add instance
+			instance := utils.CreateTestAppInstanceRequest(targetOrganization.OrganizationId, added.AppDescriptorId)
+			instAdded, err := appClient.AddAppInstance(context.Background(), instance)
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(instAdded).NotTo(gomega.BeNil())
+
+			filters := &grpc_application_manager_go.ApplicationFilter{
+				OrganizationId: targetOrganization.OrganizationId,
+				DeviceGroupName: deviceGroupNames[0],
+				DeviceGroupId: deviceGroupIds[1],
+				MatchLabels: map[string]string{"l1":"v2"},
+			}
+			// RetrieveTargetApplications
+			_, err = client.RetrieveTargetApplications(context.Background(), filters)
+			gomega.Expect(err).NotTo(gomega.Succeed())
 
 		})
 
