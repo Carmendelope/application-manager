@@ -143,6 +143,12 @@ func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.
 	return result, nil
 }
 
+func (m*Manager) fillEndpoints(endpoints []*grpc_application_go.EndpointInstance) {
+	for i:=0; i<len(endpoints); i++{
+		endpoints[i].Fqdn = fmt.Sprintf("%s:%d", endpoints[i].Fqdn, endpoints[i].Port)
+	}
+}
+
 func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.RetrieveEndpointsRequest) (*grpc_application_manager_go.ApplicationEndpoints, error){
 
 	instanceID := &grpc_application_go.AppInstanceId{
@@ -173,6 +179,8 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 				if err != nil {
 					return nil, err
 				}
+
+				m.fillEndpoints(service.Endpoints)
 
 				clusterEndPoint := &grpc_application_manager_go.ApplicationClusterEndpoints{
 					DeviceControllerUrl: fmt.Sprintf("device-controller.%s", cluster.Hostname),

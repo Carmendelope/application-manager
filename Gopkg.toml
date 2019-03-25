@@ -24,7 +24,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-go"
-    version="=v0.0.65"
+    version="=v0.0.66"
 
 
 [[constraint]]
