@@ -24,15 +24,15 @@ spec:
         component: application-manager
     spec:
       containers:
-      - name: application-manager
-        image: __NPH_REGISTRY.azurecr.io/__NPH_REGISTRY_NAMESPACE/application-manager:__NPH_VERSION
-        imagePullPolicy: Always
-        args:
-        - "run"
-        - "--debug"
-        - "--systemModelAddress=system-model.__NPH_NAMESPACE:8800"
-        - "--conductorAddress=conductor.__NPH_NAMESPACE:5000"
-        securityContext:
-          runAsUser: 2000
+        - name: application-manager
+          image: __NPH_REGISTRY/__NPH_REGISTRY_NAMESPACE/application-manager:__NPH_VERSION
+          imagePullPolicy: Always
+          args:
+            - "run"
+            - "--debug"
+            - "--systemModelAddress=system-model.__NPH_NAMESPACE:8800"
+            - "--conductorAddress=conductor.__NPH_NAMESPACE:5000"
+          securityContext:
+            runAsUser: 2000
       imagePullSecrets:
-      - name: nalej-registry
+        - name: nalej-registry
