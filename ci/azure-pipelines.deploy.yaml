@@ -1,5 +1,5 @@
-trigger:
-  - master
+# trigger:
+#   - master
 
 variables:
   - group: common-vars
@@ -13,8 +13,6 @@ variables:
     value: $(Agent.TempDirectory)/ci_kubeconfig.yaml
   - name: authorName
     value: ""
-  - name: authxSecret
-    value: "this-is-my-little-secret"
 
 resources:
   repositories:
