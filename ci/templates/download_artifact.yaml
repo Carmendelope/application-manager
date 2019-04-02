@@ -6,7 +6,7 @@ steps:
     inputs:
       buildType: "specific"
       project: "nalej"
-      pipeline: 11 # application-manager - Deployment
+      pipeline: 31 # application-manager - Deployment
       buildVersionToDownload: "latestFromBranch"
       branchName: "refs/heads/master"
       artifactName: testing-k8sYAMLfiles
