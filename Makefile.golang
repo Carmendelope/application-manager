@@ -116,14 +116,14 @@ yaml:
 			cd $(TARGET)/yaml/appcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_VERSION/$(VERSION)/g' && cd - > /dev/null ; \
 			cd $(TARGET)/yaml/appcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_NAMESPACE/nalej/g' && cd - > /dev/null ; \
 			cd $(TARGET)/yaml/appcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_REGISTRY_NAMESPACE/$(DOCKER_REPO)/g' && cd - > /dev/null ; \
-			cd $(TARGET)/yaml/appcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_REGISTRY/$(AZURE_CR)/g' && cd - > /dev/null ; \
+			cd $(TARGET)/yaml/appcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_REGISTRY/$(DOCKER_REGISTRY)/g' && cd - > /dev/null ; \
 		fi ; \
 		if [ -d components/"$$app"/mngtcluster ]; then \
 			cp components/"$$app"/mngtcluster/*.yaml $(TARGET)/yaml/mngtcluster/. ; \
 			cd $(TARGET)/yaml/mngtcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_VERSION/$(VERSION)/g' && cd - > /dev/null ; \
 			cd $(TARGET)/yaml/mngtcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_NAMESPACE/nalej/g' && cd - > /dev/null ; \
 			cd $(TARGET)/yaml/mngtcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_REGISTRY_NAMESPACE/$(DOCKER_REPO)/g' && cd - > /dev/null ; \
-			cd $(TARGET)/yaml/mngtcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_REGISTRY/$(AZURE_CR)/g' && cd - > /dev/null ; \
+			cd $(TARGET)/yaml/mngtcluster && find . -type f -name '*.yaml' | xargs sed -i '' 's/__NPH_REGISTRY/$(DOCKER_REGISTRY)/g' && cd - > /dev/null ; \
 		fi ; \
 	done
 
