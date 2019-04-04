@@ -11,3 +11,4 @@ steps:
       branchName: "refs/heads/master"
       artifactName: testing-k8sYAMLfiles
       downloadPath: ${{ parameters.downloadPath }}
+    displayName: Download application-manager YAML files
