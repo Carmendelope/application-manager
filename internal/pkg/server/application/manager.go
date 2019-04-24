@@ -19,7 +19,11 @@ import (
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/rs/zerolog/log"
 	"math/rand"
+	"time"
 )
+
+
+const DefaultTimeout =  time.Minute
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
@@ -82,7 +86,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	log.Debug().Interface("request", deployRequest).Msg("received deployment request")
 
 	// Retrieve descriptor by descriptorID
-	desc, err := m.appClient.GetAppDescriptor(context.Background(), &grpc_application_go.AppDescriptorId{
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancel()
+	desc, err := m.appClient.GetAppDescriptor(ctx, &grpc_application_go.AppDescriptorId{
 		OrganizationId: deployRequest.OrganizationId,
 		AppDescriptorId: deployRequest.AppDescriptorId,
 	})
@@ -106,7 +112,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 
 	// Add instance, by default this is created with queue status
-	instance, err := m.appClient.AddAppInstance(context.Background(), addReq)
+	ctxInstance, cancelInstance := context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancelInstance()
+	instance, err := m.appClient.AddAppInstance(ctxInstance, addReq)
 	if err != nil {
 		log.Error().Err(err).Msg("error adding application instance")
 		return nil, err
@@ -121,7 +129,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 
 	// Add parametrizedDescriptor in the system
-	_, err = m.appClient.AddParametrizedDescriptor(context.Background(), parametrizedDesc)
+	ctxParametrized, cancelParametrized := context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancelParametrized()
+	_, err = m.appClient.AddParametrizedDescriptor(ctxParametrized, parametrizedDesc)
 	if err != nil {
 		log.Error().Err(err).Msgf("error adding  parametrized descriptor %s. Delete instance", instance.AppInstanceId)
 		_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
@@ -138,7 +148,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		Name:                 deployRequest.Name,
 	}
 
-	_, err = m.conductorClient.Deploy(context.Background(), request)
+	ctxConductor, cancelConductor := context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancelConductor()
+	_, err = m.conductorClient.Deploy(ctxConductor, request)
 	if err != nil {
 		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
 		return nil, err

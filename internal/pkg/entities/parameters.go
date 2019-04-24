@@ -10,7 +10,6 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
-	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"strconv"
 )
@@ -35,6 +34,17 @@ func copySecurityRule (rule *grpc_application_go.SecurityRule) * grpc_applicatio
 	}
 }
 
+func copyServiceGroupSpecs(spec * grpc_application_go.ServiceGroupDeploymentSpecs) * grpc_application_go.ServiceGroupDeploymentSpecs {
+	if spec == nil {
+		return nil
+	}
+	return &grpc_application_go.ServiceGroupDeploymentSpecs{
+		Replicas: spec.Replicas,
+		MultiClusterReplica: spec.MultiClusterReplica,
+		DeploymentSelectors: spec.DeploymentSelectors,
+	}
+}
+
 // copyServiceGroup returns a copy of a given ServiceGroup
 func copyServiceGroup(group *grpc_application_go.ServiceGroup) *grpc_application_go.ServiceGroup {
 
@@ -54,7 +64,7 @@ func copyServiceGroup(group *grpc_application_go.ServiceGroup) *grpc_application
 		Name: group.Name,
 		Services: services,
 		Policy: group.Policy,
-		//Specs *ServiceGroupDeploymentSpecs `protobuf:"bytes,8,opt,name=specs,proto3" json:"specs,omitempty"`
+		Specs: copyServiceGroupSpecs(group.Specs),
 		Labels: group.Labels,
 	}
 }
@@ -234,12 +244,6 @@ func applyParameter (jsonParamDescriptor *string,
 
 	path := paramDefinition.Path
 
-	old := gjson.Get(*jsonParamDescriptor, path)
-	if old.Raw != "" {
-
-	}
-
-	// https://github.com/tidwall/sjson
 	json, err := sjson.Set(*jsonParamDescriptor, path, value)
 	if err != nil {
 		return  conversions.ToDerror(err)
