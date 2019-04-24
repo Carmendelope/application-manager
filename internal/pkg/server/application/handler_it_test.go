@@ -338,7 +338,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
 
 		})
-		ginkgo.FIt("Should be able to deploy a instance of a descriptor withs params", func() {
+		ginkgo.PIt("Should be able to deploy a instance of a descriptor withs params", func() {
 			// add the descriptor with params
 			added, err := client.AddAppDescriptor(context.Background(),
 				GetAddAppDescriptorWithParametersRequest("Descriptor with parameter", targetOrganization.OrganizationId))

@@ -200,12 +200,12 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:eade4ea6782f5eed4a6b3138a648f9a332900650804fd206e5daaf99cc5613ea"
+  digest = "1:0fde23d99b82798c9f1482d1cc0b298485043c7f288ae3f9cd9c8ee0c181e0e5"
   name = "github.com/tidwall/gjson"
   packages = ["."]
   pruneopts = ""
-  revision = "eee0b6226f0d1db2675a176fdfaa8419bcad4ca8"
-  version = "v1.2.1"
+  revision = "081192fa2e471ddff3ec98a3cc04fecfd031ed57"
+  version = "v1.1.4"
 
 [[projects]]
   digest = "1:72511ec1089fee111c995492d1d390a38ac7ab888aabdb1188985f2a1719c599"
@@ -214,14 +214,6 @@
   pruneopts = ""
   revision = "33827db735fff6510490d69a8622612558a557ed"
   version = "v1.0.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:1d7cab09854959fe179fe2f209400626f3dda9ec8e8b719c661d7b2add7b54b5"
-  name = "github.com/tidwall/pretty"
-  packages = ["."]
-  pruneopts = ""
-  revision = "1166b9ac2b65e46a43d8618d30d1554f4652d49b"
 
 [[projects]]
   digest = "1:04a1f04f50d734222dc3da57368771a1d6a4e4c7418d19e17285d7c1d1936939"
@@ -407,6 +399,7 @@
     "github.com/rs/zerolog",
     "github.com/rs/zerolog/log",
     "github.com/spf13/cobra",
+    "github.com/tidwall/gjson",
     "github.com/tidwall/sjson",
     "google.golang.org/grpc",
     "google.golang.org/grpc/reflection",
