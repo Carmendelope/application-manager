@@ -7,6 +7,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
@@ -16,6 +17,7 @@ import (
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/rs/zerolog/log"
 	"math/rand"
 )
 
@@ -75,22 +77,82 @@ func (m * Manager)  RemoveAppDescriptor(appDescriptorID *grpc_application_go.App
 }
 
 // Deploy an application descriptor.
-func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_conductor_go.DeploymentResponse, error) {
-	//TODO NP-249 Create the instance and pass it to conductor
+func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
 
-	appDescriptorID := &grpc_application_go.AppDescriptorId{
-		OrganizationId:       deployRequest.OrganizationId,
-		AppDescriptorId:      deployRequest.AppDescriptorId,
+	log.Debug().Interface("request", deployRequest).Msg("received deployment request")
+
+	// Retrieve descriptor by descriptorID
+	desc, err := m.appClient.GetAppDescriptor(context.Background(), &grpc_application_go.AppDescriptorId{
+		OrganizationId: deployRequest.OrganizationId,
+		AppDescriptorId: deployRequest.AppDescriptorId,
+	})
+	if err!= nil {
+		log.Error().Err(err).Msgf("error getting application descriptor %s", deployRequest.AppDescriptorId)
+		return nil,err
 	}
 
+	// Create it parametrized descriptor
+	parametrizedDesc, err := entities.CreateParametrizedDescriptor(desc, deployRequest.Parameters)
+	if err != nil {
+		log.Error().Err(err).Msgf("error creating  parametrized descriptor %s.", deployRequest.AppDescriptorId)
+		return nil, err
+	}
+
+	// Create new application instance
+	addReq := &grpc_application_go.AddAppInstanceRequest{
+		OrganizationId: deployRequest.OrganizationId,
+		AppDescriptorId: deployRequest.AppDescriptorId,
+		Name: deployRequest.Name,
+	}
+
+	// Add instance, by default this is created with queue status
+	instance, err := m.appClient.AddAppInstance(context.Background(), addReq)
+	if err != nil {
+		log.Error().Err(err).Msg("error adding application instance")
+		return nil, err
+	}
+
+	// fill the instance_id in the parametrized descriptor
+	parametrizedDesc.AppInstanceId = instance.AppInstanceId
+
+	appInstanceID := &grpc_application_go.AppInstanceId{
+		OrganizationId:     deployRequest.OrganizationId,
+		AppInstanceId:      instance.AppInstanceId,
+	}
+
+	// Add parametrizedDescriptor in the system
+	_, err = m.appClient.AddParametrizedDescriptor(context.Background(), parametrizedDesc)
+	if err != nil {
+		log.Error().Err(err).Msgf("error adding  parametrized descriptor %s. Delete instance", instance.AppInstanceId)
+		_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
+		if rollbackErr != nil {
+			log.Error().Err(err).Msgf("error in rollback deleting the instance %s", instance.AppInstanceId)
+		}
+		return nil, err
+	}
+
+	// send deploy command to conductor
 	request := &grpc_conductor_go.DeploymentRequest{
 		RequestId:            fmt.Sprintf("app-mngr-%d", rand.Int()),
-		AppId:                appDescriptorID,
+		AppInstanceId:        appInstanceID,
 		Name:                 deployRequest.Name,
-		Description:          deployRequest.Description,
 	}
 
-	return m.conductorClient.Deploy(context.Background(), request)
+	_, err = m.conductorClient.Deploy(context.Background(), request)
+	if err != nil {
+		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
+		return nil, err
+	}
+
+	toReturn := grpc_application_manager_go.DeploymentResponse{
+		RequestId:     fmt.Sprintf("app-mngr-%d", rand.Int()),
+		AppInstanceId: instance.AppInstanceId,
+		Status:        grpc_application_go.ApplicationStatus_QUEUED}
+
+	log.Debug().Interface("deploymentResponse", toReturn).Msg("Response")
+
+	return &toReturn, nil
+
 }
 
 // Undeploy a running application instance.

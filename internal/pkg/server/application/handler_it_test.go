@@ -65,8 +65,57 @@ func GetAddAppDescriptorRequest(name string, organizationID string) * grpc_appli
 	return toAdd
 }
 
+func GetAddAppDescriptorWithParametersRequest(name string, organizationID string) * grpc_application_go.AddAppDescriptorRequest{
+	service := &grpc_application_go.Service{
+		OrganizationId:       organizationID,
+		Name:                 "minimal-nginx",
+		Type:                 grpc_application_go.ServiceType_DOCKER,
+		Image:                "nginx:1.12",
+		Specs:                &grpc_application_go.DeploySpecs{
+			Replicas:             1,
+		},
+	}
+
+	group := &grpc_application_go.ServiceGroup{
+		OrganizationId:       organizationID,
+		Name:                 "g1",
+		Services:             []*grpc_application_go.Service{service},
+		Policy:               0,
+		Specs:                nil,
+		Labels:               nil,
+	}
+	parameter := &grpc_application_go.AppParameter{
+		Name: "replicas",
+		Description: "replicas",
+		Path: "groups.0.services.0.specs.replicas",
+		Type: grpc_application_go.ParamDataType_INTEGER,
+		Category:grpc_application_go.ParamCategory_BASIC,
+
+	}
+
+	toAdd := &grpc_application_go.AddAppDescriptorRequest{
+		RequestId:            fmt.Sprintf("application-manager-it-%d", ginkgo.GinkgoRandomSeed()),
+		OrganizationId:       organizationID,
+		Name:                 fmt.Sprintf("%s-app-manager-it-%d", name, ginkgo.GinkgoRandomSeed()),
+		ConfigurationOptions: nil,
+		EnvironmentVariables: nil,
+		Labels:               nil,
+		Rules:                nil,
+		Groups:               []*grpc_application_go.ServiceGroup{group},
+		Parameters:           []*grpc_application_go.AppParameter{parameter},
+	}
+	return toAdd
+}
+
 func CreateAppDescriptor(name string, organizationID string, appClient grpc_application_go.ApplicationsClient) * grpc_application_go.AppDescriptor{
 	toAdd := GetAddAppDescriptorRequest(name, organizationID)
+	desc, err := appClient.AddAppDescriptor(context.Background(), toAdd)
+	gomega.Expect(err).To(gomega.Succeed())
+	return desc
+}
+
+func CreateAppDescriptorWithParameters (name string, organizationID string, appClient grpc_application_go.ApplicationsClient) * grpc_application_go.AppDescriptor{
+	toAdd := GetAddAppDescriptorWithParametersRequest(name, organizationID)
 	desc, err := appClient.AddAppDescriptor(context.Background(), toAdd)
 	gomega.Expect(err).To(gomega.Succeed())
 	return desc
@@ -198,7 +247,6 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				OrganizationId:       targetAppDescriptor.OrganizationId,
 				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
 				Name:                 "test-deploy-app-manager",
-				Description:          "Test deploy from app mananager IT",
 			}
 			response, err := client.Deploy(context.Background(), deployRequest)
 			if err != nil {
@@ -213,7 +261,6 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				OrganizationId:       targetAppDescriptor.OrganizationId,
 				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
 				Name:                 "test-deploy-app-manager",
-				Description:          "Test deploy from app mananager IT",
 			}
 			response, err := client.Deploy(context.Background(), deployRequest)
 			if err != nil {
@@ -236,7 +283,6 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				OrganizationId:       targetAppDescriptor.OrganizationId,
 				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
 				Name:                 "test-deploy-app-manager",
-				Description:          "Test deploy from app mananager IT",
 			}
 			response, err := client.Deploy(context.Background(), deployRequest)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -253,7 +299,6 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				OrganizationId:       targetAppDescriptor.OrganizationId,
 				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
 				Name:                 "test-deploy-app-manager",
-				Description:          "Test deploy from app mananager IT",
 			}
 			response, err := client.Deploy(context.Background(), deployRequest)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -273,7 +318,6 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 				OrganizationId:       targetAppDescriptor.OrganizationId,
 				AppDescriptorId:      targetAppDescriptor.AppDescriptorId,
 				Name:                 "test-deploy-app-manager",
-				Description:          "Test deploy from app mananager IT",
 			}
 			_, err := client.Deploy(context.Background(), deployRequest)
 			gomega.Expect(err).To(gomega.Succeed())
@@ -284,6 +328,42 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(len(instances.Instances)).Should(gomega.Equal(1))
 		})
+
+		ginkgo.PIt("Should be able to add a descriptor with parameters", func(){
+			// add the descriptor with params
+			// TODO: Fill the default value
+			added, err := client.AddAppDescriptor(context.Background(),
+				GetAddAppDescriptorWithParametersRequest("Descriptor with parameter", targetOrganization.OrganizationId))
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
+
+		})
+		ginkgo.FIt("Should be able to deploy a instance of a descriptor withs params", func() {
+			// add the descriptor with params
+			added, err := client.AddAppDescriptor(context.Background(),
+				GetAddAppDescriptorWithParametersRequest("Descriptor with parameter", targetOrganization.OrganizationId))
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
+
+			// deploy it
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      added.AppDescriptorId,
+				Name:                 "test-deploy-app-manager-with-params",
+				Parameters:           &grpc_application_go.InstanceParameterList {
+					Parameters: []*grpc_application_go.InstanceParameter{{ParameterName:"replicas", Value:"2"}},
+				},
+			}
+			// TODO: waiting to conductor to be updated to check the deploy
+			response, err := client.Deploy(context.Background(), deployRequest)
+			if err != nil {
+				fmt.Println(conversions.ToDerror(err).DebugReport())
+			}
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+
+		})
+
 	})
 
 	ginkgo.Context("Devices", func(){

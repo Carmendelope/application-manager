@@ -549,6 +549,7 @@ func CreateAppDescriptorWithDeviceRules()* grpc_application_go.AddAppDescriptorR
 		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
 	}
 }
+
 func CreateAppDescriptorWithWrongDeviceRules()* grpc_application_go.AddAppDescriptorRequest{
 
 	return &grpc_application_go.AddAppDescriptorRequest {
@@ -593,5 +594,99 @@ func CreateAppDescriptorWithWrongDeviceRules()* grpc_application_go.AddAppDescri
 			},
 		},
 		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
+	}
+}
+
+func CreateTestDescriptor()* grpc_application_go.AppDescriptor{
+
+	return &grpc_application_go.AppDescriptor {
+		OrganizationId:		uuid.New().String(),
+		Name: 				"descriptor-test",
+		Rules: 				[]*grpc_application_go.SecurityRule{
+			{
+				Name: 					"rule1",
+				TargetServiceGroupName: "g1",
+				TargetServiceName:		"service1",
+				Access: 				grpc_application_go.PortAccess_APP_SERVICES,
+				AuthServiceGroupName: 	"g2",
+				AuthServices: 			[]string{"service3"},
+
+			},
+			{
+				Name: 					"rule2",
+				TargetServiceGroupName: "g2",
+				TargetServiceName:		"service3",
+				Access: 				grpc_application_go.PortAccess_APP_SERVICES,
+				AuthServiceGroupName: 	"g1",
+				AuthServices: 			[]string{"service1", "service2"},
+			},
+		},
+		Groups: 			[]*grpc_application_go.ServiceGroup{
+			{
+				Name:		"g1",
+				Services:	[]*grpc_application_go.Service{
+					{Name: "service1",},
+					{Name: "service2",},},
+				Specs: 		&grpc_application_go.ServiceGroupDeploymentSpecs{
+					Replicas: 3,
+					MultiClusterReplica: false,
+				},
+			},
+			{
+				Name:		"g2",
+				Services:	[]*grpc_application_go.Service{
+					{Name: "service3",},},
+			},
+		},
+		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
+	}
+}
+
+func CreateTestDescriptorWithParameters()* grpc_application_go.AppDescriptor{
+
+	return &grpc_application_go.AppDescriptor {
+		OrganizationId:		uuid.New().String(),
+		Name: 				"descriptor-test",
+		Rules: 				[]*grpc_application_go.SecurityRule{
+			{
+				Name: 					"rule1",
+				TargetServiceGroupName: "g1",
+				TargetServiceName:		"service1",
+				Access: 				grpc_application_go.PortAccess_APP_SERVICES,
+				AuthServiceGroupName: 	"g2",
+				AuthServices: 			[]string{"service3"},
+
+			},
+			{
+				Name: 					"rule2",
+				TargetServiceGroupName: "g2",
+				TargetServiceName:		"service3",
+				Access: 				grpc_application_go.PortAccess_APP_SERVICES,
+				AuthServiceGroupName: 	"g1",
+				AuthServices: 			[]string{"service1", "service2"},
+			},
+		},
+		Groups: 			[]*grpc_application_go.ServiceGroup{
+			{
+				Name:		"g1",
+				Services:	[]*grpc_application_go.Service{
+					{Name: "service1", EnvironmentVariables: map[string]string{"env1":"val1", "env2":"val2"}},
+					{Name: "service2",},},
+				Specs: 		&grpc_application_go.ServiceGroupDeploymentSpecs{
+					Replicas: 3,
+					MultiClusterReplica: false,
+				},
+			},
+			{
+				Name:		"g2",
+				Services:	[]*grpc_application_go.Service{
+					{Name: "service3",},},
+			},
+		},
+		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
+		Parameters: []*grpc_application_go.AppParameter{{Name:"replicas", Description:"replicas", Path:"groups.0.specs.replicas",
+				Type: grpc_application_go.ParamDataType_INTEGER, Category:grpc_application_go.ParamCategory_BASIC},
+				{Name:"env1", Description: "service 1 environment variable", Path:"groups.0.services.0.environment_variables.env1",
+				Type: grpc_application_go.ParamDataType_STRING, Category:grpc_application_go.ParamCategory_BASIC}},
 	}
 }
