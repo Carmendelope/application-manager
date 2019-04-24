@@ -10,7 +10,6 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-common-go"
-	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/rs/zerolog/log"
@@ -75,7 +74,7 @@ func (h*Handler) RemoveAppDescriptor(ctx context.Context, appDescriptorID *grpc_
 }
 
 // Deploy an application descriptor.
-func (h * Handler) Deploy(ctx context.Context, deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_conductor_go.DeploymentResponse, error) {
+func (h * Handler) Deploy(ctx context.Context, deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
 	log.Debug().Str("organizationID", deployRequest.OrganizationId).
 		Str("appDescriptorId", deployRequest.AppDescriptorId).Msg("deploy application")
 	vErr := entities.ValidDeployRequest(deployRequest)
