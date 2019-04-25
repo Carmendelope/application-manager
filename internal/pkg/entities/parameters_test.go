@@ -58,6 +58,22 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			_, err := CreateParametrizedDescriptor(descriptor, &parameters)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
+		ginkgo.It("must recognize the parameters as valid", func() {
+
+			descriptor := utils.CreateTestAddDescriptorWithParameters()
+			err := ValidateDescriptorParameters(descriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+		})
+		ginkgo.It("must recognize the parameters as valid (name defined twice)", func() {
+
+			descriptor := utils.CreateTestAddDescriptorWithParameters()
+			descriptor.Parameters = append(descriptor.Parameters, &grpc_application_go.AppParameter{
+				Name:descriptor.Parameters[0].Name,
+				Type:descriptor.Parameters[0].Type,
+				Path:descriptor.Parameters[0].Path})
+			err := ValidateDescriptorParameters(descriptor)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
 
 	})
 

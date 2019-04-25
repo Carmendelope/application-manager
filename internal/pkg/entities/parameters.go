@@ -10,9 +10,17 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"strconv"
+	"strings"
 )
+
+const nalejPrefix= "NALEJ_"
+const invalidParamName = "invalid param name"
+const invalidParamPath = "invalid param path"
+const invalidParamType = "invalid param type"
+const paramDefinedTwice = "param name defined twice"
 
 // copySecurityRule returns a copy of a given securityRule
 func copySecurityRule (rule *grpc_application_go.SecurityRule) * grpc_application_go.SecurityRule {
@@ -346,4 +354,117 @@ func CreateParametrizedDescriptor (descriptor *grpc_application_go.AppDescriptor
 
 
 		return parametrized, nil
+}
+
+// validateParamName checks the param name does not start whit "NALEJ_"
+func validateParamName (name string) derrors.Error {
+	if strings.HasPrefix(name,nalejPrefix) {
+		return derrors.NewInvalidArgumentError(invalidParamName).WithParams(name)
+	}
+	return nil
+}
+
+// validateParamPath validates that the path allows access to a defined field
+func validateParamPath (jsonDescriptor string, param *grpc_application_go.AppParameter) (gjson.Result, derrors.Error) {
+
+	path := param.Path
+	field := gjson.Get(jsonDescriptor, path)
+	if ! field.Exists() {
+		return field, derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
+	}
+
+	return field, nil
+}
+// validateParamType validates that the defined type corresponds to the value by default
+func validateParamType (field gjson.Result, param *grpc_application_go.AppParameter) derrors.Error {
+
+	fieldType := field.Type
+	// validate Type
+	switch param.Type {
+	case grpc_application_go.ParamDataType_BOOLEAN:
+		if fieldType != gjson.False && fieldType != gjson.True {
+			return derrors.NewInvalidArgumentError(invalidParamType).WithParams(param.Name)
+		}
+	case grpc_application_go.ParamDataType_INTEGER:
+		if fieldType != gjson.Number {
+			return derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
+		}
+	case grpc_application_go.ParamDataType_FLOAT:
+		if fieldType != gjson.Number {
+			return derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
+		}
+	case grpc_application_go.ParamDataType_ENUM:
+		if fieldType != gjson.String {
+			return derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
+		}
+	case grpc_application_go.ParamDataType_STRING:
+		if fieldType != gjson.String {
+			return derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
+		}
+	case grpc_application_go.ParamDataType_PASSWORD:
+		if fieldType != gjson.String {
+			return derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
+		}
+	}
+
+	return nil
+}
+
+// validateAllowedParameter validates that the path is form a allowed field
+func validateAllowedParameter (param *grpc_application_go.AppParameter) derrors.Error {
+	return nil
+}
+
+// ValidateDescriptorParameters validates the parameter has correct format, the path is allowed (field can be updated) and the name is correct (no starts with NALEJ_)
+func ValidateDescriptorParameters (descriptor *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+
+	// we need to convert the parametrized descriptor to json get values
+	newDescriptor, err:= json.Marshal(descriptor)
+	if err != nil {
+		return conversions.ToDerror(err)
+	}
+
+	jsonDescriptor := string(newDescriptor)
+
+	paramNames := make(map[string]bool, 0)
+
+
+	for i:=0; i< len(descriptor.Parameters); i++ {
+		param := descriptor.Parameters[i]
+
+		// validate name
+		name:= strings.ToUpper(strings.TrimLeft(param.Name, "") )
+		valErr := validateParamName(name)
+		if valErr != nil {
+			return valErr
+		}
+		// check the name is not defined twice
+		exists,_ := paramNames[name]
+		if exists {
+			return derrors.NewInvalidArgumentError(paramDefinedTwice).WithParams(param.Name)
+		}
+		paramNames[name] = true
+
+		// validate param path and type
+		field, valErr := validateParamPath(jsonDescriptor, param)
+		if valErr != nil {
+			return valErr
+		}
+
+		// validate type
+		valErr = validateParamType(field, param)
+		if valErr != nil {
+			return valErr
+		}
+		// default_value
+		param.DefaultValue = field.String()
+
+		valErr = validateAllowedParameter(param)
+		if valErr != nil {
+			return valErr
+		}
+
+	}
+	return nil
+
 }

@@ -44,6 +44,14 @@ func NewManager(
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
 func (m * Manager) AddAppDescriptor(addDescriptorRequest *grpc_application_go.AddAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
+
+
+	// before add appDescriptor, validate parameters
+	err := entities.ValidateDescriptorParameters(addDescriptorRequest)
+	if err != nil {
+		return nil, conversions.ToGRPCError(err)
+	}
+
 	return m.appClient.AddAppDescriptor(context.Background(), addDescriptorRequest)
 }
 
