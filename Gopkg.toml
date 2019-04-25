@@ -29,7 +29,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-manager-go"
-    version="=v0.0.32"
+    version="=v0.0.34"
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"

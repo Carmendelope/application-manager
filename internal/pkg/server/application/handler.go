@@ -113,6 +113,23 @@ func (h * Handler) GetAppInstance(ctx context.Context, appInstanceID *grpc_appli
 	return h.Manager.GetAppInstance(appInstanceID)
 }
 
+// ListInstanceParameters retrieves a list of instance parameters
+func (h * Handler)  ListInstanceParameters (ctx context.Context, appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {
+	vErr := entities.ValidAppInstanceID(appInstanceID)
+	if vErr != nil {
+		return nil, conversions.ToGRPCError(vErr)
+	}
+	return h.Manager.ListInstanceParameters(appInstanceID)
+}
+
+func (h * Handler)  ListDescriptorAppParameters (ctx context.Context, descriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppParameterList, error) {
+	vErr := entities.ValidAppDescriptorID(descriptorID)
+	if vErr != nil {
+		return nil, conversions.ToGRPCError(vErr)
+	}
+	return h.Manager.ListDescriptorAppParameters(descriptorID)
+}
+
 func (h * Handler) RetrieveTargetApplications(ctx context.Context, filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplicationList, error){
 	vErr := entities.ValidAppFilter(filter)
 	if vErr != nil {
