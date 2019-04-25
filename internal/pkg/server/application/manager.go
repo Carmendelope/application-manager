@@ -117,6 +117,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		OrganizationId: deployRequest.OrganizationId,
 		AppDescriptorId: deployRequest.AppDescriptorId,
 		Name: deployRequest.Name,
+		Parameters: deployRequest.Parameters,
 	}
 
 	// Add instance, by default this is created with queue status
