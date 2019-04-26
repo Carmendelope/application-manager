@@ -195,6 +195,15 @@ func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstance
 	return m.appClient.GetAppInstance(context.Background(), appInstanceID)
 }
 
+func (m * Manager)  ListInstanceParameters (appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {
+	return m.appClient.GetInstanceParameters(context.Background(), appInstanceID)
+}
+
+func (m * Manager)  ListDescriptorAppParameters (descriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppParameterList, error) {
+	return m.appClient.GetDescriptorAppParameters(context.Background(), descriptorID)
+}
+
+
 func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplicationList, error){
 
 	// check if the device_group_id and device_group_name are correct
