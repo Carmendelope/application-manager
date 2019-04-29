@@ -32,6 +32,7 @@ spec:
             - "--debug"
             - "--systemModelAddress=system-model.__NPH_NAMESPACE:8800"
             - "--conductorAddress=conductor.__NPH_NAMESPACE:5000"
+            - "--queueAddress=pulsar.__NPH_NAMESPACE:6550"
           securityContext:
             runAsUser: 2000
       imagePullSecrets:

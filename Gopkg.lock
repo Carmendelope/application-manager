@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  digest = "1:4202ab09395574fdc038cf334a5e3c6887fb41dfd281bbc6007becc115cb44b4"
+  name = "github.com/Comcast/pulsar-client-go"
+  packages = [
+    ".",
+    "api",
+    "frame",
+  ]
+  pruneopts = ""
+  revision = "d669484e60e7f709498a119f36ed060ed0c1eeed"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:529d738b7976c3848cae5cf3a8036440166835e389c1f617af701eeb12a0518d"
   name = "github.com/golang/protobuf"
   packages = [
@@ -71,6 +83,22 @@
   version = "v0.0.34"
 
 [[projects]]
+  digest = "1:e89a6f10b6a421e651ecf6f8a60c997025580a4fa29c20ce8d5eb6662382d1c5"
+  name = "github.com/nalej/grpc-authx-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "f6e5ce8ddada07ff2f802b64c004e6e760284cd5"
+  version = "v0.0.46"
+
+[[projects]]
+  digest = "1:c64e8299f942d00785d7129c4a2b65d319924d0e4b323bcc1e7be0a151c296bb"
+  name = "github.com/nalej/grpc-bus-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "49a94e06cf3a2e091dddd7b1f12d06b58953a927"
+  version = "v0.0.1"
+
+[[projects]]
   digest = "1:44f7426538411ea9f774f96e3b102decc9f549b188e55e29ecc15be69542a96b"
   name = "github.com/nalej/grpc-common-go"
   packages = ["."]
@@ -79,12 +107,12 @@
   version = "v0.0.30"
 
 [[projects]]
-  digest = "1:3974afbfa67f9a632312b0e1a561054f81504812adabc880e16645dec04c93dd"
+  digest = "1:1c4e0c8d913747fefcff6c15151bbb30cad22a122b9cf723a04621b20ac3753b"
   name = "github.com/nalej/grpc-conductor-go"
   packages = ["."]
   pruneopts = ""
-  revision = "d6126a7e533cf39a1f7c705219ec9ab18f924996"
-  version = "v0.0.88"
+  revision = "78140c187266b77930cde36206fd5098bd894284"
+  version = "v0.0.89"
 
 [[projects]]
   digest = "1:1920b2eec79835636c20bfe1b5aafc6e4e5161a04cac4ee030de14425107c530"
@@ -103,12 +131,36 @@
   version = "v0.0.34"
 
 [[projects]]
+  digest = "1:09fb41dc9fd129e4021f026f8be8aa8d36e2b9a55cf2c66d5289fe8d726845aa"
+  name = "github.com/nalej/grpc-inventory-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "b3f09bbfc45a996be12f67d8cb5c0820d94c7e3a"
+  version = "v0.0.4"
+
+[[projects]]
+  digest = "1:67001bf5758aff7d6f0dbca4911411d976c3cb2b971c6ad72c8e3487f6b3b746"
+  name = "github.com/nalej/grpc-inventory-manager-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "a56fba6a42f6e7059c5a4b13df2b07b9f4b98855"
+  version = "v0.0.5"
+
+[[projects]]
   digest = "1:9921e275160e1559963d6452a918027db3563746fd03f63369ab104c0fbf16bf"
   name = "github.com/nalej/grpc-organization-go"
   packages = ["."]
   pruneopts = ""
   revision = "c571882666c05213df408ae9da8ab08f71a7a7bb"
   version = "v0.0.28"
+
+[[projects]]
+  digest = "1:10fc9b68ee6cadf220c5a9268711c2521806cc96e77ac132f67451ea2950954e"
+  name = "github.com/nalej/grpc-user-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "05ecf0dd7746f97320758e963b10e398c1725179"
+  version = "v0.0.30"
 
 [[projects]]
   digest = "1:347aace88c837e2b1b65a7c603e1b74066e3ad9c26343a2001649e3a2354591b"
@@ -121,6 +173,19 @@
   pruneopts = ""
   revision = "926e5152669ee71c0e6904055ebe6cfb5492b599"
   version = "v1.4.0"
+
+[[projects]]
+  branch = "feature/NP-1264_application_ops_wrapper"
+  digest = "1:e2a73aad56b69559d96cf6a95deab1ddd88226c6c996a6fb0ba73544755a8f91"
+  name = "github.com/nalej/nalej-bus"
+  packages = [
+    "pkg/bus",
+    "pkg/bus/pulsar-comcast",
+    "pkg/queue",
+    "pkg/queue/application/ops",
+  ]
+  pruneopts = ""
+  revision = "493451cf1342a756c9a74d469bdfa39703ca3c74"
 
 [[projects]]
   digest = "1:a3735b0978a8b53fc2ac97a6f46ca1189f0712a00df86d6ec4cf26c1a25e6d77"
@@ -384,6 +449,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/golang/protobuf/proto",
     "github.com/google/uuid",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
@@ -396,6 +462,9 @@
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
     "github.com/nalej/grpc-utils/pkg/tools",
+    "github.com/nalej/nalej-bus/pkg/bus",
+    "github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast",
+    "github.com/nalej/nalej-bus/pkg/queue/application/ops",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/rs/zerolog",

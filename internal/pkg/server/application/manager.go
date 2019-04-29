@@ -7,6 +7,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
@@ -31,6 +32,7 @@ type Manager struct {
 	conductorClient grpc_conductor_go.ConductorClient
 	clusterClient   grpc_infrastructure_go.ClustersClient
 	deviceClient    grpc_device_go.DevicesClient
+	busManager		*bus.BusManager
 }
 
 // NewManager creates a Manager using a set of clients.
@@ -38,8 +40,9 @@ func NewManager(
 	appClient grpc_application_go.ApplicationsClient,
 	conductorClient grpc_conductor_go.ConductorClient,
 	clusterClient grpc_infrastructure_go.ClustersClient,
-	deviceClient grpc_device_go.DevicesClient) Manager {
-	return Manager{appClient, conductorClient, clusterClient, deviceClient}
+	deviceClient grpc_device_go.DevicesClient,
+	busManager *bus.BusManager) Manager {
+	return Manager{appClient, conductorClient, clusterClient, deviceClient, busManager}
 }
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
@@ -120,7 +123,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		Parameters: deployRequest.Parameters,
 	}
 
-	// Add instance, by default this is created with queue status
+	// Add instance, by default this is created with bus status
 	ctxInstance, cancelInstance := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancelInstance()
 	instance, err := m.appClient.AddAppInstance(ctxInstance, addReq)
@@ -177,9 +180,17 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		Name:                 deployRequest.Name,
 	}
 
+	/*
 	ctxConductor, cancelConductor := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancelConductor()
 	_, err = m.conductorClient.Deploy(ctxConductor, request)
+	if err != nil {
+		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
+		return nil, err
+	}
+	*/
+
+	err = m.busManager.Send(request)
 	if err != nil {
 		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
 		return nil, err
