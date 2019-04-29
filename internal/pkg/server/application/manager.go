@@ -140,7 +140,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	// Add parametrizedDescriptor in the system
 	ctxParametrized, cancelParametrized := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancelParametrized()
-	_, err = m.appClient.AddParametrizedDescriptor(ctxParametrized, parametrizedDesc)
+	newDesc , err := m.appClient.AddParametrizedDescriptor(ctxParametrized, parametrizedDesc)
 	if err != nil {
 		log.Error().Err(err).Msgf("error adding  parametrized descriptor %s. Delete instance", instance.AppInstanceId)
 		_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
@@ -148,6 +148,26 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 			log.Error().Err(err).Msgf("error in rollback deleting the instance %s", instance.AppInstanceId)
 		}
 		return nil, err
+	}
+
+	// update the instance with the rules parametrized
+	if len(parametrizedDesc.Rules) > 0 {
+		ctxUpdateInstance, cancelUpdate := context.WithTimeout(context.Background(), DefaultTimeout)
+		defer cancelUpdate()
+		_, err = m.appClient.UpdateRulesInstance(ctxUpdateInstance, &grpc_application_go.UpdateRulesRequest{
+			OrganizationId:deployRequest.OrganizationId,
+			AppInstanceId: instance.AppInstanceId,
+			Rules: newDesc.Rules,
+		})
+		if err != nil {
+			log.Error().Err(err).Msgf("error updating rules %s. Delete instance", instance.AppInstanceId)
+			_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
+			if rollbackErr != nil {
+				log.Error().Err(err).Msgf("error in rollback deleting the instance %s", instance.AppInstanceId)
+			}
+			return nil, err
+		}
+
 	}
 
 	// send deploy command to conductor
@@ -226,6 +246,7 @@ func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.
 	if err != nil{
 		return nil, err
 	}
+
 	filtered := ApplyFilter(allApps, filter)
 
 	result, fErr := ToApplicationLabelsList(filtered)
