@@ -12,6 +12,33 @@ import (
 )
 
 
+func createAllowedPathParameters() []*grpc_application_go.AppParameter{
+
+	return []*grpc_application_go.AppParameter{
+		{Path:"groups.0.services.0.environment_variables.ORGANIZATION_ID"},
+		{Path:"groups.10.services.0.specs.cpu"},
+		{Path:"groups.10.services.0.storage.1.size"},
+		{Path:"rules.11.device_group_names.0"},
+		{Path:"configuration_options.CONF_ID"},
+		{Path:"environment_variables.HOST_ID"},
+		{Path:"labels.LABEL_NAME"},
+		{Path:"rules.11.device_group_names.0"},
+		{Path:"groups.0.policy.0.environment_variables.ORGANIZATION_ID"},
+		{Path:"groups.0.specs.replicas"},
+	}
+}
+
+func createNotAllowedPathParameters() []*grpc_application_go.AppParameter{
+
+	return []*grpc_application_go.AppParameter{
+		{Path:"groups.10.services.0.storage.1.mount_path"},
+		{Path:"rules.11.auth_service_group_name"},
+		{Path:"groups.0.services.0.credentials.username"},
+		{Path:"groups.10.services.0.exposed_ports.2.internal_port"},
+		{Path:"groups.10.services.0.deploy_after.2"},
+	}
+}
+
 var _ = ginkgo.Describe("Parameter tests", func() {
 
 	ginkgo.Context("Parametrized descriptor", func(){
@@ -73,6 +100,22 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 				Path:descriptor.Parameters[0].Path})
 			err := ValidateDescriptorParameters(descriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+		ginkgo.It("should be able to validate allowed parameters", func () {
+			params := createAllowedPathParameters()
+			for _, p := range params {
+				err := validateAllowedParameter(p)
+				gomega.Expect(err).To(gomega.BeNil())
+			}
+
+		})
+		ginkgo.It("should not be able to validate allowed parameters", func () {
+			params := createNotAllowedPathParameters()
+			for _, p := range params {
+				err := validateAllowedParameter(p)
+				gomega.Expect(err).NotTo(gomega.BeNil())
+			}
+
 		})
 
 	})
