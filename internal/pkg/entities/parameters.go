@@ -12,6 +12,7 @@ import (
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -21,6 +22,18 @@ const invalidParamName = "invalid param name"
 const invalidParamPath = "invalid param path"
 const invalidParamType = "invalid param type"
 const paramDefinedTwice = "param name defined twice"
+const paramNotAllowed = "param not allowed"
+
+// regular expression that allows to validate the path of the allowed parameters
+const paramRootRegex = "(^configuration_options\\.)|(^environment_variables\\.)|(^labels\\.)"
+const paramRulesRegex = "(^rules\\.[0-9]+\\.device_group_names\\.[0-9]+)"
+const paramGroupsRegex = "(^groups\\.[0-9]+\\.services\\.[0-9]+\\.specs\\.)" +
+	 "|(^groups\\.[0-9]+\\.services\\.[0-9]+\\.)(environment_variables\\.|run_arguments\\.|storage\\.[0-9]+\\.(size|type))|" +
+     "(^groups\\.[0-9]+\\.)(specs|labels|policy)"
+
+const paramRegex = paramRootRegex + "|" + paramRulesRegex + "|" + paramGroupsRegex
+
+
 
 // copySecurityRule returns a copy of a given securityRule
 func copySecurityRule (rule *grpc_application_go.SecurityRule) * grpc_application_go.SecurityRule {
@@ -412,6 +425,14 @@ func validateParamType (field gjson.Result, param *grpc_application_go.AppParame
 
 // validateAllowedParameter validates that the path is form a allowed field
 func validateAllowedParameter (param *grpc_application_go.AppParameter) derrors.Error {
+
+	matched, err := regexp.Match(paramRegex, []byte(param.Path))
+	if err != nil {
+		return conversions.ToDerror(err)
+	}
+	if matched == false {
+		return derrors.NewInvalidArgumentError(paramNotAllowed).WithParams(param.Path)
+	}
 	return nil
 }
 
