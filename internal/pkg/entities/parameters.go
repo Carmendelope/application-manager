@@ -383,6 +383,11 @@ func validateParamPath (jsonDescriptor string, param *grpc_application_go.AppPar
 	path := param.Path
 	field := gjson.Get(jsonDescriptor, path)
 	if ! field.Exists() {
+		// when we have an integer with value 0: Unmarsall functions considers it empty, so it does not treat it.
+		// Number 0 is returned in this case
+		if param.Type == grpc_application_go.ParamDataType_INTEGER || param.Type == grpc_application_go.ParamDataType_FLOAT{
+			return gjson.Result{Type: gjson.Number, Raw: "0", Num:0}, nil
+		}
 		return field, derrors.NewInvalidArgumentError(invalidParamPath).WithParams(param.Name)
 	}
 

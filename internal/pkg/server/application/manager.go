@@ -24,6 +24,7 @@ import (
 
 
 const DefaultTimeout =  time.Minute
+const RequiredParamNotFilled = "Required parameter not filled"
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
@@ -88,6 +89,30 @@ func (m * Manager)  RemoveAppDescriptor(appDescriptorID *grpc_application_go.App
 	return m.appClient.RemoveAppDescriptor(context.Background(), appDescriptorID)
 }
 
+// checkAllRequiredParametersAreFilled checks all the params defined as required are filled in deploy request
+func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go.AppDescriptor, params  *grpc_application_go.InstanceParameterList) error {
+
+	// get all the required parameters
+	for _, p := range desc.Parameters {
+		if p.Required == true {
+			find := false
+			// look for it in deploy params
+			for _, deployParam := range params.Parameters {
+
+				if deployParam.ParameterName == p.Name{
+					find = true
+					break
+				}
+
+			}
+			if !find {
+				return derrors.NewFailedPreconditionError(RequiredParamNotFilled)
+			}
+		}
+	}
+
+	return nil
+}
 // Deploy an application descriptor.
 func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
 
@@ -103,6 +128,12 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	if err!= nil {
 		log.Error().Err(err).Msgf("error getting application descriptor %s", deployRequest.AppDescriptorId)
 		return nil,err
+	}
+
+	// check if all required params are filled
+	err = m.checkAllRequiredParametersAreFilled(desc, deployRequest.Parameters)
+	if err != nil {
+		return nil, err
 	}
 
 	// Create it parametrized descriptor
