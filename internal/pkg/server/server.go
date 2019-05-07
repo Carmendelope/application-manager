@@ -5,15 +5,17 @@
 package server
 
 import (
+	"fmt"
+	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/server/application"
+	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-utils/pkg/tools"
-	"fmt"
-	"github.com/nalej/derrors"
+	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -79,8 +81,25 @@ func (s *Service) Run() error {
 		log.Fatal().Errs("failed to listen: %v", []error{err})
 	}
 
+	log.Info().Msg("instatiating bus client...")
+	// Create bus client
+	queueClient := pulsar_comcast.NewClient(s.Configuration.QueueAddress)
+	if err != nil {
+		log.Panic().Err(err).Msg("impossible to create bus client instance")
+		return err
+	}
+	log.Info().Msg("done")
+	// Instantiate the bus manager
+	log.Info().Msg("instantiating bus manager...")
+	busManager, err := bus.NewBusManager(queueClient, "ApplicationManager")
+	if err != nil {
+		log.Panic().Err(err).Msg("impossible to create bus manager instance")
+		return err
+	}
+	log.Info().Msg("done")
+
 	// Create handlers
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient)
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, busManager)
 	handler := application.NewHandler(manager)
 
 	grpcServer := grpc.NewServer()
