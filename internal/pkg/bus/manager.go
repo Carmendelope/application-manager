@@ -35,6 +35,6 @@ func NewBusManager(client bus.NalejClient, name string) (*BusManager, derrors.Er
 }
 
 // Send messages to the queue. If the sent proto message is not allowed by the queue and error will be triggered.
-func (b BusManager) Send(msg proto.Message, ctx context.Context) derrors.Error {
-    return b.producer.Send(msg, ctx)
+func (b BusManager) Send(ctx context.Context, msg proto.Message) derrors.Error {
+    return b.producer.Send(ctx, msg)
 }

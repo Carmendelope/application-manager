@@ -175,8 +175,8 @@
   version = "v1.4.0"
 
 [[projects]]
-  branch = "feature/NP-1264_application_ops_wrapper"
-  digest = "1:a49db2654df363ac3b9d2e5f1f78a20ae39ee1d30f53ef5996f0231706c9a703"
+  branch = "master"
+  digest = "1:3f5438c72e41cb472d80490c3e4d2b46eabe9e0582b3c31ec75221c8eda654b2"
   name = "github.com/nalej/nalej-bus"
   packages = [
     "pkg/bus",
@@ -185,7 +185,7 @@
     "pkg/queue/application/ops",
   ]
   pruneopts = ""
-  revision = "4ee6bdc15178634de0e83e2cea3d68259d76ad56"
+  revision = "80152f7489f35e6e3b33218ad45df353ffac2998"
 
 [[projects]]
   digest = "1:a3735b0978a8b53fc2ac97a6f46ca1189f0712a00df86d6ec4cf26c1a25e6d77"

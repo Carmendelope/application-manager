@@ -193,7 +193,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
-	err = m.busManager.Send(request, ctx)
+	err = m.busManager.Send(ctx, request)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", instance.AppInstanceId).
 			Msg("error when sending deployment request to the queue")
@@ -223,7 +223,7 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
-	err := m.busManager.Send(undeployRequest, ctx)
+	err := m.busManager.Send(ctx, undeployRequest)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", undeployRequest.AppInstanceId).
 			Msg("error when sending the undeploy request to the queue")
