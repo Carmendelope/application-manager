@@ -176,7 +176,7 @@
 
 [[projects]]
   branch = "feature/NP-1264_application_ops_wrapper"
-  digest = "1:364b82f5452fe0303830aedb7b9fe2c36071fcba90a30e47248a9c95f6b8aff1"
+  digest = "1:a49db2654df363ac3b9d2e5f1f78a20ae39ee1d30f53ef5996f0231706c9a703"
   name = "github.com/nalej/nalej-bus"
   packages = [
     "pkg/bus",
@@ -185,7 +185,7 @@
     "pkg/queue/application/ops",
   ]
   pruneopts = ""
-  revision = "caf7ec79c4c5713c52b016356605f49f91316861"
+  revision = "4ee6bdc15178634de0e83e2cea3d68259d76ad56"
 
 [[projects]]
   digest = "1:a3735b0978a8b53fc2ac97a6f46ca1189f0712a00df86d6ec4cf26c1a25e6d77"
@@ -309,11 +309,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:67a6e61e60283fd7dce50eba228080bff8805d9d69b2f121d7ec2260d120c4a8"
+  digest = "1:c83d1e034ab1f1cc75a5475bd2475da6cbc193b30fd617b77b63eadcba65d379"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "ca7f33d4116e3a1f9425755d6a44e7ed9b4c97df"
+  revision = "2953c62de483abe29031e197e72d3b7061f65f91"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
@@ -434,7 +434,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a51c738f844cfc3968c3d000142fd5f6e3f2f618a538823e890c339eb0267e2c"
+  digest = "1:e0d4d69b325d3852c603b3643e0a093073cf302777a767dae6d11b91ff8d98c2"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -443,7 +443,7 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "7a17edec881af3a031163d8fbc38242b2981d0ff"
+  revision = "c4317b9d6635497a66f0dd4370bd3837ae5e5137"
 
 [solve-meta]
   analyzer-name = "dep"

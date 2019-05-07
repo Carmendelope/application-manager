@@ -65,4 +65,4 @@
 
 [[constraint]]
   name = "github.com/nalej/nalej-bus"
-  branch = "feature/NP-1264_application_ops_wrapper"
+  branch = "master"

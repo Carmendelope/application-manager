@@ -191,7 +191,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 	*/
 
-	err = m.busManager.Send(request)
+	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancel()
+	err = m.busManager.Send(request, ctx)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", instance.AppInstanceId).
 			Msg("error when sending deployment request to the queue")
@@ -219,7 +221,9 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 	// TODO: remove legacy interaction with the conductor API
 	//return  m.conductorClient.Undeploy(context.Background(), undeployRequest)
 
-	err := m.busManager.Send(undeployRequest)
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
+	defer cancel()
+	err := m.busManager.Send(undeployRequest, ctx)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", undeployRequest.AppInstanceId).
 			Msg("error when sending the undeploy request to the queue")
