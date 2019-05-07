@@ -157,13 +157,15 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	if len(parametrizedDesc.Rules) > 0 {
 		ctxUpdateInstance, cancelUpdate := context.WithTimeout(context.Background(), DefaultTimeout)
 		defer cancelUpdate()
-		_, err = m.appClient.UpdateRulesInstance(ctxUpdateInstance, &grpc_application_go.UpdateRulesRequest{
-			OrganizationId:deployRequest.OrganizationId,
-			AppInstanceId: instance.AppInstanceId,
-			Rules: newDesc.Rules,
-		})
+		// update the instance
+		instance.Rules = newDesc.Rules
+		instance.ConfigurationOptions = newDesc.ConfigurationOptions
+		instance.EnvironmentVariables = newDesc.EnvironmentVariables
+		instance.Labels = newDesc.Labels
+		_, err := m.appClient.UpdateAppInstance(ctxUpdateInstance, instance)
+
 		if err != nil {
-			log.Error().Err(err).Msgf("error updating rules %s. Delete instance", instance.AppInstanceId)
+			log.Error().Err(err).Msgf("error updating instance %s. Delete instance", instance.AppInstanceId)
 			_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
 			if rollbackErr != nil {
 				log.Error().Err(err).Msgf("error in rollback deleting the instance %s", instance.AppInstanceId)
