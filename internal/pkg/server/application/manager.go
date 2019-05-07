@@ -181,6 +181,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 
 	/*
+	// TODO remove legacy interaction with the conductor API
 	ctxConductor, cancelConductor := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancelConductor()
 	_, err = m.conductorClient.Deploy(ctxConductor, request)
@@ -192,7 +193,8 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 	err = m.busManager.Send(request)
 	if err != nil {
-		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
+		log.Error().Err(err).Str("appInstanceId", instance.AppInstanceId).
+			Msg("error when sending deployment request to the queue")
 		return nil, err
 	}
 
@@ -213,7 +215,19 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 		OrganizationId:       appInstanceID.OrganizationId,
 		AppInstanceId:            appInstanceID.AppInstanceId,
 	}
-	return  m.conductorClient.Undeploy(context.Background(), undeployRequest)
+
+	// TODO: remove legacy interaction with the conductor API
+	//return  m.conductorClient.Undeploy(context.Background(), undeployRequest)
+
+	err := m.busManager.Send(undeployRequest)
+	if err != nil {
+		log.Error().Err(err).Str("appInstanceId", undeployRequest.AppInstanceId).
+			Msg("error when sending the undeploy request to the queue")
+		return nil, err
+	}
+
+	return &grpc_common_go.Success{}, nil
+
 }
 
 // ListAppInstances retrieves a list of application descriptors.
