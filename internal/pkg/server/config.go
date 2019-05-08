@@ -16,6 +16,8 @@ type Config struct {
 	ConductorAddress string
 	// SystemModelAddress with the host:port to connect to System Model
 	SystemModelAddress string
+	// Address where the queue system can be reached
+	QueueAddress string
 }
 
 func (conf * Config) Validate() derrors.Error {
@@ -28,6 +30,10 @@ func (conf * Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("systemModelAddress must be set")
 	}
 
+	if conf.QueueAddress == "" {
+		return derrors.NewInvalidArgumentError("queueAddress must be set")
+	}
+
 	return nil
 }
 
@@ -35,4 +41,5 @@ func (conf *Config) Print() {
 	log.Info().Int("port", conf.Port).Msg("gRPC port")
 	log.Info().Str("URL", conf.ConductorAddress).Msg("Conductor")
 	log.Info().Str("URL", conf.SystemModelAddress).Msg("System Model")
+	log.Info().Str("URL", conf.QueueAddress).Msg("Queue address")
 }

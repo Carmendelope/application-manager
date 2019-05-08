@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  digest = "1:4202ab09395574fdc038cf334a5e3c6887fb41dfd281bbc6007becc115cb44b4"
+  name = "github.com/Comcast/pulsar-client-go"
+  packages = [
+    ".",
+    "api",
+    "frame",
+  ]
+  pruneopts = ""
+  revision = "d669484e60e7f709498a119f36ed060ed0c1eeed"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:529d738b7976c3848cae5cf3a8036440166835e389c1f617af701eeb12a0518d"
   name = "github.com/golang/protobuf"
   packages = [
@@ -71,6 +83,22 @@
   version = "v0.0.34"
 
 [[projects]]
+  digest = "1:258fb1c4fd8b5aee399640f104508f09149f1fd596358835373114abf8df0101"
+  name = "github.com/nalej/grpc-authx-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "dd2f2d39efd942053c6af01fa69ed01bb00c2900"
+  version = "v0.0.47"
+
+[[projects]]
+  digest = "1:c64e8299f942d00785d7129c4a2b65d319924d0e4b323bcc1e7be0a151c296bb"
+  name = "github.com/nalej/grpc-bus-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "49a94e06cf3a2e091dddd7b1f12d06b58953a927"
+  version = "v0.0.1"
+
+[[projects]]
   digest = "1:44f7426538411ea9f774f96e3b102decc9f549b188e55e29ecc15be69542a96b"
   name = "github.com/nalej/grpc-common-go"
   packages = ["."]
@@ -79,12 +107,12 @@
   version = "v0.0.30"
 
 [[projects]]
-  digest = "1:3974afbfa67f9a632312b0e1a561054f81504812adabc880e16645dec04c93dd"
+  digest = "1:1c4e0c8d913747fefcff6c15151bbb30cad22a122b9cf723a04621b20ac3753b"
   name = "github.com/nalej/grpc-conductor-go"
   packages = ["."]
   pruneopts = ""
-  revision = "d6126a7e533cf39a1f7c705219ec9ab18f924996"
-  version = "v0.0.88"
+  revision = "78140c187266b77930cde36206fd5098bd894284"
+  version = "v0.0.89"
 
 [[projects]]
   digest = "1:1920b2eec79835636c20bfe1b5aafc6e4e5161a04cac4ee030de14425107c530"
@@ -103,12 +131,36 @@
   version = "v0.0.34"
 
 [[projects]]
+  digest = "1:09fb41dc9fd129e4021f026f8be8aa8d36e2b9a55cf2c66d5289fe8d726845aa"
+  name = "github.com/nalej/grpc-inventory-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "b3f09bbfc45a996be12f67d8cb5c0820d94c7e3a"
+  version = "v0.0.4"
+
+[[projects]]
+  digest = "1:c7de415441ba97ec2dd8a2545db64a8162c3fc0a13d54d4d79a112ffa80e8acf"
+  name = "github.com/nalej/grpc-inventory-manager-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d2f1b6d39febd7db926a82fe6475455bd67945b9"
+  version = "v0.0.8"
+
+[[projects]]
   digest = "1:9921e275160e1559963d6452a918027db3563746fd03f63369ab104c0fbf16bf"
   name = "github.com/nalej/grpc-organization-go"
   packages = ["."]
   pruneopts = ""
   revision = "c571882666c05213df408ae9da8ab08f71a7a7bb"
   version = "v0.0.28"
+
+[[projects]]
+  digest = "1:10fc9b68ee6cadf220c5a9268711c2521806cc96e77ac132f67451ea2950954e"
+  name = "github.com/nalej/grpc-user-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "05ecf0dd7746f97320758e963b10e398c1725179"
+  version = "v0.0.30"
 
 [[projects]]
   digest = "1:347aace88c837e2b1b65a7c603e1b74066e3ad9c26343a2001649e3a2354591b"
@@ -121,6 +173,19 @@
   pruneopts = ""
   revision = "926e5152669ee71c0e6904055ebe6cfb5492b599"
   version = "v1.4.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:939b6a63b555852bb1167a64100d05becee13bc222f0abf98dc3aa128354d5e2"
+  name = "github.com/nalej/nalej-bus"
+  packages = [
+    "pkg/bus",
+    "pkg/bus/pulsar-comcast",
+    "pkg/queue",
+    "pkg/queue/application/ops",
+  ]
+  pruneopts = ""
+  revision = "5b50bbbc672f8d0d124950347e5d58ece9b42938"
 
 [[projects]]
   digest = "1:a3735b0978a8b53fc2ac97a6f46ca1189f0712a00df86d6ec4cf26c1a25e6d77"
@@ -225,7 +290,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:051f944c194dbaa160fa7d820701022677eef76d3b8d50382432894f68364e9c"
+  digest = "1:4f349a7da3e52df38345913607fb3daac185365588a633088107146283b48b46"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -240,15 +305,15 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "7f726cade0ab7c929c16ce0b5b25bd201e25f39f"
+  revision = "f4e77d36d62c17c2336347bb2670ddbd02d092b7"
 
 [[projects]]
   branch = "master"
-  digest = "1:8309671ea041a80cae0a80724f2ec1a29e1c2774027aec2d487a13306b41ecaf"
+  digest = "1:c83d1e034ab1f1cc75a5475bd2475da6cbc193b30fd617b77b63eadcba65d379"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "a43fa875dd822b81eb6d2ad538bc1f4caba169bd"
+  revision = "2953c62de483abe29031e197e72d3b7061f65f91"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
@@ -369,7 +434,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2a9edb5f4e09427dd6d52bf0777c5b08cdd628e9f6bff510340067f164088716"
+  digest = "1:e0d4d69b325d3852c603b3643e0a093073cf302777a767dae6d11b91ff8d98c2"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -378,12 +443,13 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "a44ef629a3c96737242430c412751bca67b342bd"
+  revision = "c4317b9d6635497a66f0dd4370bd3837ae5e5137"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/golang/protobuf/proto",
     "github.com/google/uuid",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
@@ -396,6 +462,9 @@
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
     "github.com/nalej/grpc-utils/pkg/tools",
+    "github.com/nalej/nalej-bus/pkg/bus",
+    "github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast",
+    "github.com/nalej/nalej-bus/pkg/queue/application/ops",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/rs/zerolog",

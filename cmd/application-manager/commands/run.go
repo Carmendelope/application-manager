@@ -32,5 +32,7 @@ func init() {
 		"System Model address (host:port)")
 	runCmd.PersistentFlags().StringVar(&config.ConductorAddress, "conductorAddress", "localhost:5000",
 		"Conductor address (host:port)")
+	runCmd.PersistentFlags().StringVar(&config.QueueAddress, "queueAddress", "localhost:6550",
+		"Queue system address (host:port)")
 	rootCmd.AddCommand(runCmd)
 }
