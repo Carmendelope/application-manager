@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
@@ -23,6 +24,7 @@ import (
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/grpc-utils/pkg/test"
+	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
@@ -80,7 +82,7 @@ func GetAddAppDescriptorWithParametersRequest(name string, organizationID string
 		OrganizationId:       organizationID,
 		Name:                 "g1",
 		Services:             []*grpc_application_go.Service{service},
-		Policy:               0,
+		Policy:               grpc_application_go.CollocationPolicy_SAME_CLUSTER,
 		Specs:                nil,
 		Labels:               nil,
 	}
@@ -90,7 +92,15 @@ func GetAddAppDescriptorWithParametersRequest(name string, organizationID string
 		Path: "groups.0.services.0.specs.replicas",
 		Type: grpc_application_go.ParamDataType_INTEGER,
 		Category:grpc_application_go.ParamCategory_BASIC,
-
+		Required: true,
+	}
+	parameter2 := &grpc_application_go.AppParameter{
+		Name: "policy",
+		Description: "policy",
+		Path: "groups.0.policy",
+		Type: grpc_application_go.ParamDataType_INTEGER,
+		Category:grpc_application_go.ParamCategory_BASIC,
+		Required: false,
 	}
 
 	toAdd := &grpc_application_go.AddAppDescriptorRequest{
@@ -102,7 +112,7 @@ func GetAddAppDescriptorWithParametersRequest(name string, organizationID string
 		Labels:               nil,
 		Rules:                nil,
 		Groups:               []*grpc_application_go.ServiceGroup{group},
-		Parameters:           []*grpc_application_go.AppParameter{parameter},
+		Parameters:           []*grpc_application_go.AppParameter{parameter, parameter2},
 	}
 	return toAdd
 }
@@ -141,6 +151,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	var (
 		systemModelAddress = os.Getenv("IT_SM_ADDRESS")
 		conductorAddress = os.Getenv("IT_CONDUCTOR_ADDRESS")
+		busAddress = os.Getenv("IT_BUS_ADDRESS")
 	)
 
 	if systemModelAddress == "" || conductorAddress == "" {
@@ -161,6 +172,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	var conductorConn * grpc.ClientConn
 	var client grpc_application_manager_go.ApplicationManagerClient
 
+
 	// Target organization.
 	var targetOrganization *grpc_organization_go.Organization
 	var targetAppDescriptor *grpc_application_go.AppDescriptor
@@ -179,11 +191,15 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		conductorClient = grpc_conductor_go.NewConductorClient(conductorConn)
 		clusterClient = grpc_infrastructure_go.NewClustersClient(smConn)
 		deviceClient = grpc_device_go.NewDevicesClient(smConn)
+		busConn := pulsar_comcast.NewClient(busAddress)
+		busClient, bError := bus.NewBusManager(busConn, "application-manager-test")
+		gomega.Expect(bError).To(gomega.BeNil())
+
 
 		test.LaunchServer(server, listener)
 
 		// Register the service
-		manager := NewManager(appClient, conductorClient, clusterClient, deviceClient)
+		manager := NewManager(appClient, conductorClient, clusterClient, deviceClient, busClient)
 		handler := NewHandler(manager)
 		grpc_application_manager_go.RegisterApplicationManagerServer(server, handler)
 
@@ -338,7 +354,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
 
 		})
-		ginkgo.It("Should be able to deploy a instance of a descriptor withs params", func() {
+		ginkgo.It("Should be able to deploy a instance of a descriptor with params", func() {
 			// add the descriptor with params
 			added, err := client.AddAppDescriptor(context.Background(),
 				GetAddAppDescriptorWithParametersRequest("Descriptor with parameter", targetOrganization.OrganizationId))
@@ -361,6 +377,29 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 			}
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(response.AppInstanceId).ShouldNot(gomega.BeEmpty())
+
+		})
+		ginkgo.It("Should not be able to deploy a instance of a descriptor with params (required param not filled)", func() {
+			// add the descriptor with params
+			added, err := client.AddAppDescriptor(context.Background(),
+				GetAddAppDescriptorWithParametersRequest("Descriptor with parameter", targetOrganization.OrganizationId))
+			gomega.Expect(err).To(gomega.Succeed())
+			gomega.Expect(added.AppDescriptorId).ShouldNot(gomega.BeEmpty())
+
+			// deploy it
+			deployRequest := &grpc_application_manager_go.DeployRequest{
+				OrganizationId:       targetAppDescriptor.OrganizationId,
+				AppDescriptorId:      added.AppDescriptorId,
+				Name:                 "test-deploy-app-manager-with-params",
+				Parameters:           &grpc_application_go.InstanceParameterList {
+					Parameters: []*grpc_application_go.InstanceParameter{{ParameterName:"policy", Value:"1"}},
+				},
+			}
+			_, err = client.Deploy(context.Background(), deployRequest)
+			if err != nil {
+				fmt.Println(conversions.ToDerror(err).DebugReport())
+			}
+			gomega.Expect(err).NotTo(gomega.Succeed())
 
 		})
 

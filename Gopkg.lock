@@ -67,12 +67,12 @@
   version = "v2.0.0"
 
 [[projects]]
-  digest = "1:6b4f58c55c1211c721f8ee4b7c44eab1a19385c3e7a0ef0a5946da504fac2b26"
+  digest = "1:da98e6ba85330ead8c726dc38ccdbfadd0b512b0a9d81674dcb4ce1e34959010"
   name = "github.com/nalej/grpc-application-go"
   packages = ["."]
   pruneopts = ""
-  revision = "f9851c5fd08e5f204674a9069fcaef6430d806d6"
-  version = "v0.0.74"
+  revision = "76de5d11c2e2f7093f2ddf38a21d95b585c964aa"
+  version = "v0.0.75"
 
 [[projects]]
   digest = "1:09cc137c9fbe050b7ac30b4096e12783079c1d424d138bc388febba73047890c"
@@ -176,7 +176,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3f5438c72e41cb472d80490c3e4d2b46eabe9e0582b3c31ec75221c8eda654b2"
+  digest = "1:939b6a63b555852bb1167a64100d05becee13bc222f0abf98dc3aa128354d5e2"
   name = "github.com/nalej/nalej-bus"
   packages = [
     "pkg/bus",
@@ -185,7 +185,7 @@
     "pkg/queue/application/ops",
   ]
   pruneopts = ""
-  revision = "80152f7489f35e6e3b33218ad45df353ffac2998"
+  revision = "5b50bbbc672f8d0d124950347e5d58ece9b42938"
 
 [[projects]]
   digest = "1:a3735b0978a8b53fc2ac97a6f46ca1189f0712a00df86d6ec4cf26c1a25e6d77"
