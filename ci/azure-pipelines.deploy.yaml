@@ -75,6 +75,11 @@ jobs:
       kubeconfig: $(kubeconfig)
       namespace: $(namespace)
 
+  - template: k8s/logs/archive.yaml@ci_templates
+    parameters:
+      kubeconfig: $(kubeconfig)
+      namespace: $(namespace)
+
   - template: k8s/ns/delete.yaml@ci_templates
     parameters:
       kubeconfig: $(kubeconfig)
