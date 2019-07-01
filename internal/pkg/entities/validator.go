@@ -81,7 +81,7 @@ func GetPath(path string) string {
 	directories := strings.Split(path, "/")
 
 	if directories[0] == ".." {
-		// unable to get path, we dont know what is the actual path
+		// unable to get path, we dont know what is the current path
 		return path
 	}
 
@@ -118,11 +118,10 @@ func GetPath(path string) string {
 // ValidateStoragePathAppRequest validate if the same storage path is added more than once
 func ValidateStoragePathAppRequest(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
 
-	// map to store the storage paths
-	pathMap := make (map[string] bool, 0)
-
 	for _, group := range toAdd.Groups {
 		for _, service := range group.Services {
+			// map to store the storage paths
+			pathMap := make (map[string] bool, 0)
 			for _, sto := range service.Storage {
 
 				path := GetPath(sto.MountPath)

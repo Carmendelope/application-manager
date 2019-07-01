@@ -758,6 +758,9 @@ func CreateTestAddDescriptorWithWrongMountPath()* grpc_application_go.AddAppDesc
 					{
 						MountPath: "./dir1/dir2/",
 					},
+					{
+						MountPath: "./dir1/dir2/",
+					},
 				},
 			},
 			{Name: "service2",},},
@@ -814,7 +817,7 @@ func CreateTestAddDescriptorWithMountPath()* grpc_application_go.AddAppDescripto
 						Name: "service3",
 						Storage: [] *grpc_application_go.Storage {
 							{
-								MountPath: "./dir1/dir3/../dir5/",
+								MountPath: "./dir1/dir2/",
 							},
 						},
 					},},
