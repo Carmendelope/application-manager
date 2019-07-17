@@ -10,6 +10,7 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-organization-go"
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"strings"
 )
@@ -25,6 +26,13 @@ const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 
+// Map containing port numbers used by Nalej that cannot be used by any application.
+var NalejUsedPorts = map[int32]bool {
+	// Port used by Zt-sidecars redirection
+	1576: true,
+	// Port used by Zt-sidecars zt daemon
+	9993: true,
+}
 
 func ValidOrganizationId(organizationID *grpc_organization_go.OrganizationId) derrors.Error {
 	if organizationID.OrganizationId == "" {
@@ -68,12 +76,14 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 	return err
 }
 
+
 // ValidateDescriptor checks validity of object names, ports name, port numbers  meeting Kubernetes specs.
 func  ValidateAppRequestForNames(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
 	var errs []string
 	// for each group
 	for _, group := range toAdd.Groups {
 		for _,service := range group.Services {
+
 			// Validate service name
 			kerr := validation.IsDNS1123Label(service.Name)
 			if len(kerr) > 0 {
@@ -92,11 +102,26 @@ func  ValidateAppRequestForNames(toAdd * grpc_application_go.AddAppDescriptorReq
 					errs = append(errs, "ExposedPort")
 					errs = append(errs, kerr...)
 				}
+
+				found, _ := NalejUsedPorts[port.ExposedPort]
+				if found {
+					errs = append(errs, "ExposedPort")
+					errs = append(errs, "this is a reserved port")
+				}
+
 				kerr = validation.IsValidPortNum(int(port.InternalPort))
 				if len(kerr) > 0 {
 					errs = append(errs, "InternalPort")
 					errs = append(errs, kerr...)
 				}
+
+				found, _ = NalejUsedPorts[port.InternalPort]
+				if found {
+					log.Error().Msg("internal port error")
+					errs = append(errs, "InternalPort")
+					errs = append(errs, "this is a reserved port")
+				}
+
 			}
 		}
 	}
