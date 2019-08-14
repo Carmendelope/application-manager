@@ -71,9 +71,80 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 		return err
 	}
 
+	err = ValidateStoragePathAppRequest(toAdd)
+	if err != nil {
+		return err
+	}
+
 	// logic validation
 	err = ValidDescriptorLogic(toAdd)
 	return err
+}
+
+// getPath returns a path equivalent to 'path' but without indirections
+func GetPath(path string) string {
+	res := ""
+
+	directories := strings.Split(path, "/")
+
+	if directories[0] == ".." {
+		// unable to get path, we dont know what is the current path
+		return path
+	}
+
+	dirRes := make([]string, len(directories))
+
+	index := 1
+	dirRes[0] = directories[0]
+
+	if len(directories) > 1 {
+		for i := 1; i < len(directories); i++ {
+			if directories[i] == "."{
+				// nothing to do
+			}else if directories[i] == ".."{
+				index --
+				if index < 0 {
+					log.Warn().Str("path", path).Msg("unable to validate path")
+					return path
+				}
+			} else {
+				dirRes[index] = directories[i]
+				index ++
+			}
+		}
+	}
+
+	res = dirRes[0]
+	for i:=1; i< index; i++ {
+		res = fmt.Sprintf("%s/%s", res, dirRes[i])
+	}
+
+	return res
+}
+
+// ValidateStoragePathAppRequest validate if the same storage path is added more than once
+func ValidateStoragePathAppRequest(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+
+	for _, group := range toAdd.Groups {
+		for _, service := range group.Services {
+			// map to store the storage paths
+			pathMap := make (map[string] bool, 0)
+			for _, sto := range service.Storage {
+
+				path := GetPath(sto.MountPath)
+				// check if the mountPath is used before
+				_, exists := pathMap[path]
+				if exists{
+					return derrors.NewInvalidArgumentError("mounthPath defined twice").WithParams(sto.MountPath)
+				}
+				pathMap[path] = true
+
+			}
+		}
+	}
+
+
+	return nil
 }
 
 
