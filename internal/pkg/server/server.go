@@ -14,7 +14,6 @@ import (
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
-	"github.com/nalej/grpc-utils/pkg/tools"
 	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -25,14 +24,12 @@ import (
 // Service structure with the configuration and the gRPC server.
 type Service struct {
 	Configuration Config
-	Server * tools.GenericGRPCServer
 }
 
 // NewService creates a new system model service.
 func NewService(conf Config) *Service {
 	return &Service{
 		conf,
-		tools.NewGenericGRPCServer(uint32(conf.Port)),
 	}
 }
 
