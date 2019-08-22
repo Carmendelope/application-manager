@@ -740,3 +740,88 @@ func CreateTestAddDescriptorWithParameters()* grpc_application_go.AddAppDescript
 				Type: grpc_application_go.ParamDataType_STRING, Category:grpc_application_go.ParamCategory_BASIC}},
 	}
 }
+
+func CreateTestAddDescriptorWithWrongMountPath()* grpc_application_go.AddAppDescriptorRequest{
+
+	return &grpc_application_go.AddAppDescriptorRequest {
+		RequestId: 		uuid.New().String(),
+		OrganizationId:	uuid.New().String(),
+		Name: 			"descriptor-test",
+
+		Groups: 		[]*grpc_application_go.ServiceGroup{
+		{
+			Name:"g1",
+			Services:[]*grpc_application_go.Service{
+			{
+				Name: "service1",
+				Storage: [] *grpc_application_go.Storage {
+					{
+						MountPath: "./dir1/dir2/",
+					},
+					{
+						MountPath: "./dir1/dir2/",
+					},
+				},
+			},
+			{Name: "service2",},},
+			Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
+			Replicas: 3,
+			MultiClusterReplica: false,
+			},
+		},
+		{
+			Name:"g2",
+			Services:[]*grpc_application_go.Service{
+			{
+				Name: "service3",
+				Storage: [] *grpc_application_go.Storage {
+					{
+						MountPath: "./dir1/dir3/../dir2/",
+					},
+				},
+			},},
+		},
+		},
+	}
+}
+
+func CreateTestAddDescriptorWithMountPath()* grpc_application_go.AddAppDescriptorRequest{
+
+	return &grpc_application_go.AddAppDescriptorRequest {
+		RequestId: 		uuid.New().String(),
+		OrganizationId:	uuid.New().String(),
+		Name: 			"descriptor-test",
+
+		Groups: 		[]*grpc_application_go.ServiceGroup{
+			{
+				Name:"g1",
+				Services:[]*grpc_application_go.Service{
+					{
+						Name: "service1",
+						Storage: [] *grpc_application_go.Storage {
+							{
+								MountPath: "./dir1/dir2/",
+							},
+						},
+					},
+					{Name: "service2",},},
+				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
+					Replicas: 3,
+					MultiClusterReplica: false,
+				},
+			},
+			{
+				Name:"g2",
+				Services:[]*grpc_application_go.Service{
+					{
+						Name: "service3",
+						Storage: [] *grpc_application_go.Storage {
+							{
+								MountPath: "./dir1/dir2/",
+							},
+						},
+					},},
+			},
+		},
+	}
+}

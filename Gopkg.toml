@@ -64,4 +64,4 @@
 
 [[constraint]]
   name = "github.com/nalej/nalej-bus"
-  branch = "master"
+  version = "=v0.3.0"

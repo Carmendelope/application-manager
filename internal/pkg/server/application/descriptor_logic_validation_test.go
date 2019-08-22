@@ -67,4 +67,18 @@ var _ = ginkgo.Describe("Application Descriptor Validations", func() {
 		})
 
 	})
+
+	ginkgo.Context("Valid storage path", func(){
+		ginkgo.It("should pass the validation ", func(){
+			appDescriptor := utils.CreateTestAddDescriptorWithMountPath()
+			err := entities.ValidateStoragePathAppRequest(appDescriptor)
+			gomega.Expect(err).To(gomega.Succeed())
+		})
+		ginkgo.It("should not pass the storage validation ", func(){
+			appDescriptor := utils.CreateTestAddDescriptorWithWrongMountPath()
+			err := entities.ValidateStoragePathAppRequest(appDescriptor)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+
+	})
 })
