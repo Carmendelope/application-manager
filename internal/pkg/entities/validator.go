@@ -26,7 +26,7 @@ const emptyDeviceGroupName = "device_group_name cannot be empty"
 const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
-const EnvironmentVariableRegex = "[._a-zA-Z][-._a-zA-Z0-9]*"
+const EnvironmentVariableRegex = "[._a-zA-Z][._a-zA-Z0-9]*"
 
 // Map containing port numbers used by Nalej that cannot be used by any application.
 var NalejUsedPorts = map[int32]bool {
@@ -286,7 +286,7 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 	for key, value := range appDescriptor.EnvironmentVariables {
 
 		// a valid environment variable name must consist of alphabetic characters, digits, '_', '', or '.', and must not start with a digit
-		// regex used for validation is '[._a-zA-Z][-._a-zA-Z0-9]*'
+		// regex used for validation is '[._a-zA-Z][._a-zA-Z0-9]*'
 
 		match := re.FindString(key)
 		if match != key {
