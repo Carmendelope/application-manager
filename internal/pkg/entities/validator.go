@@ -12,6 +12,7 @@ import (
 	"github.com/nalej/grpc-organization-go"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"regexp"
 	"strings"
 )
 
@@ -25,6 +26,7 @@ const emptyDeviceGroupName = "device_group_name cannot be empty"
 const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
+const EnvironmentVariableRegex = "[._a-zA-Z][-._a-zA-Z0-9]*"
 
 // Map containing port numbers used by Nalej that cannot be used by any application.
 var NalejUsedPorts = map[int32]bool {
@@ -280,7 +282,18 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 
 	// - Environment variables must be checked with existing service names
 	// TODO: the enviroment variables only looks the service name (servicegroup should be included)
-	for _, value := range appDescriptor.EnvironmentVariables {
+	re := regexp.MustCompile(EnvironmentVariableRegex)
+	for key, value := range appDescriptor.EnvironmentVariables {
+
+		// a valid environment variable name must consist of alphabetic characters, digits, '_', '', or '.', and must not start with a digit
+		// regex used for validation is '[._a-zA-Z][-._a-zA-Z0-9]*'
+
+		match := re.FindString(key)
+		if match != key {
+			return derrors.NewFailedPreconditionError("A valid environment variable name must consist of alphabetic characters, digits, '_', '', or '.', and must not start with a digit").WithParams(key)
+		}
+
+
 		serviceValue := strings.Trim(value, " ")
 		if strings.Index(serviceValue, NalejEnvironmentVariablePrefix) == 0 {
 			// check the service exists.
