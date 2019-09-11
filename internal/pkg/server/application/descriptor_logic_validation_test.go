@@ -65,6 +65,12 @@ var _ = ginkgo.Describe("Application Descriptor Validations", func() {
 			err := entities.ValidDescriptorLogic(appDescriptor)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
+		ginkgo.It("should pass the validation", func(){
+			appDescriptor := utils.CreateFullAppDescriptor()
+			appDescriptor.EnvironmentVariables["sonar.jdbc.username=sonar"] = "sonar"
+			err := entities.ValidDescriptorLogic(appDescriptor)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
 
 	})
 
