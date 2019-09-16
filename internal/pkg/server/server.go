@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/server/application"
+	"github.com/nalej/application-manager/internal/pkg/server/application-network"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
@@ -39,6 +41,7 @@ type Clients struct {
 	ConductorClient grpc_conductor_go.ConductorClient
 	ClusterClient grpc_infrastructure_go.ClustersClient
 	DeviceClient  grpc_device_go.DevicesClient
+	AppNetClient grpc_application_network_go.ApplicationNetworkClient
 }
 
 // GetClients creates the required connections with the remote clients.
@@ -57,8 +60,9 @@ func (s * Service) GetClients() (* Clients, derrors.Error) {
 	cClient := grpc_conductor_go.NewConductorClient(conductorConn)
 	clClient := grpc_infrastructure_go.NewClustersClient(smConn)
 	dvClient := grpc_device_go.NewDevicesClient(smConn)
+	appNetClient := grpc_application_network_go.NewApplicationNetworkClient(smConn)
 
-	return &Clients{aClient, cClient, clClient, dvClient}, nil
+	return &Clients{aClient, cClient, clClient, dvClient, appNetClient}, nil
 }
 
 // Run the service, launch the REST service handler.
@@ -99,8 +103,12 @@ func (s *Service) Run() error {
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, busManager)
 	handler := application.NewHandler(manager)
 
+	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient)
+	appNetHandler := application_network.NewHandler(appNetManager)
+
 	grpcServer := grpc.NewServer()
 	grpc_application_manager_go.RegisterApplicationManagerServer(grpcServer, handler)
+	grpc_application_network_go.RegisterApplicationNetworkServer(grpcServer, appNetHandler)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)

@@ -9,6 +9,7 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -24,6 +25,10 @@ const emptyName = "name cannot be empty"
 const emptyDeviceGroupId = "device_group_id cannot be empty"
 const emptyDeviceGroupName = "device_group_name cannot be empty"
 const emptyAppDescriptorId = "app_descriptor_id cannot be empty"
+const emptySourceInstanceId = "source_instance_id cannot be empty"
+const emptyTargetInstanceId = "target_instance_id cannot be empty"
+const emptyInboundName = "inbound_name cannot be empty"
+const emptyOutboundName = "outbound_name cannot be empty"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 const EnvironmentVariableRegex = "[._a-zA-Z][._a-zA-Z0-9]*"
@@ -481,5 +486,43 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 		return err
 	}
 
+	return nil
+}
+
+func ValidAddConnectionRequest(addRequest * grpc_application_network_go.AddConnectionRequest) derrors.Error {
+	if addRequest.OrganizationId == ""{
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+	if addRequest.TargetInstanceId == "" {
+		return derrors.NewInvalidArgumentError(emptyTargetInstanceId)
+	}
+	if addRequest.SourceInstanceId == "" {
+		return derrors.NewInvalidArgumentError(emptySourceInstanceId)
+	}
+	if addRequest.InboundName == "" {
+		return derrors.NewInvalidArgumentError(emptyInboundName)
+	}
+	if addRequest.OutboundName == "" {
+		return derrors.NewInvalidArgumentError(emptyOutboundName)
+	}
+	return nil
+}
+
+func ValidRemoveConnectionRequest(removeRequest * grpc_application_network_go.RemoveConnectionRequest) derrors.Error {
+	if removeRequest.OrganizationId == ""{
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+	if removeRequest.TargetInstanceId == "" {
+		return derrors.NewInvalidArgumentError(emptyTargetInstanceId)
+	}
+	if removeRequest.SourceInstanceId == "" {
+		return derrors.NewInvalidArgumentError(emptySourceInstanceId)
+	}
+	if removeRequest.InboundName == "" {
+		return derrors.NewInvalidArgumentError(emptyInboundName)
+	}
+	if removeRequest.OutboundName == "" {
+		return derrors.NewInvalidArgumentError(emptyOutboundName)
+	}
 	return nil
 }
