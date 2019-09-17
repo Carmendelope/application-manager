@@ -26,6 +26,8 @@ import (
 
 const DefaultTimeout =  time.Minute
 const RequiredParamNotFilled = "Required parameter not filled"
+const RequiredOutboundNotFilled = "Required outbound not filled"
+const OutboundNotDefined = "Deploy outbound connection not defined"
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
@@ -116,6 +118,66 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 
 	return nil
 }
+
+// checkConnections: Checks all the connection fields are consistent (the target_instance_id has an inbound named TargetInboundName)
+// and checks the required outbounds are informed
+func (m * Manager) checkConnections (organizationID string, connections []*grpc_application_manager_go.ConnectionRequest,
+	outboundInterfaces []*grpc_application_go.OutboundNetworkInterface) derrors.Error {
+
+	for _, conn := range connections {
+
+		log.Debug().Interface("connection", conn).Msg("check connection")
+
+		// 1.- the target_instance_id has an inbound named TargetInboundName
+		log.Debug().Str("TargetInstanceId", conn.TargetInstanceId).Str("TargetInboundName", conn.TargetInboundName).Msg("check inbound Interface")
+		targetInstance, err := m.appClient.GetAppInstance(context.Background(),
+			&grpc_application_go.AppInstanceId{
+				OrganizationId: organizationID,
+				AppInstanceId: conn.TargetInstanceId,
+			})
+		if err != nil {
+			return nil
+		}
+		targetFound := false
+		for _, inbound := range targetInstance.InboundNetInterfaces{
+			if inbound.Name == conn.TargetInboundName {
+				targetFound = true
+			}
+		}
+		if ! targetFound {
+			return derrors.NewFailedPreconditionError("no inbound interface found").WithParams(conn.TargetInstanceId, conn.TargetInboundName)
+		}
+
+		// 2.- SourceOutboundName is defined in the instance
+		log.Debug().Str("SourceOutboundName", conn.SourceOutboundName).Msg("check outbound Interface")
+		outboundFound := false
+		for _, outbound := range outboundInterfaces {
+			if outbound.Name == conn.SourceOutboundName {
+				outboundFound = true
+			}
+		}
+		if ! outboundFound {
+			return derrors.NewFailedPreconditionError("no outbound interface found").WithParams(conn.SourceOutboundName)
+		}
+	}
+
+	for _, outbound := range outboundInterfaces {
+		if outbound.Required {
+			found := false
+			for _, connection := range connections {
+				if connection.SourceOutboundName == outbound.Name {
+					found = true
+				}
+			}
+			if ! found {
+				return derrors.NewFailedPreconditionError(RequiredOutboundNotFilled).WithParams(outbound.Name)
+			}
+		}
+	}
+
+	return nil
+}
+
 // Deploy an application descriptor.
 func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
 
@@ -137,6 +199,15 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	err = m.checkAllRequiredParametersAreFilled(desc, deployRequest.Parameters)
 	if err != nil {
 		return nil, err
+	}
+
+	// NP-1963. Check connections
+	// 1.- TargetInstanceId has an inbound named TargetInboundName
+	// 2.- The descriptor has an outbound named SourceOutboundName
+	// 3.- All required outbound are informed
+	dErr := m.checkConnections(deployRequest.OrganizationId, deployRequest.OutboundConnections, desc.OutboundNetInterfaces)
+	if dErr != nil {
+		return nil, conversions.ToGRPCError(dErr)
 	}
 
 	// Create it parametrized descriptor
@@ -162,6 +233,8 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		log.Error().Err(err).Msg("error adding application instance")
 		return nil, err
 	}
+
+	// TODO: AddConnections
 
 	// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
