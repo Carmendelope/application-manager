@@ -30,37 +30,56 @@ func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient, app
 }
 
 // AddConnection adds a new connection between one outbound and one inbound
-func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConnectionRequest) (*grpc_application_network_go.ConnectionInstance, error){
+func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConnectionRequest) (*grpc_application_network_go.ConnectionInstance, error) {
 
-	ctx, cancel := common.GetContext()
-	defer cancel()
+	ctxSource, cancelSource := common.GetContext()
+	defer cancelSource()
 
-
-	instanceList, err := m.appClient.ListAppInstances(ctx, &grpc_organization_go.OrganizationId{
+	// Source & Outbound
+	sourceInstance, err := m.appClient.GetAppInstance(ctxSource, &grpc_application_go.AppInstanceId{
 		OrganizationId: addRequest.OrganizationId,
+		AppInstanceId:  addRequest.SourceInstanceId,
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
-	// check if source_instance_id exists
-	if ! common.InstanceExists(instanceList, addRequest.SourceInstanceId) {
-		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("source_instance_id does not exist").WithParams(addRequest.SourceInstanceId))
-	}
-	// check if target_instance_id exists
-	if ! common.InstanceExists(instanceList, addRequest.TargetInstanceId) {
-		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("target_instance_id does not exist").WithParams(addRequest.TargetInstanceId))
+	if sourceInstance.OutboundNetInterfaces == nil {
+		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("outbound_name does not exist").WithParams(addRequest.SourceInstanceId, addRequest.OutboundName))
 	}
 
-	// check if the inboundName exists (the inboundName should be defined in the targetInstance)
-	if ! common.InboundExists(instanceList, addRequest.TargetInstanceId, addRequest.InboundName) {
-		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.InboundName, addRequest.TargetInstanceId))
+	outBoundFound := false
+	for _, outbound := range sourceInstance.OutboundNetInterfaces{
+		if outbound.Name == addRequest.OutboundName {
+			outBoundFound = true
+		}
 	}
-	// check if the outboundName exists (the outboundName should be defined in the sourceInstance)
-	if ! common.OutboundExists(instanceList, addRequest.SourceInstanceId, addRequest.OutboundName) {
-		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("outbound_name does not exist").WithParams(addRequest.OutboundName, addRequest.SourceInstanceId))
+	if ! outBoundFound {
+		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("outbound_name does not exist").WithParams(addRequest.SourceInstanceId, addRequest.OutboundName))
 	}
+
+
+	// Target & Inbound
+	ctxTarget, cancelTarget := common.GetContext()
+	defer cancelTarget()
+	targetInstance, err := m.appClient.GetAppInstance(ctxTarget, &grpc_application_go.AppInstanceId{
+		OrganizationId: addRequest.OrganizationId,
+		AppInstanceId: addRequest.TargetInstanceId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	inBoundFound := false
+	for _, inbound := range targetInstance.InboundNetInterfaces{
+		if inbound.Name == addRequest.InboundName {
+			inBoundFound = true
+		}
+	}
+	if ! inBoundFound {
+		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.TargetInstanceId, addRequest.InboundName))
+	}
+
+	// Add
 	return m.appNetClient.AddConnection(context.Background(), addRequest)
 }
 // RemoveConnection removes a connection

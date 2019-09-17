@@ -8,5 +8,5 @@ import (
 
 func TestApplicationNetworkPackage(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "Application Network ∫package suite")
+	ginkgo.RunSpecs(t, "Application Network package suite")
 }
