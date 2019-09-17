@@ -20,6 +20,7 @@ import (
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/rs/zerolog/log"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -119,6 +120,51 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 	return nil
 }
 
+type CheckInboundResponse struct {
+	InstanceId string
+	InboundName string
+	Result bool
+}
+
+// checkInbounds checks if the instanceID has defined all the inbounds in the inboundNames array
+func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.WaitGroup, organizationID string, instanceID string, inboundNames []string) {
+	defer wg.Done()
+
+	log.Debug().Str("TargetInstanceId", instanceID).Interface("TargetInboundNames", inboundNames).Msg("check inbounds Interface")
+
+	targetInstance, err := m.appClient.GetAppInstance(context.Background(),
+		&grpc_application_go.AppInstanceId{
+			OrganizationId: organizationID,
+			AppInstanceId: instanceID,
+		})
+	if err != nil {
+		respond <- CheckInboundResponse{
+			InstanceId: instanceID,
+			Result: false,
+		}
+	}
+	for _, inboundName := range inboundNames {
+		targetFound := false
+		for _, inbound := range targetInstance.InboundNetInterfaces {
+			if inbound.Name == inboundName {
+				targetFound = true
+			}
+		}
+		if ! targetFound {
+			respond <- CheckInboundResponse{
+				InstanceId: instanceID,
+				InboundName: inboundName,
+				Result: false,
+			}
+		}
+	}
+	respond <- CheckInboundResponse{
+		InstanceId: instanceID,
+		Result: true,
+	}
+
+}
+
 // checkConnections: Checks all the connection fields are consistent (the target_instance_id has an inbound named TargetInboundName)
 // and checks the required outbounds are informed
 func (m * Manager) checkConnections (organizationID string, connections []*grpc_application_manager_go.ConnectionRequest,
@@ -140,45 +186,44 @@ func (m * Manager) checkConnections (organizationID string, connections []*grpc_
 		}
 	}
 
+	// create a map with all the inbounds per instance_id
+	instanceList := make (map[string][]string, 0)
 	for _, conn := range connections {
-
-		log.Debug().Interface("connection", conn).Msg("check connection")
-
-		// 2.- the target_instance_id has an inbound named TargetInboundName
-		log.Debug().Str("TargetInstanceId", conn.TargetInstanceId).Str("TargetInboundName", conn.TargetInboundName).Msg("check inbound Interface")
-		targetInstance, err := m.appClient.GetAppInstance(context.Background(),
-			&grpc_application_go.AppInstanceId{
-				OrganizationId: organizationID,
-				AppInstanceId: conn.TargetInstanceId,
-			})
-		if err != nil {
-			return nil
-		}
-		targetFound := false
-		for _, inbound := range targetInstance.InboundNetInterfaces{
-			if inbound.Name == conn.TargetInboundName {
-				targetFound = true
-			}
-		}
-		if ! targetFound {
-			return derrors.NewFailedPreconditionError("no inbound interface found").WithParams(conn.TargetInstanceId, conn.TargetInboundName)
-		}
-
-		// 3.- SourceOutboundName is defined in the instance
-		log.Debug().Str("SourceOutboundName", conn.SourceOutboundName).Msg("check outbound Interface")
-		outboundFound := false
-		for _, outbound := range outboundInterfaces {
-			if outbound.Name == conn.SourceOutboundName {
-				outboundFound = true
-			}
-		}
-		if ! outboundFound {
-			return derrors.NewFailedPreconditionError("no outbound interface found").WithParams(conn.SourceOutboundName)
+		inbounds, exists := instanceList[conn.TargetInstanceId]
+		if ! exists {
+			instanceList[conn.TargetInstanceId] = []string{conn.TargetInboundName}
+		}else{
+			instanceList[conn.TargetInstanceId] = append(inbounds, conn.TargetInboundName)
 		}
 	}
 
+	respond := make (chan CheckInboundResponse, len(instanceList))
+	var wg sync.WaitGroup
+
+	wg.Add(len(instanceList))
+
+	for instanceId, inboundList := range instanceList {
+		log.Debug().Str("instanceID", instanceId).Interface("inboundList", inboundList).Msg("check inbound names")
+
+		go m.checkInbounds(respond, &wg, organizationID, instanceId, inboundList)
+
+	}
+
+	wg.Wait()
+	close (respond)
+
+	for result := range respond{
+		if result.Result == false {
+			if result.InboundName != "" {
+				return derrors.NewFailedPreconditionError("no inbound interface found").WithParams(result.InstanceId, result.InboundName)
+			}else{ // database error getting the instanceId (or instanceID does not exist)
+				return derrors.NewFailedPreconditionError("instance not found").WithParams(result.InstanceId)
+			}
+		}
+	}
 
 	return nil
+
 }
 
 // Deploy an application descriptor.
