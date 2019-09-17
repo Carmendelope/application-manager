@@ -7,6 +7,7 @@ package application
 import (
 	"context"
 	"github.com/nalej/application-manager/internal/pkg/entities"
+	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-common-go"
@@ -144,4 +145,14 @@ func (h * Handler) RetrieveEndpoints(ctx context.Context, filter *grpc_applicati
 		return nil, conversions.ToGRPCError(vErr)
 	}
 	return h.Manager.RetrieveEndpoints(filter)
+}
+
+// ListAvailableInstanceInbounds retrieves a list of available inbounds of an organization
+func (h * Handler) ListAvailableInstanceInbounds(ctx context.Context, in *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AvailableInstanceInboundList, error){
+	return nil, conversions.ToGRPCError(derrors.NewUnimplementedError("not implemented yet"))
+}
+// ListAvailableInstanceOutbounds retrieves a list of available outbounds of an organization
+func (h * Handler) ListAvailableInstanceOutbounds(ctx context.Context, in *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AvailableInstanceOutboundList, error){
+	return nil, conversions.ToGRPCError(derrors.NewUnimplementedError("not implemented yet"))
+
 }

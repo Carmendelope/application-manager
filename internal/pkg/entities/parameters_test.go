@@ -120,5 +120,40 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 
 	})
 
+	ginkgo.Context("Inbound and Outbound validation", func () {
+
+		ginkgo.It("Should be able to Valid the descriptor ", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).To(gomega.Succeed())
+		})
+
+		ginkgo.It("Should not be able to Valid the descriptor, inbound defined twice ", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.InboundNetInterfaces = append(appDesc.InboundNetInterfaces, &grpc_application_go.InboundNetworkInterface{Name:"inbound1"})
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+
+		ginkgo.It("Should be able to Valid the descriptor, inbound and outbound with the same name", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.InboundNetInterfaces = append(appDesc.InboundNetInterfaces, &grpc_application_go.InboundNetworkInterface{Name:"outbound1"})
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+
+		ginkgo.It("Should not be able to Valid the descriptor, invalid inbound in the rule", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Rules[0].InboundNetInterface = "wrong inbound"
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+		ginkgo.It("Should not be able to Valid the descriptor, invalid ACCESS", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Rules[0].Access = grpc_application_go.PortAccess_OUTBOUND_APPNET
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+	})
 
 })
