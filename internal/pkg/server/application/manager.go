@@ -124,11 +124,27 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 func (m * Manager) checkConnections (organizationID string, connections []*grpc_application_manager_go.ConnectionRequest,
 	outboundInterfaces []*grpc_application_go.OutboundNetworkInterface) derrors.Error {
 
+		// 1.- Check required outbounds
+	for _, outbound := range outboundInterfaces {
+		if outbound.Required {
+			log.Debug().Interface("outboundName", outbound.Name).Msg("check required outbound")
+			found := false
+			for _, connection := range connections {
+				if connection.SourceOutboundName == outbound.Name {
+					found = true
+				}
+			}
+			if ! found {
+				return derrors.NewFailedPreconditionError(RequiredOutboundNotFilled).WithParams(outbound.Name)
+			}
+		}
+	}
+
 	for _, conn := range connections {
 
 		log.Debug().Interface("connection", conn).Msg("check connection")
 
-		// 1.- the target_instance_id has an inbound named TargetInboundName
+		// 2.- the target_instance_id has an inbound named TargetInboundName
 		log.Debug().Str("TargetInstanceId", conn.TargetInstanceId).Str("TargetInboundName", conn.TargetInboundName).Msg("check inbound Interface")
 		targetInstance, err := m.appClient.GetAppInstance(context.Background(),
 			&grpc_application_go.AppInstanceId{
@@ -148,7 +164,7 @@ func (m * Manager) checkConnections (organizationID string, connections []*grpc_
 			return derrors.NewFailedPreconditionError("no inbound interface found").WithParams(conn.TargetInstanceId, conn.TargetInboundName)
 		}
 
-		// 2.- SourceOutboundName is defined in the instance
+		// 3.- SourceOutboundName is defined in the instance
 		log.Debug().Str("SourceOutboundName", conn.SourceOutboundName).Msg("check outbound Interface")
 		outboundFound := false
 		for _, outbound := range outboundInterfaces {
@@ -161,19 +177,6 @@ func (m * Manager) checkConnections (organizationID string, connections []*grpc_
 		}
 	}
 
-	for _, outbound := range outboundInterfaces {
-		if outbound.Required {
-			found := false
-			for _, connection := range connections {
-				if connection.SourceOutboundName == outbound.Name {
-					found = true
-				}
-			}
-			if ! found {
-				return derrors.NewFailedPreconditionError(RequiredOutboundNotFilled).WithParams(outbound.Name)
-			}
-		}
-	}
 
 	return nil
 }
