@@ -120,9 +120,14 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 	return nil
 }
 
+
+// CheckInboundResponse struct that contains the result of checkInbound operation.
 type CheckInboundResponse struct {
+	// InstanceId with the targetInstance identifier
 	InstanceId string
+	// InboundName with the name of the inbound not found
 	InboundName string
+	// Result contains the result of the validation
 	Result bool
 }
 
@@ -143,6 +148,10 @@ func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.
 			Result: false,
 		}
 	}
+	// globalResult contains the result of the operation,
+	// it is true when ALL the names are found
+	// it is false when one of them is not found
+	globalResult := true
 	for _, inboundName := range inboundNames {
 		targetFound := false
 		for _, inbound := range targetInstance.InboundNetInterfaces {
@@ -156,11 +165,16 @@ func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.
 				InboundName: inboundName,
 				Result: false,
 			}
+			globalResult = false
+			break
 		}
 	}
-	respond <- CheckInboundResponse{
-		InstanceId: instanceID,
-		Result: true,
+	// if all is OK -> true result sent to the chan
+	if globalResult {
+		respond <- CheckInboundResponse{
+			InstanceId: instanceID,
+			Result:     true,
+		}
 	}
 
 }
