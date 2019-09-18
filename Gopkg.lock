@@ -197,12 +197,12 @@
   version = "v0.0.56"
 
 [[projects]]
-  digest = "1:f41783cc6d03c6734fe9bb8b42ca4aa87651430e98cd8fe0ad5c72ca30da2efa"
+  digest = "1:f0bfa5064a85d3e11622850af09822ca8bce8dd78ec09d736f248fca4db85a64"
   name = "github.com/nalej/grpc-network-go"
   packages = ["."]
   pruneopts = ""
-  revision = "41e32d47652ad671340be2a115d36ec4364070e4"
-  version = "v0.0.42"
+  revision = "c8ef9a36892b5089176a6a53cf0fdee4012d70d2"
+  version = "v0.0.43"
 
 [[projects]]
   digest = "1:9921e275160e1559963d6452a918027db3563746fd03f63369ab104c0fbf16bf"
@@ -355,7 +355,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:af83d44f1195692d76697f62af82329be4d55b100d33b9b3db8f5d0f44563fb9"
+  digest = "1:ce26d94b8841936fff59bb524f4b96ac434f411b780b3aa784da90ee96ae2367"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -370,7 +370,7 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "c8589233b77dde5edd2205ba8a4fb5c9c2472556"
+  revision = "a8b05e9114ab0cb08faec337c959aed24b68bf50"
 
 [[projects]]
   branch = "master"
