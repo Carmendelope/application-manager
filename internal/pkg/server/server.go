@@ -11,6 +11,7 @@ import (
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
@@ -35,10 +36,11 @@ func NewService(conf Config) *Service {
 
 // Clients structure with the gRPC clients for remote services.
 type Clients struct {
-	AppClient grpc_application_go.ApplicationsClient
-	ConductorClient grpc_conductor_go.ConductorClient
-	ClusterClient grpc_infrastructure_go.ClustersClient
-	DeviceClient  grpc_device_go.DevicesClient
+	AppClient 		grpc_application_go.ApplicationsClient
+	ConductorClient	grpc_conductor_go.ConductorClient
+	ClusterClient 	grpc_infrastructure_go.ClustersClient
+	DeviceClient  	grpc_device_go.DevicesClient
+	AppNetClient 	grpc_application_network_go.ApplicationNetworkClient
 }
 
 // GetClients creates the required connections with the remote clients.
@@ -57,8 +59,9 @@ func (s * Service) GetClients() (* Clients, derrors.Error) {
 	cClient := grpc_conductor_go.NewConductorClient(conductorConn)
 	clClient := grpc_infrastructure_go.NewClustersClient(smConn)
 	dvClient := grpc_device_go.NewDevicesClient(smConn)
+	apClient := grpc_application_network_go.NewApplicationNetworkClient(smConn)
 
-	return &Clients{aClient, cClient, clClient, dvClient}, nil
+	return &Clients{aClient, cClient, clClient, dvClient, apClient}, nil
 }
 
 // Run the service, launch the REST service handler.
@@ -96,7 +99,7 @@ func (s *Service) Run() error {
 	log.Info().Msg("done")
 
 	// Create handlers
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, busManager)
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busManager)
 	handler := application.NewHandler(manager)
 
 	grpcServer := grpc.NewServer()

@@ -93,28 +93,28 @@
   version = "v0.0.2"
 
 [[projects]]
-  digest = "1:079b7aaa59da8402311008e92178ac5b202d056e59e1aea682b66c8db1ed0fb9"
+  digest = "1:b6844eec3faae47051ba88f4c003264e94833a3cc74de0f7e6bd936ccf7ca19b"
   name = "github.com/nalej/grpc-application-go"
   packages = ["."]
   pruneopts = ""
-  revision = "e56034675512e6591fa2d0fe2035c729bd58dc99"
-  version = "v0.0.85"
+  revision = "27d9d79c7f2d3967057c0934355660d6615d1c45"
+  version = "v0.0.86"
 
 [[projects]]
-  digest = "1:28f7c617e1a30af3bee86f5a6fdfa83a9afc25c256820e9aec196c8388c892d6"
+  digest = "1:eaf60efd3511b372a224f4699a82d6e834ec8f861b5ad18bd877f06280128111"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
   pruneopts = ""
-  revision = "3aa09b00e510c79773c6c22935308f32442b688b"
-  version = "v0.0.37"
+  revision = "9f32ea4a641bb8b5b97e0035f61c12c710d57258"
+  version = "v0.0.39"
 
 [[projects]]
-  digest = "1:1916eb9e133fd4310d1391e35cb70668b4320526a35b6b1234a0f8e878c036ea"
+  digest = "1:ea312c9f68cc9ca90bc95fa83f4be8d199a8070246680cf8a1ba25149e6776db"
   name = "github.com/nalej/grpc-application-network-go"
   packages = ["."]
   pruneopts = ""
-  revision = "7058446f357c9f6d6ccad68cc24c9f1e956e24a2"
-  version = "v0.0.1"
+  revision = "8d98dbfcc4c93e233b56a0173225e8bdd31863c4"
+  version = "v0.0.2"
 
 [[projects]]
   digest = "1:be9824efa8944bc7180a51b2e0c1b62d49902a3e5faa3a1ed57a15358e465096"
@@ -197,12 +197,12 @@
   version = "v0.0.56"
 
 [[projects]]
-  digest = "1:f41783cc6d03c6734fe9bb8b42ca4aa87651430e98cd8fe0ad5c72ca30da2efa"
+  digest = "1:f0bfa5064a85d3e11622850af09822ca8bce8dd78ec09d736f248fca4db85a64"
   name = "github.com/nalej/grpc-network-go"
   packages = ["."]
   pruneopts = ""
-  revision = "41e32d47652ad671340be2a115d36ec4364070e4"
-  version = "v0.0.42"
+  revision = "c8ef9a36892b5089176a6a53cf0fdee4012d70d2"
+  version = "v0.0.43"
 
 [[projects]]
   digest = "1:9921e275160e1559963d6452a918027db3563746fd03f63369ab104c0fbf16bf"
@@ -322,12 +322,12 @@
   version = "v0.0.5"
 
 [[projects]]
-  digest = "1:cbaf13cdbfef0e4734ed8a7504f57fe893d471d62a35b982bf6fb3f036449a66"
+  digest = "1:1bff633980ce46a718d753a3bc7e3eb6d7e4df34bc7e4a9869e71ccb4314dc40"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = ""
-  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
-  version = "v1.0.3"
+  revision = "e8f29969b682c41a730f8f08b76033b120498464"
+  version = "v1.0.4"
 
 [[projects]]
   digest = "1:0fde23d99b82798c9f1482d1cc0b298485043c7f288ae3f9cd9c8ee0c181e0e5"
@@ -355,7 +355,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:af83d44f1195692d76697f62af82329be4d55b100d33b9b3db8f5d0f44563fb9"
+  digest = "1:ce26d94b8841936fff59bb524f4b96ac434f411b780b3aa784da90ee96ae2367"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -370,7 +370,7 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "c8589233b77dde5edd2205ba8a4fb5c9c2472556"
+  revision = "a8b05e9114ab0cb08faec337c959aed24b68bf50"
 
 [[projects]]
   branch = "master"
@@ -503,7 +503,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c82da24d774bfa6970ed20dff1467e797e2434c5bc17b654bb5a73df1e319bbf"
+  digest = "1:47cb9a92a8facc3a0a99d872974325255db7ee637f0c0dcf2f4233565e9b3b69"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -512,7 +512,7 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "344bcc0201c96e6981fd956f55e530f657826a52"
+  revision = "a891081239f5a13b1e612412e1e55c458036b88e"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -523,6 +523,7 @@
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
     "github.com/nalej/grpc-application-manager-go",
+    "github.com/nalej/grpc-application-network-go",
     "github.com/nalej/grpc-common-go",
     "github.com/nalej/grpc-conductor-go",
     "github.com/nalej/grpc-device-go",
