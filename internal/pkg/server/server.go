@@ -42,6 +42,7 @@ type Clients struct {
 	ClusterClient grpc_infrastructure_go.ClustersClient
 	DeviceClient  grpc_device_go.DevicesClient
 	AppNetClient grpc_application_network_go.ApplicationNetworkClient
+
 }
 
 // GetClients creates the required connections with the remote clients.
@@ -100,7 +101,7 @@ func (s *Service) Run() error {
 	log.Info().Msg("done")
 
 	// Create handlers
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, busManager)
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busManager)
 	handler := application.NewHandler(manager)
 
 	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient)
@@ -108,7 +109,7 @@ func (s *Service) Run() error {
 
 	grpcServer := grpc.NewServer()
 	grpc_application_manager_go.RegisterApplicationManagerServer(grpcServer, handler)
-	grpc_application_network_go.RegisterApplicationNetworkServer(grpcServer, appNetHandler)
+	grpc_application_manager_go.RegisterApplicationNetworkServer(grpcServer, appNetHandler)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)

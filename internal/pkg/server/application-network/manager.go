@@ -5,7 +5,7 @@
 package application_network
 
 import (
-	"context"
+	"github.com/google/uuid"
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
@@ -13,6 +13,7 @@ import (
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"time"
 )
 
 // Manager structure with the required clients for roles operations.
@@ -30,7 +31,7 @@ func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient, app
 }
 
 // AddConnection adds a new connection between one outbound and one inbound
-func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConnectionRequest) (*grpc_application_network_go.ConnectionInstance, error) {
+func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
 	ctxSource, cancelSource := common.GetContext()
 	defer cancelSource()
@@ -79,15 +80,26 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.TargetInstanceId, addRequest.InboundName))
 	}
 
-	// Add
-	return m.appNetClient.AddConnection(context.Background(), addRequest)
+	// TODO: send the addConnection message to the bus
+	return &grpc_common_go.OpResponse{
+		OrganizationId: addRequest.OrganizationId,
+		RequestId: uuid.New().String(),
+		Timestamp: time.Now().Unix(),
+		Status: "",
+		Info: "Add Connection queued",
+	}, nil
 }
 // RemoveConnection removes a connection
-func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.RemoveConnectionRequest) (*grpc_common_go.Success, error) {
-	ctx, cancel := common.GetContext()
-	defer cancel()
+func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.RemoveConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
-	return m.appNetClient.RemoveConnection(ctx, removeRequest)
+	// TODO: send the removeConnection message to the bus
+	return &grpc_common_go.OpResponse{
+		OrganizationId: removeRequest.OrganizationId,
+		RequestId: uuid.New().String(),
+		Timestamp: time.Now().Unix(),
+		Status: "",
+		Info: "Remove Connection queued",
+	}, nil
 }
 // ListConnections retrieves a list all the established connections of an organization
 func (m *Manager) ListConnections(orgID *grpc_organization_go.OrganizationId) (*grpc_application_network_go.ConnectionInstanceList, error){
