@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
-	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
@@ -215,7 +214,7 @@ func copyConfigFile (configFile * grpc_application_go.ConfigFile) * grpc_applica
 }
 
 // newParametrizedDescriptorFromDescriptor returns a parameterized descriptor as a copy of a given descriptor
-func newParametrizedDescriptorFromDescriptor(descriptor *grpc_application_go.AppDescriptor) *grpc_application_manager_go.ParametrizedDescriptor {
+func newParametrizedDescriptorFromDescriptor(descriptor *grpc_application_go.AppDescriptor) *grpc_application_go.ParametrizedDescriptor {
 	if descriptor == nil {
 		return nil
 	}
