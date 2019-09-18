@@ -147,6 +147,7 @@ func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.
 			InstanceId: instanceID,
 			Result: false,
 		}
+		return
 	}
 	// globalResult contains the result of the operation,
 	// it is true when ALL the names are found
