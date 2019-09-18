@@ -825,3 +825,48 @@ func CreateTestAddDescriptorWithMountPath()* grpc_application_go.AddAppDescripto
 		},
 	}
 }
+
+func CreateAppDescriptorWithInboundAndOutbounds()* grpc_application_go.AddAppDescriptorRequest{
+
+	return &grpc_application_go.AddAppDescriptorRequest {
+		RequestId: 		uuid.New().String(),
+		OrganizationId:	uuid.New().String(),
+		Name: 			"descriptor-test",
+		InboundNetInterfaces:[]*grpc_application_go.InboundNetworkInterface{{Name:"inbound1"}},
+		OutboundNetInterfaces:[]*grpc_application_go.OutboundNetworkInterface{{Name:"outbound1"}},
+		Rules: 			[]*grpc_application_go.SecurityRule{
+			{
+				Name: "rule1",
+				TargetServiceGroupName: "g1",
+				TargetServiceName:"service1",
+				Access: grpc_application_go.PortAccess_INBOUND_APPNET,
+				InboundNetInterface: "inbound1",
+			},
+			{
+				Name: "rule2",
+				TargetServiceGroupName: "g2",
+				TargetServiceName:"service3",
+				Access: grpc_application_go.PortAccess_OUTBOUND_APPNET,
+				OutboundNetInterface: "outbound1",
+			},
+		},
+		Groups: 		[]*grpc_application_go.ServiceGroup{
+			{
+				Name:"g1",
+				Services:[]*grpc_application_go.Service{
+					{Name: "service1",},
+					{Name: "service2",},},
+				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
+					Replicas: 3,
+					MultiClusterReplica: false,
+				},
+			},
+			{
+				Name:"g2",
+				Services:[]*grpc_application_go.Service{
+					{Name: "service3",},},
+			},
+		},
+		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
+	}
+}

@@ -273,7 +273,7 @@ func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.Organiz
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
-func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.AppInstance, error) {
+func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_manager_go.AppInstance, error) {
 	return m.appClient.GetAppInstance(context.Background(), appInstanceID)
 }
 
