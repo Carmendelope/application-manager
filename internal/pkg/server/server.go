@@ -6,7 +6,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/server/application"
 	"github.com/nalej/application-manager/internal/pkg/server/application-network"
 	"github.com/nalej/derrors"
@@ -17,6 +16,8 @@ import (
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
+	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
+	networkOps "github.com/nalej/nalej-bus/pkg/queue/network/ops"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -42,7 +43,30 @@ type Clients struct {
 	ClusterClient grpc_infrastructure_go.ClustersClient
 	DeviceClient  grpc_device_go.DevicesClient
 	AppNetClient grpc_application_network_go.ApplicationNetworkClient
+}
 
+type BusClients struct {
+	AppOpsProducer *ops.ApplicationOpsProducer
+	NetOpsProducer *networkOps.NetworkOpsProducer
+}
+
+// GetBusClients creates the required connections with the bus
+func (s*Service) GetBusClients() (*BusClients, derrors.Error) {
+	queueClient := pulsar_comcast.NewClient(s.Configuration.QueueAddress, nil)
+
+	appOpsProducer, err := ops.NewApplicationOpsProducer(queueClient, "ApplicationManager-app_ops")
+	if err != nil {
+		return nil, err
+	}
+
+	netOpsProducer, err := networkOps.NewNetworkOpsProducer(queueClient, "ApplicationManager-network_ops")
+	if err != nil {
+		return nil, err
+	}
+	return &BusClients{
+		AppOpsProducer:appOpsProducer,
+		NetOpsProducer:netOpsProducer,
+	}, nil
 }
 
 // GetClients creates the required connections with the remote clients.
@@ -68,43 +92,36 @@ func (s * Service) GetClients() (* Clients, derrors.Error) {
 
 // Run the service, launch the REST service handler.
 func (s *Service) Run() error {
+	// Configuration
 	cErr := s.Configuration.Validate()
 	if cErr != nil{
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("invalid configuration")
 	}
 	s.Configuration.Print()
-	clients, cErr := s.GetClients()
-	if cErr != nil{
-		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create clients")
-	}
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Configuration.Port))
 	if err != nil {
 		log.Fatal().Errs("failed to listen: %v", []error{err})
 	}
 
-	log.Info().Msg("instatiating bus client...")
-	// Create bus client
-	queueClient := pulsar_comcast.NewClient(s.Configuration.QueueAddress)
-	if err != nil {
-		log.Panic().Err(err).Msg("impossible to create bus client instance")
-		return err
+	// Clients
+	clients, cErr := s.GetClients()
+	if cErr != nil{
+		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create clients")
 	}
-	log.Info().Msg("done")
-	// Instantiate the bus manager
-	log.Info().Msg("instantiating bus manager...")
-	busManager, err := bus.NewBusManager(queueClient, "ApplicationManager")
-	if err != nil {
-		log.Panic().Err(err).Msg("impossible to create bus manager instance")
-		return err
+
+	// BusClients
+	busClients, bErr := s.GetBusClients()
+	if err != nil{
+		log.Fatal().Str("err", bErr.DebugReport()).Msg("Cannot create bus clients")
 	}
-	log.Info().Msg("done")
+
 
 	// Create handlers
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busManager)
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer)
 	handler := application.NewHandler(manager)
 
-	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient)
+	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient, busClients.NetOpsProducer)
 	appNetHandler := application_network.NewHandler(appNetManager)
 
 	grpcServer := grpc.NewServer()

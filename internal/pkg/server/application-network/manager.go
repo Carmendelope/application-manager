@@ -13,6 +13,7 @@ import (
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/nalej/nalej-bus/pkg/queue/network/ops"
 	"time"
 )
 
@@ -20,13 +21,17 @@ import (
 type Manager struct {
 	appNetClient grpc_application_network_go.ApplicationNetworkClient
 	appClient grpc_application_go.ApplicationsClient
+	netOpsProducer *ops.NetworkOpsProducer
 }
 
 // NewManager creates a Manager using a set of clients.
-func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient, appClient grpc_application_go.ApplicationsClient) Manager{
+func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient,
+	appClient grpc_application_go.ApplicationsClient,
+	netOpsProducer *ops.NetworkOpsProducer) Manager{
 	return Manager{
-		appNetClient: appNet,
-		appClient: appClient,
+		appNetClient: 	appNet,
+		appClient: 		appClient,
+		netOpsProducer: netOpsProducer,
 	}
 }
 
@@ -79,6 +84,8 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 	if ! inBoundFound {
 		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.TargetInstanceId, addRequest.InboundName))
 	}
+
+
 
 	// TODO: send the addConnection message to the bus
 	return &grpc_common_go.OpResponse{
