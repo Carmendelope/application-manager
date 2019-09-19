@@ -283,16 +283,22 @@ func (m  * Manager) getInstanceConnections(instance *grpc_application_go.AppInst
 	// InboundConnections
 	inboundConnections, err := m.appNetClient.ListInboundConnections(context.Background(), appInstanceID)
 	if err != nil {
-		// TODO: what to do in this case???
+		log.Error().Str("instance_id", instance.AppInstanceId).Msg("error getting inbound connections")
+	}else {
+		if inboundConnections != nil {
+			expandInstance.InboundConnections = inboundConnections.Connections
+		}
 	}
-	expandInstance.InboundConnections = inboundConnections.Connections
 
 	// OutboundConnections
 	outboundConnections, err := m.appNetClient.ListOutboundConnections(context.Background(), appInstanceID)
 	if err != nil {
-		// TODO: what to do in this case???
+		log.Error().Str("instance_id", instance.AppInstanceId).Msg("error getting outbound connections")
+	}else {
+		if outboundConnections != nil {
+			expandInstance.OutboundConnections = outboundConnections.Connections
+		}
 	}
-	expandInstance.OutboundConnections = outboundConnections.Connections
 
 	return expandInstance
 

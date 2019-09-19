@@ -322,12 +322,12 @@
   version = "v0.0.5"
 
 [[projects]]
-  digest = "1:1bff633980ce46a718d753a3bc7e3eb6d7e4df34bc7e4a9869e71ccb4314dc40"
+  digest = "1:688428eeb1ca80d92599eb3254bdf91b51d7e232fead3a73844c1f201a281e51"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = ""
-  revision = "e8f29969b682c41a730f8f08b76033b120498464"
-  version = "v1.0.4"
+  revision = "2e9d26c8c37aae03e3f9d4e90b7116f5accb7cab"
+  version = "v1.0.5"
 
 [[projects]]
   digest = "1:0fde23d99b82798c9f1482d1cc0b298485043c7f288ae3f9cd9c8ee0c181e0e5"
@@ -374,11 +374,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d75336f9fd966011ede7a692794c112e81f0cb80d6e0082ad352e1986fc7b5ee"
+  digest = "1:c04d252619a11f0ba51313ad9ee728c0b7bb61c34c7ab65e841a05ac350e65a0"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "b4ddaad3f8a36719f2b8bc6486c14cc468ca2bb5"
+  revision = "0c1ff786ef13daa914a3351c5e6b0321aed5960e"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
