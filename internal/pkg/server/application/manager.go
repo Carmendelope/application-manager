@@ -7,7 +7,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
@@ -19,6 +18,7 @@ import (
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
 	"github.com/rs/zerolog/log"
 	"math/rand"
 	"time"
@@ -35,7 +35,7 @@ type Manager struct {
 	clusterClient   grpc_infrastructure_go.ClustersClient
 	deviceClient    grpc_device_go.DevicesClient
 	appNetClient    grpc_application_network_go.ApplicationNetworkClient
-	busManager		*bus.BusManager
+	appOpsProducer 	*ops.ApplicationOpsProducer
 }
 
 // NewManager creates a Manager using a set of clients.
@@ -45,8 +45,8 @@ func NewManager(
 	clusterClient grpc_infrastructure_go.ClustersClient,
 	deviceClient grpc_device_go.DevicesClient,
 	appNetClient grpc_application_network_go.ApplicationNetworkClient,
-	busManager *bus.BusManager) Manager {
-	return Manager{appClient, conductorClient, clusterClient, deviceClient, appNetClient,busManager}
+	appOpsProducer *ops.ApplicationOpsProducer) Manager {
+	return Manager{appClient, conductorClient, clusterClient, deviceClient, appNetClient,appOpsProducer}
 }
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
@@ -229,7 +229,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
-	err = m.busManager.Send(ctx, request)
+	err = m.appOpsProducer.Send(ctx, request)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", instance.AppInstanceId).
 			Msg("error when sending deployment request to the queue")
@@ -259,7 +259,7 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
-	err := m.busManager.Send(ctx, undeployRequest)
+	err := m.appOpsProducer.Send(ctx, undeployRequest)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", undeployRequest.AppInstanceId).
 			Msg("error when sending the undeploy request to the queue")
@@ -316,6 +316,7 @@ func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.Organiz
 
 // GetAppDescriptor retrieves a given application descriptor.
 func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_manager_go.AppInstance, error) {
+
 	appInstance, err := m.appClient.GetAppInstance(context.Background(), appInstanceID)
 
 	if err != nil {
@@ -325,6 +326,7 @@ func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstance
 	// get inbound and outbound connections for the instance
 	expandInstance := m.getInstanceConnections(appInstance)
 	return expandInstance, nil
+
 }
 
 func (m * Manager)  ListInstanceParameters (appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {
