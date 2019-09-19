@@ -14,6 +14,7 @@ import (
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/nalej-bus/pkg/queue/network/ops"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -85,26 +86,39 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.TargetInstanceId, addRequest.InboundName))
 	}
 
+	// send the message to the queue
+	ctxSend, cancelSend := common.GetContext()
+	defer cancelSend()
+	err = m.netOpsProducer.Send(ctxSend, addRequest)
+	if err != nil {
+		log.Error().Interface("connection", addRequest).Msg("error sending addConnection to the queue")
+		return nil, err
+	}
 
-
-	// TODO: send the addConnection message to the bus
 	return &grpc_common_go.OpResponse{
 		OrganizationId: addRequest.OrganizationId,
 		RequestId: uuid.New().String(),
 		Timestamp: time.Now().Unix(),
-		Status: "",
+		Status: "QUEUED",
 		Info: "Add Connection queued",
 	}, nil
 }
 // RemoveConnection removes a connection
 func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.RemoveConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
-	// TODO: send the removeConnection message to the bus
+	// send the message to the queue
+	ctxSend, cancelSend := common.GetContext()
+	defer cancelSend()
+	err := m.netOpsProducer.Send(ctxSend, removeRequest)
+	if err != nil {
+		log.Error().Interface("connection", removeRequest).Msg("error sending removeConnection to the queue")
+		return nil, err
+	}
 	return &grpc_common_go.OpResponse{
 		OrganizationId: removeRequest.OrganizationId,
 		RequestId: uuid.New().String(),
 		Timestamp: time.Now().Unix(),
-		Status: "",
+		Status: "QUEUED",
 		Info: "Remove Connection queued",
 	}, nil
 }

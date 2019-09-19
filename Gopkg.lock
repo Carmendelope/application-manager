@@ -519,7 +519,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/golang/protobuf/proto",
     "github.com/google/uuid",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
@@ -532,7 +531,6 @@
     "github.com/nalej/grpc-organization-go",
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
-    "github.com/nalej/nalej-bus/pkg/bus",
     "github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast",
     "github.com/nalej/nalej-bus/pkg/queue/application/ops",
     "github.com/nalej/nalej-bus/pkg/queue/network/ops",
