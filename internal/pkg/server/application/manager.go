@@ -7,17 +7,18 @@ package application
 import (
 	"context"
 	"fmt"
-	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
 	"github.com/rs/zerolog/log"
 	"math/rand"
 	"sync"
@@ -36,7 +37,8 @@ type Manager struct {
 	conductorClient grpc_conductor_go.ConductorClient
 	clusterClient   grpc_infrastructure_go.ClustersClient
 	deviceClient    grpc_device_go.DevicesClient
-	busManager		*bus.BusManager
+	appNetClient    grpc_application_network_go.ApplicationNetworkClient
+	appOpsProducer 	*ops.ApplicationOpsProducer
 }
 
 // NewManager creates a Manager using a set of clients.
@@ -45,8 +47,9 @@ func NewManager(
 	conductorClient grpc_conductor_go.ConductorClient,
 	clusterClient grpc_infrastructure_go.ClustersClient,
 	deviceClient grpc_device_go.DevicesClient,
-	busManager *bus.BusManager) Manager {
-	return Manager{appClient, conductorClient, clusterClient, deviceClient, busManager}
+	appNetClient grpc_application_network_go.ApplicationNetworkClient,
+	appOpsProducer *ops.ApplicationOpsProducer) Manager {
+	return Manager{appClient, conductorClient, clusterClient, deviceClient, appNetClient,appOpsProducer}
 }
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
@@ -362,7 +365,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
-	err = m.busManager.Send(ctx, request)
+	err = m.appOpsProducer.Send(ctx, request)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", instance.AppInstanceId).
 			Msg("error when sending deployment request to the queue")
@@ -392,7 +395,7 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
-	err := m.busManager.Send(ctx, undeployRequest)
+	err := m.appOpsProducer.Send(ctx, undeployRequest)
 	if err != nil {
 		log.Error().Err(err).Str("appInstanceId", undeployRequest.AppInstanceId).
 			Msg("error when sending the undeploy request to the queue")
@@ -403,14 +406,69 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 
 }
 
+// getInstanceConnections returns the appInstance with the connections field filled
+func (m  * Manager) getInstanceConnections(instance *grpc_application_go.AppInstance) *grpc_application_manager_go.AppInstance {
+
+	expandInstance := entities.ToAppInstance(instance)
+
+	appInstanceID := &grpc_application_go.AppInstanceId{
+		OrganizationId: instance.OrganizationId,
+		AppInstanceId: instance.AppInstanceId,
+	}
+
+	// InboundConnections
+	inboundConnections, err := m.appNetClient.ListInboundConnections(context.Background(), appInstanceID)
+	if err != nil {
+		log.Error().Str("instance_id", instance.AppInstanceId).Msg("error getting inbound connections")
+	}else {
+		if inboundConnections != nil {
+			expandInstance.InboundConnections = inboundConnections.Connections
+		}
+	}
+
+	// OutboundConnections
+	outboundConnections, err := m.appNetClient.ListOutboundConnections(context.Background(), appInstanceID)
+	if err != nil {
+		log.Error().Str("instance_id", instance.AppInstanceId).Msg("error getting outbound connections")
+	}else {
+		if outboundConnections != nil {
+			expandInstance.OutboundConnections = outboundConnections.Connections
+		}
+	}
+
+	return expandInstance
+
+}
+
 // ListAppInstances retrieves a list of application descriptors.
-func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_go.AppInstanceList, error) {
-	return m.appClient.ListAppInstances(context.Background(), organizationID)
+func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AppInstanceList, error) {
+
+	list, err :=  m.appClient.ListAppInstances(context.Background(), organizationID)
+	if err != nil {
+		return nil, err
+	}
+	expandList := make ([]*grpc_application_manager_go.AppInstance, len(list.Instances))
+	for _, instance := range list.Instances {
+		expandList = append(expandList, m.getInstanceConnections(instance))
+	}
+	return &grpc_application_manager_go.AppInstanceList{
+		Instances:expandList,
+	}, nil
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
-func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.AppInstance, error) {
-	return m.appClient.GetAppInstance(context.Background(), appInstanceID)
+func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_manager_go.AppInstance, error) {
+
+	appInstance, err := m.appClient.GetAppInstance(context.Background(), appInstanceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// get inbound and outbound connections for the instance
+	expandInstance := m.getInstanceConnections(appInstance)
+	return expandInstance, nil
+
 }
 
 func (m * Manager)  ListInstanceParameters (appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {

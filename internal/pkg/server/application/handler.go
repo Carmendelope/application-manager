@@ -97,7 +97,7 @@ func (h * Handler) Undeploy(ctx context.Context, appInstanceID *grpc_application
 }
 
 // ListAppInstances retrieves a list of application descriptors.
-func (h * Handler) ListAppInstances(ctx context.Context, organizationID *grpc_organization_go.OrganizationId) (*grpc_application_go.AppInstanceList, error) {
+func (h * Handler) ListAppInstances(ctx context.Context, organizationID *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AppInstanceList, error) {
 	vErr := entities.ValidOrganizationId(organizationID)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
@@ -106,7 +106,7 @@ func (h * Handler) ListAppInstances(ctx context.Context, organizationID *grpc_or
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
-func (h * Handler) GetAppInstance(ctx context.Context, appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.AppInstance, error) {
+func (h * Handler) GetAppInstance(ctx context.Context, appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_manager_go.AppInstance, error) {
 	vErr := entities.ValidAppInstanceID(appInstanceID)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
@@ -149,6 +149,7 @@ func (h * Handler) RetrieveEndpoints(ctx context.Context, filter *grpc_applicati
 
 // ListAvailableInstanceInbounds retrieves a list of available inbounds of an organization
 func (h * Handler) ListAvailableInstanceInbounds(ctx context.Context, in *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AvailableInstanceInboundList, error){
+
 	return nil, conversions.ToGRPCError(derrors.NewUnimplementedError("not implemented yet"))
 }
 // ListAvailableInstanceOutbounds retrieves a list of available outbounds of an organization

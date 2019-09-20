@@ -14,10 +14,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/nalej/application-manager/internal/pkg/bus"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
@@ -25,6 +25,7 @@ import (
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/grpc-utils/pkg/test"
 	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
+	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
@@ -168,8 +169,10 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	var conductorClient grpc_conductor_go.ConductorClient
 	var clusterClient grpc_infrastructure_go.ClustersClient
 	var deviceClient grpc_device_go.DevicesClient
+	var apNetClient grpc_application_network_go.ApplicationNetworkClient
 	var smConn * grpc.ClientConn
 	var conductorConn * grpc.ClientConn
+
 	var client grpc_application_manager_go.ApplicationManagerClient
 
 
@@ -191,15 +194,16 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		conductorClient = grpc_conductor_go.NewConductorClient(conductorConn)
 		clusterClient = grpc_infrastructure_go.NewClustersClient(smConn)
 		deviceClient = grpc_device_go.NewDevicesClient(smConn)
-		busConn := pulsar_comcast.NewClient(busAddress)
-		busClient, bError := bus.NewBusManager(busConn, "application-manager-test")
-		gomega.Expect(bError).To(gomega.BeNil())
+		apNetClient = grpc_application_network_go.NewApplicationNetworkClient(smConn)
 
+		queueClient := pulsar_comcast.NewClient(busAddress, nil)
+		appOpsProducer, bErr := ops.NewApplicationOpsProducer(queueClient, "ApplicationManager-app_ops")
+		gomega.Expect(bErr).To(gomega.BeNil())
 
 		test.LaunchServer(server, listener)
 
 		// Register the service
-		manager := NewManager(appClient, conductorClient, clusterClient, deviceClient, busClient)
+		manager := NewManager(appClient, conductorClient, clusterClient, deviceClient, apNetClient, appOpsProducer)
 		handler := NewHandler(manager)
 		grpc_application_manager_go.RegisterApplicationManagerServer(server, handler)
 
