@@ -352,17 +352,6 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		Name:                 deployRequest.Name,
 	}
 
-	/*
-	// TODO remove legacy interaction with the conductor API
-	ctxConductor, cancelConductor := context.WithTimeout(context.Background(), DefaultTimeout)
-	defer cancelConductor()
-	_, err = m.conductorClient.Deploy(ctxConductor, request)
-	if err != nil {
-		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
-		return nil, err
-	}
-	*/
-
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
 	err = m.appOpsProducer.Send(ctx, request)
@@ -389,9 +378,6 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 		OrganizationId:       appInstanceID.OrganizationId,
 		AppInstanceId:            appInstanceID.AppInstanceId,
 	}
-
-	// TODO: remove legacy interaction with the conductor API
-	//return  m.conductorClient.Undeploy(context.Background(), undeployRequest)
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
