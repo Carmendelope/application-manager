@@ -21,12 +21,15 @@ import (
 	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
 	"github.com/rs/zerolog/log"
 	"math/rand"
+	"sync"
 	"time"
 )
 
 
 const DefaultTimeout =  time.Minute
 const RequiredParamNotFilled = "Required parameter not filled"
+const RequiredOutboundNotFilled = "Required outbound not filled"
+const OutboundNotDefined = "Deploy outbound connection not defined"
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
@@ -119,6 +122,128 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 
 	return nil
 }
+
+
+// CheckInboundResponse struct that contains the result of checkInbound operation.
+type CheckInboundResponse struct {
+	// InstanceId with the targetInstance identifier
+	InstanceId string
+	// InboundName with the name of the inbound not found
+	InboundName string
+	// Result contains the result of the validation
+	Result bool
+}
+
+// checkInbounds checks if the instanceID has defined all the inbounds in the inboundNames array
+func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.WaitGroup, organizationID string, instanceID string, inboundNames []string) {
+	defer wg.Done()
+
+	log.Debug().Str("TargetInstanceId", instanceID).Interface("TargetInboundNames", inboundNames).Msg("check inbounds Interface")
+
+	targetInstance, err := m.appClient.GetAppInstance(context.Background(),
+		&grpc_application_go.AppInstanceId{
+			OrganizationId: organizationID,
+			AppInstanceId: instanceID,
+		})
+	if err != nil {
+		respond <- CheckInboundResponse{
+			InstanceId: instanceID,
+			Result: false,
+		}
+		return
+	}
+	// globalResult contains the result of the operation,
+	// it is true when ALL the names are found
+	// it is false when one of them is not found
+	globalResult := true
+	for _, inboundName := range inboundNames {
+		targetFound := false
+		for _, inbound := range targetInstance.InboundNetInterfaces {
+			if inbound.Name == inboundName {
+				targetFound = true
+			}
+		}
+		if ! targetFound {
+			respond <- CheckInboundResponse{
+				InstanceId: instanceID,
+				InboundName: inboundName,
+				Result: false,
+			}
+			globalResult = false
+			break
+		}
+	}
+	// if all is OK -> true result sent to the chan
+	if globalResult {
+		respond <- CheckInboundResponse{
+			InstanceId: instanceID,
+			Result:     true,
+		}
+	}
+
+}
+
+// checkConnections: Checks all the connection fields are consistent (the target_instance_id has an inbound named TargetInboundName)
+// and checks the required outbounds are informed
+func (m * Manager) checkConnections (organizationID string, connections []*grpc_application_manager_go.ConnectionRequest,
+	outboundInterfaces []*grpc_application_go.OutboundNetworkInterface) derrors.Error {
+
+		// 1.- Check required outbounds
+	for _, outbound := range outboundInterfaces {
+		if outbound.Required {
+			log.Debug().Interface("outboundName", outbound.Name).Msg("check required outbound")
+			found := false
+			for _, connection := range connections {
+				if connection.SourceOutboundName == outbound.Name {
+					found = true
+				}
+			}
+			if ! found {
+				return derrors.NewFailedPreconditionError(RequiredOutboundNotFilled).WithParams(outbound.Name)
+			}
+		}
+	}
+
+	// create a map with all the inbounds per instance_id
+	instanceList := make (map[string][]string, 0)
+	for _, conn := range connections {
+		inbounds, exists := instanceList[conn.TargetInstanceId]
+		if ! exists {
+			instanceList[conn.TargetInstanceId] = []string{conn.TargetInboundName}
+		}else{
+			instanceList[conn.TargetInstanceId] = append(inbounds, conn.TargetInboundName)
+		}
+	}
+
+	respond := make (chan CheckInboundResponse, len(instanceList))
+	var wg sync.WaitGroup
+
+	wg.Add(len(instanceList))
+
+	for instanceId, inboundList := range instanceList {
+		log.Debug().Str("instanceID", instanceId).Interface("inboundList", inboundList).Msg("check inbound names")
+
+		go m.checkInbounds(respond, &wg, organizationID, instanceId, inboundList)
+
+	}
+
+	wg.Wait()
+	close (respond)
+
+	for result := range respond{
+		if result.Result == false {
+			if result.InboundName != "" {
+				return derrors.NewFailedPreconditionError("no inbound interface found").WithParams(result.InstanceId, result.InboundName)
+			}else{ // database error getting the instanceId (or instanceID does not exist)
+				return derrors.NewFailedPreconditionError("instance not found").WithParams(result.InstanceId)
+			}
+		}
+	}
+
+	return nil
+
+}
+
 // Deploy an application descriptor.
 func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
 
@@ -140,6 +265,15 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	err = m.checkAllRequiredParametersAreFilled(desc, deployRequest.Parameters)
 	if err != nil {
 		return nil, err
+	}
+
+	// NP-1963. Check connections
+	// 1.- TargetInstanceId has an inbound named TargetInboundName
+	// 2.- The descriptor has an outbound named SourceOutboundName
+	// 3.- All required outbound are informed
+	dErr := m.checkConnections(deployRequest.OrganizationId, deployRequest.OutboundConnections, desc.OutboundNetInterfaces)
+	if dErr != nil {
+		return nil, conversions.ToGRPCError(dErr)
 	}
 
 	// Create it parametrized descriptor
@@ -165,6 +299,8 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		log.Error().Err(err).Msg("error adding application instance")
 		return nil, err
 	}
+
+	// TODO: AddConnections
 
 	// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
@@ -216,17 +352,6 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 		Name:                 deployRequest.Name,
 	}
 
-	/*
-	// TODO remove legacy interaction with the conductor API
-	ctxConductor, cancelConductor := context.WithTimeout(context.Background(), DefaultTimeout)
-	defer cancelConductor()
-	_, err = m.conductorClient.Deploy(ctxConductor, request)
-	if err != nil {
-		log.Error().Err(err).Msgf("problems deploying application %s", instance.AppInstanceId)
-		return nil, err
-	}
-	*/
-
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
 	err = m.appOpsProducer.Send(ctx, request)
@@ -253,9 +378,6 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 		OrganizationId:       appInstanceID.OrganizationId,
 		AppInstanceId:            appInstanceID.AppInstanceId,
 	}
-
-	// TODO: remove legacy interaction with the conductor API
-	//return  m.conductorClient.Undeploy(context.Background(), undeployRequest)
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
