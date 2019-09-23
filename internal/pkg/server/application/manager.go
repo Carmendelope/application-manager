@@ -301,6 +301,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 
 	// TODO: AddConnections
+	for _, conn := range deployRequest.OutboundConnections {
+		ctx
+	}
 
 	// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
@@ -433,7 +436,7 @@ func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.Organiz
 	if err != nil {
 		return nil, err
 	}
-	expandList := make ([]*grpc_application_manager_go.AppInstance, len(list.Instances))
+	expandList := make ([]*grpc_application_manager_go.AppInstance, 0)
 	for _, instance := range list.Instances {
 		expandList = append(expandList, m.getInstanceConnections(instance))
 	}
