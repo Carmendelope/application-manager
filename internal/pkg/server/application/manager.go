@@ -301,11 +301,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 
 	// TODO: AddConnections
-	for _, conn := range deployRequest.OutboundConnections {
-		ctx
-	}
-
-	// fill the instance_id in the parametrized descriptor
+		// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
 
 	appInstanceID := &grpc_application_go.AppInstanceId{
