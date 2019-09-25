@@ -43,7 +43,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:0ebfd2f00a84ee4fb31913b49011b7fa2fb6b12040991d8b948db821a15f7f77"
+  digest = "1:ae32d227228900622c8e5db5da79d18fdb595d613c17c0d45d8038010a4b700b"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "internal",
@@ -51,8 +51,8 @@
     "utilities",
   ]
   pruneopts = ""
-  revision = "471f45a5a99a578de7a8638dc7ed29e245bde097"
-  version = "v1.11.1"
+  revision = "2dfdd971e2e70fb436ffcdf845b7313c43606848"
+  version = "v1.11.2"
 
 [[projects]]
   digest = "1:b3c5b95e56c06f5aa72cb2500e6ee5f44fcd122872d4fec2023a488e561218bc"
@@ -125,20 +125,20 @@
   version = "v0.0.53"
 
 [[projects]]
-  digest = "1:a3f288d69631c5bec04bb232d746105fbe80074e868c7f2ecf30a5891350ad88"
+  digest = "1:d5dd24fef8eaff65ad6d8d248e13234c9a902a5301689ded84da51366a468d6d"
   name = "github.com/nalej/grpc-bus-go"
   packages = ["."]
   pruneopts = ""
-  revision = "380ebd75aef76ed868fdc99528564a617cd3fe10"
-  version = "v0.0.17"
+  revision = "e96fa705be218641e9b4ba695ed7ef200592a533"
+  version = "v0.0.19"
 
 [[projects]]
-  digest = "1:b6d762d6f7e153404d1491e9531ad92e1ef1f151dc00763e129bf390bbff6e68"
+  digest = "1:4d9aa384a7b493425344b4d2642ca890b21d09ddbf9f4b993038c8f1b82e642d"
   name = "github.com/nalej/grpc-common-go"
   packages = ["."]
   pruneopts = ""
-  revision = "0ba76c0dc9cb897d40762b20fe60e5bdca4fd778"
-  version = "v0.0.32"
+  revision = "58080e20696b548205ebd73411d904950c487261"
+  version = "v0.0.33"
 
 [[projects]]
   digest = "1:b20974f33d5927364de58b99328ee8bdbb23fa0911a92e3a868afec5d92d5466"
@@ -147,6 +147,14 @@
   pruneopts = ""
   revision = "7895e36f8e79a9219e48f5a1c72296d1f3928231"
   version = "v0.0.92"
+
+[[projects]]
+  digest = "1:a00c84dcff7308478c3b7273833785c522f355180b420db27d678ff9ea1d4ee5"
+  name = "github.com/nalej/grpc-connectivity-manager-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "545e6763cb4e8933cde0b768a43085a1fdfce51f"
+  version = "v0.0.1"
 
 [[projects]]
   digest = "1:0bad099051ea5df46222752d38f98673d2ccec88ab40e30a9ec3d1473cbcd634"
@@ -241,7 +249,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:06c6e8f39b321c6148864a9f14005ff1eba37e8520483650f366e1962da0309b"
+  digest = "1:7f0acf953e4b915b71ed99864b83d8277f1cfe4b24ef51dd9bfe2a6daddb86f1"
   name = "github.com/nalej/nalej-bus"
   packages = [
     "pkg/bus",
@@ -251,7 +259,7 @@
     "pkg/queue/network/ops",
   ]
   pruneopts = ""
-  revision = "b826f3f4c4487ebfffae2e11e68c488981078296"
+  revision = "6e0d011db7c47de9e21a961a9179ebc05b357bb5"
 
 [[projects]]
   digest = "1:94f6656435022d2e0eaed70a0874df6d273a7cbf29890a7e19f4261732d25a87"
@@ -356,7 +364,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ce26d94b8841936fff59bb524f4b96ac434f411b780b3aa784da90ee96ae2367"
+  digest = "1:b123a95f458db7b93e65276282e352cbf195095bc2ea2ec81601949de04f7365"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -371,15 +379,15 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "a8b05e9114ab0cb08faec337c959aed24b68bf50"
+  revision = "aa69164e4478b84860dc6769c710c699c67058a3"
 
 [[projects]]
   branch = "master"
-  digest = "1:c04d252619a11f0ba51313ad9ee728c0b7bb61c34c7ab65e841a05ac350e65a0"
+  digest = "1:0c3b4c65ce4849683ca607bc62d4156b3a63437627736a59b32c83ccb989cc28"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "0c1ff786ef13daa914a3351c5e6b0321aed5960e"
+  revision = "2837fb4f24fee082b8c39b1a6dc9e0ed9f3fbd4f"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
@@ -504,7 +512,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d8738da45ab1d7f8d77113ecfb9a0f39d7fa12038c8d72bcc4cd0150d3770bcd"
+  digest = "1:9742700db76152c5cb86f1b0157ca947299b689150aebbde42fa5e033fd5d170"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -513,7 +521,7 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "83fef8059749edaaa8826ca1e46b40149318b983"
+  revision = "ec87dd743e08e4db62e6c468506a05a4ae6e10c4"
 
 [solve-meta]
   analyzer-name = "dep"

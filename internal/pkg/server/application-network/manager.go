@@ -20,18 +20,18 @@ import (
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
-	appNetClient grpc_application_network_go.ApplicationNetworkClient
-	appClient grpc_application_go.ApplicationsClient
+	appNetClient   grpc_application_network_go.ApplicationNetworkClient
+	appClient      grpc_application_go.ApplicationsClient
 	netOpsProducer *ops.NetworkOpsProducer
 }
 
 // NewManager creates a Manager using a set of clients.
 func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient,
 	appClient grpc_application_go.ApplicationsClient,
-	netOpsProducer *ops.NetworkOpsProducer) Manager{
+	netOpsProducer *ops.NetworkOpsProducer) Manager {
 	return Manager{
-		appNetClient: 	appNet,
-		appClient: 		appClient,
+		appNetClient:   appNet,
+		appClient:      appClient,
 		netOpsProducer: netOpsProducer,
 	}
 }
@@ -56,33 +56,32 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 	}
 
 	outBoundFound := false
-	for _, outbound := range sourceInstance.OutboundNetInterfaces{
+	for _, outbound := range sourceInstance.OutboundNetInterfaces {
 		if outbound.Name == addRequest.OutboundName {
 			outBoundFound = true
 		}
 	}
-	if ! outBoundFound {
+	if !outBoundFound {
 		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("outbound_name does not exist").WithParams(addRequest.SourceInstanceId, addRequest.OutboundName))
 	}
-
 
 	// Target & Inbound
 	ctxTarget, cancelTarget := common.GetContext()
 	defer cancelTarget()
 	targetInstance, err := m.appClient.GetAppInstance(ctxTarget, &grpc_application_go.AppInstanceId{
 		OrganizationId: addRequest.OrganizationId,
-		AppInstanceId: addRequest.TargetInstanceId,
+		AppInstanceId:  addRequest.TargetInstanceId,
 	})
 	if err != nil {
 		return nil, err
 	}
 	inBoundFound := false
-	for _, inbound := range targetInstance.InboundNetInterfaces{
+	for _, inbound := range targetInstance.InboundNetInterfaces {
 		if inbound.Name == addRequest.InboundName {
 			inBoundFound = true
 		}
 	}
-	if ! inBoundFound {
+	if !inBoundFound {
 		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.TargetInstanceId, addRequest.InboundName))
 	}
 
@@ -97,12 +96,13 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 
 	return &grpc_common_go.OpResponse{
 		OrganizationId: addRequest.OrganizationId,
-		RequestId: uuid.New().String(),
-		Timestamp: time.Now().Unix(),
-		Status: "QUEUED",
-		Info: "Add Connection queued",
+		RequestId:      uuid.New().String(),
+		Timestamp:      time.Now().Unix(),
+		Status:         grpc_common_go.OpStatus_SCHEDULED,
+		Info:           "Add Connection queued",
 	}, nil
 }
+
 // RemoveConnection removes a connection
 func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.RemoveConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
@@ -116,14 +116,15 @@ func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.Re
 	}
 	return &grpc_common_go.OpResponse{
 		OrganizationId: removeRequest.OrganizationId,
-		RequestId: uuid.New().String(),
-		Timestamp: time.Now().Unix(),
-		Status: "QUEUED",
-		Info: "Remove Connection queued",
+		RequestId:      uuid.New().String(),
+		Timestamp:      time.Now().Unix(),
+		Status:         grpc_common_go.OpStatus_SCHEDULED,
+		Info:           "Remove Connection queued",
 	}, nil
 }
+
 // ListConnections retrieves a list all the established connections of an organization
-func (m *Manager) ListConnections(orgID *grpc_organization_go.OrganizationId) (*grpc_application_network_go.ConnectionInstanceList, error){
+func (m *Manager) ListConnections(orgID *grpc_organization_go.OrganizationId) (*grpc_application_network_go.ConnectionInstanceList, error) {
 	ctx, cancel := common.GetContext()
 	defer cancel()
 
