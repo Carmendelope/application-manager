@@ -25,8 +25,7 @@ import (
 	"time"
 )
 
-
-const DefaultTimeout =  time.Minute
+const DefaultTimeout = time.Minute
 const RequiredParamNotFilled = "Required parameter not filled"
 const RequiredOutboundNotFilled = "Required outbound not filled"
 const OutboundNotDefined = "Deploy outbound connection not defined"
@@ -38,7 +37,7 @@ type Manager struct {
 	clusterClient   grpc_infrastructure_go.ClustersClient
 	deviceClient    grpc_device_go.DevicesClient
 	appNetClient    grpc_application_network_go.ApplicationNetworkClient
-	appOpsProducer 	*ops.ApplicationOpsProducer
+	appOpsProducer  *ops.ApplicationOpsProducer
 }
 
 // NewManager creates a Manager using a set of clients.
@@ -49,12 +48,11 @@ func NewManager(
 	deviceClient grpc_device_go.DevicesClient,
 	appNetClient grpc_application_network_go.ApplicationNetworkClient,
 	appOpsProducer *ops.ApplicationOpsProducer) Manager {
-	return Manager{appClient, conductorClient, clusterClient, deviceClient, appNetClient,appOpsProducer}
+	return Manager{appClient, conductorClient, clusterClient, deviceClient, appNetClient, appOpsProducer}
 }
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
-func (m * Manager) AddAppDescriptor(addDescriptorRequest *grpc_application_go.AddAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
-
+func (m *Manager) AddAppDescriptor(addDescriptorRequest *grpc_application_go.AddAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
 
 	// before add appDescriptor, validate parameters
 	err := entities.ValidateDescriptorParameters(addDescriptorRequest)
@@ -66,28 +64,28 @@ func (m * Manager) AddAppDescriptor(addDescriptorRequest *grpc_application_go.Ad
 }
 
 // ListAppDescriptors retrieves a list of application descriptors.
-func (m * Manager) ListAppDescriptors(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_go.AppDescriptorList, error) {
+func (m *Manager) ListAppDescriptors(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_go.AppDescriptorList, error) {
 	return m.appClient.ListAppDescriptors(context.Background(), organizationID)
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
-func (m * Manager) GetAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppDescriptor, error) {
+func (m *Manager) GetAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppDescriptor, error) {
 	return m.appClient.GetAppDescriptor(context.Background(), appDescriptorID)
 }
 
 // UpdateAppDescriptor allows the user to update the information of a registered descriptor.
-func (m * Manager) UpdateAppDescriptor(request *grpc_application_go.UpdateAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
+func (m *Manager) UpdateAppDescriptor(request *grpc_application_go.UpdateAppDescriptorRequest) (*grpc_application_go.AppDescriptor, error) {
 	return m.appClient.UpdateAppDescriptor(context.Background(), request)
 }
 
 // RemoveAppDescriptor removes an application descriptor from the system.
-func (m * Manager)  RemoveAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_common_go.Success, error) {
+func (m *Manager) RemoveAppDescriptor(appDescriptorID *grpc_application_go.AppDescriptorId) (*grpc_common_go.Success, error) {
 	// Check if there are instances running with that descriptor
 	orgID := &grpc_organization_go.OrganizationId{
 		OrganizationId: appDescriptorID.OrganizationId,
 	}
 	instances, err := m.appClient.ListAppInstances(context.Background(), orgID)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	for _, inst := range instances.Instances {
@@ -99,7 +97,7 @@ func (m * Manager)  RemoveAppDescriptor(appDescriptorID *grpc_application_go.App
 }
 
 // checkAllRequiredParametersAreFilled checks all the params defined as required are filled in deploy request
-func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go.AppDescriptor, params  *grpc_application_go.InstanceParameterList) error {
+func (m *Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go.AppDescriptor, params *grpc_application_go.InstanceParameterList) error {
 
 	// get all the required parameters
 	for _, p := range desc.Parameters {
@@ -108,7 +106,7 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 			// look for it in deploy params
 			for _, deployParam := range params.Parameters {
 
-				if deployParam.ParameterName == p.Name{
+				if deployParam.ParameterName == p.Name {
 					find = true
 					break
 				}
@@ -123,7 +121,6 @@ func (m * Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go
 	return nil
 }
 
-
 // CheckInboundResponse struct that contains the result of checkInbound operation.
 type CheckInboundResponse struct {
 	// InstanceId with the targetInstance identifier
@@ -135,7 +132,7 @@ type CheckInboundResponse struct {
 }
 
 // checkInbounds checks if the instanceID has defined all the inbounds in the inboundNames array
-func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.WaitGroup, organizationID string, instanceID string, inboundNames []string) {
+func (m *Manager) checkInbounds(respond chan<- CheckInboundResponse, wg *sync.WaitGroup, organizationID string, instanceID string, inboundNames []string) {
 	defer wg.Done()
 
 	log.Debug().Str("TargetInstanceId", instanceID).Interface("TargetInboundNames", inboundNames).Msg("check inbounds Interface")
@@ -143,12 +140,12 @@ func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.
 	targetInstance, err := m.appClient.GetAppInstance(context.Background(),
 		&grpc_application_go.AppInstanceId{
 			OrganizationId: organizationID,
-			AppInstanceId: instanceID,
+			AppInstanceId:  instanceID,
 		})
 	if err != nil {
 		respond <- CheckInboundResponse{
 			InstanceId: instanceID,
-			Result: false,
+			Result:     false,
 		}
 		return
 	}
@@ -163,11 +160,11 @@ func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.
 				targetFound = true
 			}
 		}
-		if ! targetFound {
+		if !targetFound {
 			respond <- CheckInboundResponse{
-				InstanceId: instanceID,
+				InstanceId:  instanceID,
 				InboundName: inboundName,
-				Result: false,
+				Result:      false,
 			}
 			globalResult = false
 			break
@@ -185,10 +182,10 @@ func (m * Manager) checkInbounds(respond chan <- CheckInboundResponse, wg *sync.
 
 // checkConnections: Checks all the connection fields are consistent (the target_instance_id has an inbound named TargetInboundName)
 // and checks the required outbounds are informed
-func (m * Manager) checkConnections (organizationID string, connections []*grpc_application_manager_go.ConnectionRequest,
+func (m *Manager) checkConnections(organizationID string, connections []*grpc_application_manager_go.ConnectionRequest,
 	outboundInterfaces []*grpc_application_go.OutboundNetworkInterface) derrors.Error {
 
-		// 1.- Check required outbounds
+	// 1.- Check required outbounds
 	for _, outbound := range outboundInterfaces {
 		if outbound.Required {
 			log.Debug().Interface("outboundName", outbound.Name).Msg("check required outbound")
@@ -198,24 +195,24 @@ func (m * Manager) checkConnections (organizationID string, connections []*grpc_
 					found = true
 				}
 			}
-			if ! found {
+			if !found {
 				return derrors.NewFailedPreconditionError(RequiredOutboundNotFilled).WithParams(outbound.Name)
 			}
 		}
 	}
 
 	// create a map with all the inbounds per instance_id
-	instanceList := make (map[string][]string, 0)
+	instanceList := make(map[string][]string, 0)
 	for _, conn := range connections {
 		inbounds, exists := instanceList[conn.TargetInstanceId]
-		if ! exists {
+		if !exists {
 			instanceList[conn.TargetInstanceId] = []string{conn.TargetInboundName}
-		}else{
+		} else {
 			instanceList[conn.TargetInstanceId] = append(inbounds, conn.TargetInboundName)
 		}
 	}
 
-	respond := make (chan CheckInboundResponse, len(instanceList))
+	respond := make(chan CheckInboundResponse, len(instanceList))
 	var wg sync.WaitGroup
 
 	wg.Add(len(instanceList))
@@ -228,13 +225,13 @@ func (m * Manager) checkConnections (organizationID string, connections []*grpc_
 	}
 
 	wg.Wait()
-	close (respond)
+	close(respond)
 
-	for result := range respond{
+	for result := range respond {
 		if result.Result == false {
 			if result.InboundName != "" {
 				return derrors.NewFailedPreconditionError("no inbound interface found").WithParams(result.InstanceId, result.InboundName)
-			}else{ // database error getting the instanceId (or instanceID does not exist)
+			} else { // database error getting the instanceId (or instanceID does not exist)
 				return derrors.NewFailedPreconditionError("instance not found").WithParams(result.InstanceId)
 			}
 		}
@@ -245,7 +242,7 @@ func (m * Manager) checkConnections (organizationID string, connections []*grpc_
 }
 
 // Deploy an application descriptor.
-func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
+func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployRequest) (*grpc_application_manager_go.DeploymentResponse, error) {
 
 	log.Debug().Interface("request", deployRequest).Msg("received deployment request")
 
@@ -253,12 +250,12 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
 	desc, err := m.appClient.GetAppDescriptor(ctx, &grpc_application_go.AppDescriptorId{
-		OrganizationId: deployRequest.OrganizationId,
+		OrganizationId:  deployRequest.OrganizationId,
 		AppDescriptorId: deployRequest.AppDescriptorId,
 	})
-	if err!= nil {
+	if err != nil {
 		log.Error().Err(err).Msgf("error getting application descriptor %s", deployRequest.AppDescriptorId)
-		return nil,err
+		return nil, err
 	}
 
 	// check if all required params are filled
@@ -285,10 +282,10 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 	// Create new application instance
 	addReq := &grpc_application_go.AddAppInstanceRequest{
-		OrganizationId: deployRequest.OrganizationId,
+		OrganizationId:  deployRequest.OrganizationId,
 		AppDescriptorId: deployRequest.AppDescriptorId,
-		Name: deployRequest.Name,
-		Parameters: deployRequest.Parameters,
+		Name:            deployRequest.Name,
+		Parameters:      deployRequest.Parameters,
 	}
 
 	// Add instance, by default this is created with bus status
@@ -301,21 +298,21 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 	}
 
 	// TODO: AddConnections
-		// fill the instance_id in the parametrized descriptor
+	// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
 
 	appInstanceID := &grpc_application_go.AppInstanceId{
-		OrganizationId:     deployRequest.OrganizationId,
-		AppInstanceId:      instance.AppInstanceId,
+		OrganizationId: deployRequest.OrganizationId,
+		AppInstanceId:  instance.AppInstanceId,
 	}
 
 	// Add parametrizedDescriptor in the system
 	ctxParametrized, cancelParametrized := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancelParametrized()
-	newDesc , err := m.appClient.AddParametrizedDescriptor(ctxParametrized, parametrizedDesc)
+	newDesc, err := m.appClient.AddParametrizedDescriptor(ctxParametrized, parametrizedDesc)
 	if err != nil {
 		log.Error().Err(err).Msgf("error adding  parametrized descriptor %s. Delete instance", instance.AppInstanceId)
-		_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
+		_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID)
 		if rollbackErr != nil {
 			log.Error().Err(err).Msgf("error in rollback deleting the instance %s", instance.AppInstanceId)
 		}
@@ -335,7 +332,7 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 		if err != nil {
 			log.Error().Err(err).Msgf("error updating instance %s. Delete instance", instance.AppInstanceId)
-			_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID )
+			_, rollbackErr := m.appClient.RemoveAppInstance(context.Background(), appInstanceID)
 			if rollbackErr != nil {
 				log.Error().Err(err).Msgf("error in rollback deleting the instance %s", instance.AppInstanceId)
 			}
@@ -346,9 +343,9 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 
 	// send deploy command to conductor
 	request := &grpc_conductor_go.DeploymentRequest{
-		RequestId:            fmt.Sprintf("app-mngr-%d", rand.Int()),
-		AppInstanceId:        appInstanceID,
-		Name:                 deployRequest.Name,
+		RequestId:     fmt.Sprintf("app-mngr-%d", rand.Int()),
+		AppInstanceId: appInstanceID,
+		Name:          deployRequest.Name,
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
@@ -372,10 +369,10 @@ func (m * Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReque
 }
 
 // Undeploy a running application instance.
-func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_common_go.Success, error) {
+func (m *Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_common_go.Success, error) {
 	undeployRequest := &grpc_conductor_go.UndeployRequest{
-		OrganizationId:       appInstanceID.OrganizationId,
-		AppInstanceId:            appInstanceID.AppInstanceId,
+		OrganizationId: appInstanceID.OrganizationId,
+		AppInstanceId:  appInstanceID.AppInstanceId,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
@@ -392,20 +389,20 @@ func (m * Manager) Undeploy(appInstanceID *grpc_application_go.AppInstanceId) (*
 }
 
 // getInstanceConnections returns the appInstance with the connections field filled
-func (m  * Manager) getInstanceConnections(instance *grpc_application_go.AppInstance) *grpc_application_manager_go.AppInstance {
+func (m *Manager) getInstanceConnections(instance *grpc_application_go.AppInstance) *grpc_application_manager_go.AppInstance {
 
 	expandInstance := entities.ToAppInstance(instance)
 
 	appInstanceID := &grpc_application_go.AppInstanceId{
 		OrganizationId: instance.OrganizationId,
-		AppInstanceId: instance.AppInstanceId,
+		AppInstanceId:  instance.AppInstanceId,
 	}
 
 	// InboundConnections
 	inboundConnections, err := m.appNetClient.ListInboundConnections(context.Background(), appInstanceID)
 	if err != nil {
 		log.Error().Str("instance_id", instance.AppInstanceId).Msg("error getting inbound connections")
-	}else {
+	} else {
 		if inboundConnections != nil {
 			expandInstance.InboundConnections = inboundConnections.Connections
 		}
@@ -415,7 +412,7 @@ func (m  * Manager) getInstanceConnections(instance *grpc_application_go.AppInst
 	outboundConnections, err := m.appNetClient.ListOutboundConnections(context.Background(), appInstanceID)
 	if err != nil {
 		log.Error().Str("instance_id", instance.AppInstanceId).Msg("error getting outbound connections")
-	}else {
+	} else {
 		if outboundConnections != nil {
 			expandInstance.OutboundConnections = outboundConnections.Connections
 		}
@@ -426,23 +423,23 @@ func (m  * Manager) getInstanceConnections(instance *grpc_application_go.AppInst
 }
 
 // ListAppInstances retrieves a list of application descriptors.
-func (m * Manager) ListAppInstances(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AppInstanceList, error) {
+func (m *Manager) ListAppInstances(organizationID *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AppInstanceList, error) {
 
-	list, err :=  m.appClient.ListAppInstances(context.Background(), organizationID)
+	list, err := m.appClient.ListAppInstances(context.Background(), organizationID)
 	if err != nil {
 		return nil, err
 	}
-	expandList := make ([]*grpc_application_manager_go.AppInstance, 0)
+	expandList := make([]*grpc_application_manager_go.AppInstance, 0)
 	for _, instance := range list.Instances {
 		expandList = append(expandList, m.getInstanceConnections(instance))
 	}
 	return &grpc_application_manager_go.AppInstanceList{
-		Instances:expandList,
+		Instances: expandList,
 	}, nil
 }
 
 // GetAppDescriptor retrieves a given application descriptor.
-func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_manager_go.AppInstance, error) {
+func (m *Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_manager_go.AppInstance, error) {
 
 	appInstance, err := m.appClient.GetAppInstance(context.Background(), appInstanceID)
 
@@ -456,21 +453,20 @@ func (m * Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstance
 
 }
 
-func (m * Manager)  ListInstanceParameters (appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {
+func (m *Manager) ListInstanceParameters(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {
 	return m.appClient.GetInstanceParameters(context.Background(), appInstanceID)
 }
 
-func (m * Manager)  ListDescriptorAppParameters (descriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppParameterList, error) {
+func (m *Manager) ListDescriptorAppParameters(descriptorID *grpc_application_go.AppDescriptorId) (*grpc_application_go.AppParameterList, error) {
 	return m.appClient.GetDescriptorAppParameters(context.Background(), descriptorID)
 }
 
-
-func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplicationList, error){
+func (m *Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.ApplicationFilter) (*grpc_application_manager_go.TargetApplicationList, error) {
 
 	// check if the device_group_id and device_group_name are correct
 	group, err := m.deviceClient.GetDeviceGroup(context.Background(), &grpc_device_go.DeviceGroupId{
 		OrganizationId: filter.OrganizationId,
-		DeviceGroupId: filter.DeviceGroupId,
+		DeviceGroupId:  filter.DeviceGroupId,
 	})
 	if err != nil {
 		return nil, err
@@ -480,30 +476,30 @@ func (m*Manager) RetrieveTargetApplications(filter *grpc_application_manager_go.
 	}
 
 	orgID := &grpc_organization_go.OrganizationId{
-		OrganizationId:       filter.OrganizationId,
+		OrganizationId: filter.OrganizationId,
 	}
 	// TODO allow filtering on the list request
 	allApps, err := m.appClient.ListAppInstances(context.Background(), orgID)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	filtered := ApplyFilter(allApps, filter)
 
 	result, fErr := ToApplicationLabelsList(filtered)
-	if fErr != nil{
+	if fErr != nil {
 		return nil, conversions.ToGRPCError(fErr)
 	}
 	return result, nil
 }
 
-func (m*Manager) fillEndpoints(endpoints []*grpc_application_go.EndpointInstance) {
-	for i:=0; i<len(endpoints); i++{
+func (m *Manager) fillEndpoints(endpoints []*grpc_application_go.EndpointInstance) {
+	for i := 0; i < len(endpoints); i++ {
 		endpoints[i].Fqdn = fmt.Sprintf("%s:%d", endpoints[i].Fqdn, endpoints[i].Port)
 	}
 }
 
-func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.RetrieveEndpointsRequest) (*grpc_application_manager_go.ApplicationEndpoints, error){
+func (m *Manager) RetrieveEndpoints(request *grpc_application_manager_go.RetrieveEndpointsRequest) (*grpc_application_manager_go.ApplicationEndpoints, error) {
 
 	instanceID := &grpc_application_go.AppInstanceId{
 		OrganizationId: request.OrganizationId,
@@ -511,19 +507,19 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 	}
 	// get the instance requested
 	instance, err := m.appClient.GetAppInstance(context.Background(), instanceID)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	appClusterEndPoints := make ([]*grpc_application_manager_go.ApplicationClusterEndpoints, 0)
+	appClusterEndPoints := make([]*grpc_application_manager_go.ApplicationClusterEndpoints, 0)
 
 	//foreach serviceInstance in appInstance -> get endPoints and DeployedClusterId
 	for _, group := range instance.Groups {
 		for _, service := range group.ServiceInstances {
 
 			// get the clusterHost (if the service is RUNNING)
-			if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING  &&
-				len(service.Endpoints) > 0  { // the service has endpoints
+			if service.Status == grpc_application_go.ServiceStatus_SERVICE_RUNNING &&
+				len(service.Endpoints) > 0 { // the service has endpoints
 
 				clusterId := &grpc_infrastructure_go.ClusterId{
 					OrganizationId: request.OrganizationId,
@@ -545,8 +541,59 @@ func (m*Manager) RetrieveEndpoints(request *grpc_application_manager_go.Retrieve
 		}
 	}
 
-	return  &grpc_application_manager_go.ApplicationEndpoints{
+	return &grpc_application_manager_go.ApplicationEndpoints{
 		ClusterEndpoints: appClusterEndPoints,
-	} , nil
+	}, nil
 
+}
+
+// ListAvailableInstanceInbounds List all the pluggable inbounds
+func (m *Manager) ListAvailableInstanceInbounds(organizationId *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AvailableInstanceInboundList, error) {
+	appInstances, err := m.appClient.ListAppInstances(context.Background(), organizationId)
+	if err != nil {
+		return nil, err
+	}
+	instanceInbounds := make([]*grpc_application_manager_go.AvailableInstanceInbound, 0)
+	for _, appInstance := range appInstances.Instances {
+		for _, inbound := range appInstance.InboundNetInterfaces {
+			instanceInbounds = append(instanceInbounds, &grpc_application_manager_go.AvailableInstanceInbound{
+				OrganizationId: organizationId.OrganizationId,
+				AppInstanceId:  appInstance.AppInstanceId,
+				InstanceName:   appInstance.Name,
+				InboundName:    inbound.Name,
+			})
+		}
+	}
+	return &grpc_application_manager_go.AvailableInstanceInboundList{InstanceInbounds: instanceInbounds}, nil
+}
+
+// ListAvailableInstanceOutbounds List all the outbounds that are not connected
+func (m *Manager) ListAvailableInstanceOutbounds(organizationId *grpc_organization_go.OrganizationId) (*grpc_application_manager_go.AvailableInstanceOutboundList, error) {
+	appInstances, err := m.appClient.ListAppInstances(context.Background(), organizationId)
+	if err != nil {
+		return nil, err
+	}
+	instanceOutbounds := make([]*grpc_application_manager_go.AvailableInstanceOutbound, 0)
+	for _, appInstance := range appInstances.Instances {
+		expandedAppInstance := m.getInstanceConnections(appInstance)
+		for _, outbound := range appInstance.OutboundNetInterfaces {
+			connected := false
+			for _, connection := range expandedAppInstance.OutboundConnections {
+				if outbound.Name == connection.OutboundName {
+					connected = true
+				}
+			}
+			// Exclude the connected outbounds
+			if !connected {
+				instanceOutbounds = append(instanceOutbounds, &grpc_application_manager_go.AvailableInstanceOutbound{
+					OrganizationId: organizationId.OrganizationId,
+					AppInstanceId:  appInstance.AppInstanceId,
+					InstanceName:   appInstance.Name,
+					OutboundName:   outbound.Name,
+				})
+			}
+		}
+
+	}
+	return &grpc_application_manager_go.AvailableInstanceOutboundList{InstanceOutbounds: instanceOutbounds}, nil
 }
