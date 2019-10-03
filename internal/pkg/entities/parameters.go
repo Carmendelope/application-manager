@@ -38,17 +38,20 @@ func copySecurityRule(rule *grpc_application_go.SecurityRule) *grpc_application_
 		return nil
 	}
 	return &grpc_application_go.SecurityRule{
-		OrganizationId:       rule.OrganizationId,
-		AppDescriptorId:      rule.AppDescriptorId,
-		RuleId:               rule.RuleId,
-		Name:                 rule.Name,
-		TargetServiceName:    rule.TargetServiceName,
-		TargetPort:           rule.TargetPort,
-		Access:               rule.Access,
-		AuthServiceGroupName: rule.AuthServiceGroupName,
-		AuthServices:         rule.AuthServices,
-		DeviceGroupIds:       rule.DeviceGroupIds,
-		DeviceGroupNames:     rule.DeviceGroupNames,
+		OrganizationId:         rule.OrganizationId,
+		AppDescriptorId:        rule.AppDescriptorId,
+		RuleId:                 rule.RuleId,
+		Name:                   rule.Name,
+		TargetServiceGroupName: rule.TargetServiceGroupName,
+		TargetServiceName:      rule.TargetServiceName,
+		TargetPort:             rule.TargetPort,
+		Access:                 rule.Access,
+		AuthServiceGroupName:   rule.AuthServiceGroupName,
+		AuthServices:           rule.AuthServices,
+		DeviceGroupIds:         rule.DeviceGroupIds,
+		DeviceGroupNames:       rule.DeviceGroupNames,
+		InboundNetInterface:    rule.InboundNetInterface,
+		OutboundNetInterface:   rule.OutboundNetInterface,
 	}
 }
 
