@@ -297,7 +297,17 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 		return nil, err
 	}
 
-	// TODO: AddConnections
+	connections := make([]*grpc_application_network_go.ConnectionInstance, len(deployRequest.OutboundConnections))
+	for _, connectionRequest := range deployRequest.OutboundConnections {
+		connections = append(connections, &grpc_application_network_go.ConnectionInstance{
+			OrganizationId:     desc.OrganizationId,
+			SourceInstanceName: deployRequest.Name,
+			TargetInstanceId:   connectionRequest.TargetInstanceId,
+			InboundName:        connectionRequest.TargetInboundName,
+			OutboundName:       connectionRequest.SourceOutboundName,
+		})
+	}
+
 	// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
 
@@ -343,9 +353,10 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 
 	// send deploy command to conductor
 	request := &grpc_conductor_go.DeploymentRequest{
-		RequestId:     fmt.Sprintf("app-mngr-%d", rand.Int()),
-		AppInstanceId: appInstanceID,
-		Name:          deployRequest.Name,
+		RequestId:           fmt.Sprintf("app-mngr-%d", rand.Int()),
+		AppInstanceId:       appInstanceID,
+		Name:                deployRequest.Name,
+		OutboundConnections: connections,
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
