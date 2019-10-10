@@ -298,7 +298,7 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 	}
 
 	connections := make([]*grpc_application_network_go.ConnectionInstance, len(deployRequest.OutboundConnections))
-	for _, connectionRequest := range deployRequest.OutboundConnections {
+	for connectionIndex, connectionRequest := range deployRequest.OutboundConnections {
 		sourceInstanceName := ""
 		// TODO Too cumbersome. Consider a refactor of the descriptor to link outbound interfaces to services explicitly
 		for _, rule := range instance.Rules {
@@ -310,13 +310,13 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 			log.Error().Interface("connectionRequest", connectionRequest).Msg("the connection request refers to an outbound interface name not linked to a service. Skipping.")
 			continue
 		}
-		connections = append(connections, &grpc_application_network_go.ConnectionInstance{
+		connections[connectionIndex] = &grpc_application_network_go.ConnectionInstance{
 			OrganizationId:     desc.OrganizationId,
 			SourceInstanceName: sourceInstanceName,
 			TargetInstanceId:   connectionRequest.TargetInstanceId,
 			InboundName:        connectionRequest.TargetInboundName,
 			OutboundName:       connectionRequest.SourceOutboundName,
-		})
+		}
 	}
 
 	// fill the instance_id in the parametrized descriptor
