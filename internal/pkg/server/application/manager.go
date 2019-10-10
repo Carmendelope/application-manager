@@ -297,7 +297,28 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 		return nil, err
 	}
 
-	// TODO: AddConnections
+	connections := make([]*grpc_application_network_go.ConnectionInstance, len(deployRequest.OutboundConnections))
+	for connectionIndex, connectionRequest := range deployRequest.OutboundConnections {
+		sourceInstanceName := ""
+		// TODO Too cumbersome. Consider a refactor of the descriptor to link outbound interfaces to services explicitly
+		for _, rule := range instance.Rules {
+			if rule.OutboundNetInterface == connectionRequest.SourceOutboundName {
+				sourceInstanceName = rule.TargetServiceName
+			}
+		}
+		if sourceInstanceName == "" {
+			log.Error().Interface("connectionRequest", connectionRequest).Msg("the connection request refers to an outbound interface name not linked to a service. Skipping.")
+			continue
+		}
+		connections[connectionIndex] = &grpc_application_network_go.ConnectionInstance{
+			OrganizationId:     desc.OrganizationId,
+			SourceInstanceName: sourceInstanceName,
+			TargetInstanceId:   connectionRequest.TargetInstanceId,
+			InboundName:        connectionRequest.TargetInboundName,
+			OutboundName:       connectionRequest.SourceOutboundName,
+		}
+	}
+
 	// fill the instance_id in the parametrized descriptor
 	parametrizedDesc.AppInstanceId = instance.AppInstanceId
 
@@ -343,9 +364,10 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 
 	// send deploy command to conductor
 	request := &grpc_conductor_go.DeploymentRequest{
-		RequestId:     fmt.Sprintf("app-mngr-%d", rand.Int()),
-		AppInstanceId: appInstanceID,
-		Name:          deployRequest.Name,
+		RequestId:           fmt.Sprintf("app-mngr-%d", rand.Int()),
+		AppInstanceId:       appInstanceID,
+		Name:                deployRequest.Name,
+		OutboundConnections: connections,
 	}
 
 	ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)

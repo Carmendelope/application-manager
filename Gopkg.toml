@@ -32,7 +32,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-network-go"
-    version="=v0.0.2"
+    version="=v0.0.10"
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"
