@@ -106,6 +106,20 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 // RemoveConnection removes a connection
 func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.RemoveConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
+	// check if the connection exists
+	ctx, cancel := common.GetContext()
+	defer  cancel()
+	_, vErr := m.appNetClient.GetConnection(ctx, &grpc_application_network_go.ConnectionInstanceId{
+		OrganizationId: 	removeRequest.OrganizationId,
+		SourceInstanceId: 	removeRequest.SourceInstanceId,
+		TargetInstanceId: 	removeRequest.TargetInstanceId,
+		InboundName: 		removeRequest.InboundName,
+		OutboundName:	 	removeRequest.OutboundName,
+	})
+	if vErr != nil {
+		return nil, vErr
+	}
+
 	// send the message to the queue
 	ctxSend, cancelSend := common.GetContext()
 	defer cancelSend()
