@@ -110,11 +110,11 @@ func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.Re
 	ctx, cancel := common.GetContext()
 	defer  cancel()
 	_, vErr := m.appNetClient.GetConnection(ctx, &grpc_application_network_go.ConnectionInstanceId{
-		OrganizationId: removeRequest.OrganizationId,
-		SourceInstanceId: removeRequest.SourceInstanceId,
-		TargetInstanceId: removeRequest.TargetInstanceId,
-		InboundName: removeRequest.InboundName,
-		OutboundName: removeRequest.OutboundName,
+		OrganizationId: 	removeRequest.OrganizationId,
+		SourceInstanceId: 	removeRequest.SourceInstanceId,
+		TargetInstanceId: 	removeRequest.TargetInstanceId,
+		InboundName: 		removeRequest.InboundName,
+		OutboundName:	 	removeRequest.OutboundName,
 	})
 	if vErr != nil {
 		return nil, vErr
