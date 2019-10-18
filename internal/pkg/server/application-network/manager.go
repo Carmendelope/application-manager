@@ -39,6 +39,25 @@ func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient,
 // AddConnection adds a new connection between one outbound and one inbound
 func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
+	// check it the connection already exists
+	ctxGet, cancelGet := common.GetContext()
+	defer cancelGet()
+	exists, err := m.appNetClient.ExistsConnection(ctxGet, &grpc_application_network_go.ConnectionInstanceId{
+		OrganizationId: 	addRequest.OrganizationId,
+		SourceInstanceId:	addRequest.SourceInstanceId,
+		OutboundName: 		addRequest.OutboundName,
+		TargetInstanceId: 	addRequest.TargetInstanceId,
+		InboundName: 		addRequest.InboundName,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if exists.Exists {
+		return nil, conversions.ToGRPCError(derrors.NewAlreadyExistsError("connection").WithParams(
+			addRequest.OrganizationId,addRequest.SourceInstanceId, addRequest.OutboundName, addRequest.TargetInstanceId, addRequest.InboundName))
+	}
+
+
 	ctxSource, cancelSource := common.GetContext()
 	defer cancelSource()
 

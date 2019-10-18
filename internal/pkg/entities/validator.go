@@ -555,6 +555,7 @@ func ValidAddConnectionRequest(addRequest * grpc_application_network_go.AddConne
 	if addRequest.OutboundName == "" {
 		return derrors.NewInvalidArgumentError(emptyOutboundName)
 	}
+
 	return nil
 }
 
