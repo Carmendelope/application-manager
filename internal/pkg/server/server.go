@@ -118,11 +118,12 @@ func (s *Service) Run() error {
 
 
 	// Create handlers
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer)
-	handler := application.NewHandler(manager)
-
 	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient, busClients.NetOpsProducer)
 	appNetHandler := application_network.NewHandler(appNetManager)
+
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
+	handler := application.NewHandler(manager)
+
 
 	grpcServer := grpc.NewServer()
 	grpc_application_manager_go.RegisterApplicationManagerServer(grpcServer, handler)
