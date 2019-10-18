@@ -121,7 +121,8 @@ func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.Re
 	}
 
 	if conn.OutboundRequired && !removeRequest.UserConfirmation {
-		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError("can not remove a required outbound. User confirmation required") )
+		errorMsg := "A connection in which the outbound is required cannot be deleted; the application could have an unexpected result. If it must be deleted, user confirmation is required"
+		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError(errorMsg))
 	}
 
 	// send the message to the queue
