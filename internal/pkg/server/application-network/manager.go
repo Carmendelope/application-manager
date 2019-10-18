@@ -128,7 +128,7 @@ func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.Re
 	// check if the connection exists
 	ctx, cancel := common.GetContext()
 	defer  cancel()
-	_, vErr := m.appNetClient.GetConnection(ctx, &grpc_application_network_go.ConnectionInstanceId{
+	conn, vErr := m.appNetClient.GetConnection(ctx, &grpc_application_network_go.ConnectionInstanceId{
 		OrganizationId: 	removeRequest.OrganizationId,
 		SourceInstanceId: 	removeRequest.SourceInstanceId,
 		TargetInstanceId: 	removeRequest.TargetInstanceId,
@@ -137,6 +137,11 @@ func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.Re
 	})
 	if vErr != nil {
 		return nil, vErr
+	}
+
+	if conn.OutboundRequired && !removeRequest.UserConfirmation {
+		errorMsg := "A connection in which the outbound is required cannot be deleted; the application could have an unexpected result. If it must be deleted, user confirmation is required"
+		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError(errorMsg))
 	}
 
 	// send the message to the queue

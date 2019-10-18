@@ -84,14 +84,14 @@ func (h *Handler) Deploy(ctx context.Context, deployRequest *grpc_application_ma
 }
 
 // Undeploy a running application instance.
-func (h *Handler) Undeploy(ctx context.Context, appInstanceID *grpc_application_go.AppInstanceId) (*grpc_common_go.Success, error) {
-	log.Debug().Str("organizationID", appInstanceID.OrganizationId).
-		Str("appInstanceId", appInstanceID.AppInstanceId).Msg("undeploy application")
-	vErr := entities.ValidAppInstanceID(appInstanceID)
+func (h *Handler) Undeploy(ctx context.Context, undeployRequest *grpc_application_manager_go.UndeployRequest) (*grpc_common_go.Success, error) {
+	log.Debug().Str("organizationID", undeployRequest.OrganizationId).
+		Str("appInstanceId", undeployRequest.AppInstanceId).Msg("undeploy application")
+	vErr := entities.ValidUndeployRequest(undeployRequest)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
 	}
-	return h.Manager.Undeploy(appInstanceID)
+	return h.Manager.Undeploy(undeployRequest)
 }
 
 // ListAppInstances retrieves a list of application descriptors.

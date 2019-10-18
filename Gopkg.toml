@@ -28,7 +28,7 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-manager-go"
-    version="=v0.0.42"
+    version="=v0.0.43"
 
 [[constraint]]
     name="github.com/nalej/grpc-application-network-go"
