@@ -1,6 +1,10 @@
 {
   "language": "golang",
+  "version": "v0.4.0",
   "application_list": [
+    "application-manager"
+  ],
+  "image_list": [
     "application-manager"
   ],
   "tools": [
