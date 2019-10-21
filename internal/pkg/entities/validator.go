@@ -390,7 +390,7 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Target Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.TargetServiceGroupName)
 		}
-		ruleService, exists := appServices[rule.TargetServiceName]
+		_, exists = appServices[rule.TargetServiceName]
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Target Service Name in rule not found in services definition").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
 		}
