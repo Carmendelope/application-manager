@@ -386,11 +386,11 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 			return derrors.NewFailedPreconditionError("Rule Id cannot be filled").WithParams(rule.Name)
 		}
 
-		_, exists := appGroups[rule.TargetServiceGroupName]
+		ruleGroup, exists := appGroups[rule.TargetServiceGroupName]
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Target Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.TargetServiceGroupName)
 		}
-		_, exists = appServices[rule.TargetServiceName]
+		ruleService, exists := appServices[rule.TargetServiceName]
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Target Service Name in rule not found in services definition").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
 		}
@@ -441,6 +441,12 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 			if inbound == false {
 				// the interface named rule.InboundInterface is an outbound
 				return derrors.NewFailedPreconditionError("InboundInterface found in security rule is defined as Outbound").WithParams(rule.InboundNetInterface)
+			}
+			if ruleGroup.Specs != nil && (ruleGroup.Specs.Replicas > 1 || ruleGroup.Specs.MultiClusterReplica) {
+				return derrors.NewFailedPreconditionError("Inbound rule linked to a multireplica service group").WithParams(rule.InboundNetInterface)
+			}
+			if ruleService.Specs != nil && ruleService.Specs.Replicas > 1 {
+				return derrors.NewFailedPreconditionError("Inbound rule linked to a multireplica service").WithParams(rule.InboundNetInterface)
 			}
 		}
 		// if the rule is related to an outbound interface -> it should be defined in outboundInterfaces
