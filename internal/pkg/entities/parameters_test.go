@@ -134,25 +134,79 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			err := ValidDescriptorLogic(appDesc)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
-
-		ginkgo.It("Should be able to Valid the descriptor, inbound and outbound with the same name", func() {
+		ginkgo.It("Should not be able to Valid the descriptor, inbound and outbound with the same name", func() {
 			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
 			appDesc.InboundNetInterfaces = append(appDesc.InboundNetInterfaces, &grpc_application_go.InboundNetworkInterface{Name:"outbound1"})
 			err := ValidDescriptorLogic(appDesc)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
 
-		ginkgo.It("Should not be able to Valid the descriptor, invalid inbound in the rule", func() {
+		ginkgo.It("Should not be able to Valid the descriptor, outbound defined twice ", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.OutboundNetInterfaces = append(appDesc.OutboundNetInterfaces, &grpc_application_go.OutboundNetworkInterface{Name: "outbound1", Required: false})
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+		ginkgo.It("Should not be able to Valid the descriptor, inbound and outbound with the same name", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.OutboundNetInterfaces = append(appDesc.OutboundNetInterfaces, &grpc_application_go.OutboundNetworkInterface{Name: "inbound1", Required: false})
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+
+		// The rules must be informed with existing interfaces
+		ginkgo.It("Should not be able to Valid the descriptor, invalid interface in the inbound rule", func() {
 			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
 			appDesc.Rules[0].InboundNetInterface = "wrong inbound"
 			err := ValidDescriptorLogic(appDesc)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
-		ginkgo.It("Should not be able to Valid the descriptor, invalid ACCESS", func() {
+		ginkgo.It("Should not be able to Valid the descriptor, invalid interface in the outbound rule", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Rules[1].InboundNetInterface = "wrong outbound"
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+
+		ginkgo.It("Should not be able to Valid the descriptor, invalid ACCESS. Outbound rule with inbound interface", func() {
 			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
 			appDesc.Rules[0].Access = grpc_application_go.PortAccess_OUTBOUND_APPNET
 			err := ValidDescriptorLogic(appDesc)
 			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+		ginkgo.It("Should not be able to Valid the descriptor, invalid ACCESS. Inbound rule with outbound interface", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Rules[1].Access = grpc_application_go.PortAccess_INBOUND_APPNET
+			err := ValidDescriptorLogic(appDesc)
+			gomega.Expect(err).NotTo(gomega.Succeed())
+		})
+
+		ginkgo.It("Is not valid to have inbound interfaces not linked to a rule", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.InboundNetInterfaces = append(appDesc.InboundNetInterfaces, &grpc_application_go.InboundNetworkInterface{Name: "inbound2"})
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
+		})
+		ginkgo.It("Is not valid to have outbound interfaces not linked to a rule", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.OutboundNetInterfaces = append(appDesc.OutboundNetInterfaces, &grpc_application_go.OutboundNetworkInterface{Name: "inbound2", Required: false})
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
+		})
+
+		ginkgo.It("Is not valid to have a rule with both inboundNetInterface and outboundNetInterface fields informed", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Rules[0].OutboundNetInterface = "invalidOutbound"
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
+		})
+
+		ginkgo.It("Is not valid to have an inbound rule without inbound interfaces", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.InboundNetInterfaces = nil
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
+		})
+		ginkgo.It("Is not valid to have an outbound rule without outbound interfaces", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.OutboundNetInterfaces = nil
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
 		})
 
 		ginkgo.It("Is not valid to link an inbound interface to a multi replica group service", func() {

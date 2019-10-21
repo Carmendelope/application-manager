@@ -432,7 +432,7 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		// if the rule is related to an inbound interface -> it should be defined in inboundInterfaces
 		if rule.InboundNetInterface != "" {
 			if rule.Access != grpc_application_go.PortAccess_INBOUND_APPNET {
-				return derrors.NewFailedPreconditionError("InboundInterface defined and the access is no INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
+				return derrors.NewFailedPreconditionError("InboundInterface defined and the access is not INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
 			}
 			inbound, exists := interfaceNames[rule.InboundNetInterface]
 			if ! exists{
@@ -449,7 +449,7 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		// if the rule is related to an outbound interface -> it should be defined in outboundInterfaces
 		if rule.OutboundNetInterface != "" {
 			if rule.Access != grpc_application_go.PortAccess_OUTBOUND_APPNET {
-				return derrors.NewFailedPreconditionError("OutboundInterface defined and the access is no OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
+				return derrors.NewFailedPreconditionError("OutboundInterface defined and the access is not OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
 			}
 			outbound, exists := interfaceNames[rule.OutboundNetInterface]
 			if ! exists{
@@ -475,6 +475,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 		- Environment variables must be checked with existing service names
 		- Deploy after should point to existing services
 		- Multireplicate set cannot be set with number of replicas
+	    - Validate that the inbound and outbound net interfaces are always linked to specific rules
 	 */
 
 	 // TODO: the service should be unique per group, not unique in the descriptor
@@ -554,6 +555,51 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 		return err
 	}
 
+	// - Validate the inbound and outbound net interfaces
+	err = ValidAppDescriptorNetInterfaces(appDescriptor)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidAppDescriptorNetInterfaces This function validates that:
+// - All inbound and outbound net interfaces are linked to a security rule. This is because rules can not be generated
+// after deployment and a net interface without rule does not make sense.
+func ValidAppDescriptorNetInterfaces(addAppDescriptorRequest *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+	var missedInterface string
+	found := true
+	for _, inboundNetInterface := range addAppDescriptorRequest.InboundNetInterfaces {
+		found = false
+		for _, rule := range addAppDescriptorRequest.Rules {
+			if rule.InboundNetInterface == inboundNetInterface.Name {
+				found = true
+			}
+		}
+		if ! found {
+			missedInterface = inboundNetInterface.Name
+			break
+		}
+	}
+	if ! found {
+		return derrors.NewFailedPreconditionError("The inbound net interface is not linked to a rule").WithParams(missedInterface)
+	}
+	for _, outboundNetInterface := range addAppDescriptorRequest.OutboundNetInterfaces {
+		found = false
+		for _, rule := range addAppDescriptorRequest.Rules {
+			if rule.OutboundNetInterface == outboundNetInterface.Name {
+				found = true
+			}
+		}
+		if ! found {
+			missedInterface = outboundNetInterface.Name
+			break
+		}
+	}
+	if ! found {
+		return derrors.NewFailedPreconditionError("The outbound net interface is not linked to a rule").WithParams(missedInterface)
+	}
 	return nil
 }
 
