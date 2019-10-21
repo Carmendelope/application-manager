@@ -155,11 +155,6 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
 
-		ginkgo.It("Is not valid to link an inbound interface to a multi replica service", func() {
-			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
-			appDesc.Groups[0].Services[0].Specs = &grpc_application_go.DeploySpecs{Replicas: 2}
-			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
-		})
 		ginkgo.It("Is not valid to link an inbound interface to a multi replica group service", func() {
 			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
 			appDesc.Groups[0].Specs = &grpc_application_go.ServiceGroupDeploymentSpecs{Replicas: 2}

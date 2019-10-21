@@ -445,9 +445,6 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 			if ruleGroup.Specs != nil && (ruleGroup.Specs.Replicas > 1 || ruleGroup.Specs.MultiClusterReplica) {
 				return derrors.NewFailedPreconditionError("Inbound rule linked to a multireplica service group").WithParams(rule.InboundNetInterface)
 			}
-			if ruleService.Specs != nil && ruleService.Specs.Replicas > 1 {
-				return derrors.NewFailedPreconditionError("Inbound rule linked to a multireplica service").WithParams(rule.InboundNetInterface)
-			}
 		}
 		// if the rule is related to an outbound interface -> it should be defined in outboundInterfaces
 		if rule.OutboundNetInterface != "" {
