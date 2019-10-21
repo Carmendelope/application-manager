@@ -826,7 +826,7 @@ func CreateTestAddDescriptorWithMountPath()* grpc_application_go.AddAppDescripto
 	}
 }
 
-func CreateAppDescriptorWithInboundAndOutbounds()* grpc_application_go.AddAppDescriptorRequest{
+func CreateValidAppDescriptorWithInboundAndOutbounds()* grpc_application_go.AddAppDescriptorRequest{
 
 	return &grpc_application_go.AddAppDescriptorRequest {
 		RequestId: 		uuid.New().String(),
@@ -864,7 +864,8 @@ func CreateAppDescriptorWithInboundAndOutbounds()* grpc_application_go.AddAppDes
 			{
 				Name:"g2",
 				Services:[]*grpc_application_go.Service{
-					{Name: "service3",},},
+					{Name: "service3",},
+					{Name: "service4",},},
 			},
 		},
 		EnvironmentVariables:map[string]string{"var1": "NALEJ_SERV_SERVICE1:2000", "var2": "NALEJ_SERV_SERVICE2"},
