@@ -298,7 +298,7 @@ func ValidRetrieveEndpointsRequest (request *grpc_application_manager_go.Retriev
 	return nil
 }
 
-func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool) derrors.Error {
+func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error {
 
 	// - Environment variables must be checked with existing service names
 	// TODO: the enviroment variables only looks the service name (servicegroup should be included)
@@ -333,7 +333,7 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 	return nil
 }
 
-func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool) derrors.Error{
+func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error{
 
 	// TODO: the DeployAfter only looks the service name (servicegroup should be included)
 	// - Deploy after should point to existing services
@@ -356,7 +356,7 @@ func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDesc
 	return nil
 }
 
-func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool, appGroups map[string]bool) derrors.Error{
+func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service, appGroups map[string]*grpc_application_go.ServiceGroup) derrors.Error{
 
 	// NP-1962 Descriptor Validation for inbound and outbound connections
 	// check the interface names are unique for each descriptor (in both inbound and outbound)
@@ -475,8 +475,8 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 	 */
 
 	 // TODO: the service should be unique per group, not unique in the descriptor
-	appServices := make(map[string]bool)
-	appGroups := make(map[string]bool)
+	appServices := make(map[string]*grpc_application_go.Service)
+	appGroups := make(map[string]*grpc_application_go.ServiceGroup)
 
 	// at least one group should be defined
 	if appDescriptor.Groups == nil || len (appDescriptor.Groups) <=0 {
@@ -516,7 +516,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 			if exists {
 				return derrors.NewFailedPreconditionError("Service Name defined twice").WithParams(appGroup.Name, service.Name)
 			}
-			appServices[service.Name] = true
+			appServices[service.Name] = service
 
 			// ConfigFiledId is filled by system-model
 			if service.Configs != nil && len(service.Configs) > 0 {
@@ -528,7 +528,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 			}
 
 		}
-		appGroups[appGroup.Name] = true
+		appGroups[appGroup.Name] = appGroup
 	}
 
 	// - Rules refer to existing services
