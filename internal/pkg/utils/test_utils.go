@@ -856,10 +856,6 @@ func CreateAppDescriptorWithInboundAndOutbounds()* grpc_application_go.AddAppDes
 				Services:[]*grpc_application_go.Service{
 					{Name: "service1",},
 					{Name: "service2",},},
-				Specs: &grpc_application_go.ServiceGroupDeploymentSpecs{
-					Replicas: 3,
-					MultiClusterReplica: false,
-				},
 			},
 			{
 				Name:"g2",
