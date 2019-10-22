@@ -432,15 +432,15 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		// if the rule is related to an inbound interface -> it should be defined in inboundInterfaces
 		if rule.InboundNetInterface != "" {
 			if rule.Access != grpc_application_go.PortAccess_INBOUND_APPNET {
-				return derrors.NewFailedPreconditionError("InboundInterface defined and the access is not INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
+				return derrors.NewFailedPreconditionError("inbound_net_interface defined but the access is not INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
 			}
 			inbound, exists := interfaceNames[rule.InboundNetInterface]
 			if ! exists{
-				return derrors.NewFailedPreconditionError("InboundInterface found in security rule is not defined").WithParams(rule.InboundNetInterface)
+				return derrors.NewFailedPreconditionError("inbound_net_interface found in security rule is not defined").WithParams(rule.InboundNetInterface)
 			}
 			if inbound == false {
 				// the interface named rule.InboundInterface is an outbound
-				return derrors.NewFailedPreconditionError("InboundInterface found in security rule is defined as Outbound").WithParams(rule.InboundNetInterface)
+				return derrors.NewFailedPreconditionError("inbound_net_interface found in security rule is defined as Outbound").WithParams(rule.InboundNetInterface)
 			}
 			if ruleGroup.Specs != nil && (ruleGroup.Specs.Replicas > 1 || ruleGroup.Specs.MultiClusterReplica) {
 				return derrors.NewFailedPreconditionError("Inbound rule linked to a multireplica service group").WithParams(rule.InboundNetInterface)
@@ -449,15 +449,15 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		// if the rule is related to an outbound interface -> it should be defined in outboundInterfaces
 		if rule.OutboundNetInterface != "" {
 			if rule.Access != grpc_application_go.PortAccess_OUTBOUND_APPNET {
-				return derrors.NewFailedPreconditionError("OutboundInterface defined and the access is not OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
+				return derrors.NewFailedPreconditionError("outbound_net_interface defined but the access is not OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
 			}
 			outbound, exists := interfaceNames[rule.OutboundNetInterface]
 			if ! exists{
-				return derrors.NewFailedPreconditionError("OutboundInterface found in security rule is not defined").WithParams(rule.OutboundNetInterface)
+				return derrors.NewFailedPreconditionError("outbound_net_interface found in security rule is not defined").WithParams(rule.OutboundNetInterface)
 			}
 			if outbound == true {
 				// the interface named rule.outboundInterface is an inbound
-				return derrors.NewFailedPreconditionError("OutboundInterface found in security rule is defined as inbound").WithParams(rule.OutboundNetInterface)
+				return derrors.NewFailedPreconditionError("outbound_net_interface found in security rule is defined as inbound").WithParams(rule.OutboundNetInterface)
 			}
 		}
 	}
