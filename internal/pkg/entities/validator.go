@@ -298,7 +298,7 @@ func ValidRetrieveEndpointsRequest (request *grpc_application_manager_go.Retriev
 	return nil
 }
 
-func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool) derrors.Error {
+func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error {
 
 	// - Environment variables must be checked with existing service names
 	// TODO: the enviroment variables only looks the service name (servicegroup should be included)
@@ -333,7 +333,7 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 	return nil
 }
 
-func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool) derrors.Error{
+func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error{
 
 	// TODO: the DeployAfter only looks the service name (servicegroup should be included)
 	// - Deploy after should point to existing services
@@ -356,7 +356,7 @@ func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDesc
 	return nil
 }
 
-func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]bool, appGroups map[string]bool) derrors.Error{
+func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service, appGroups map[string]*grpc_application_go.ServiceGroup) derrors.Error{
 
 	// NP-1962 Descriptor Validation for inbound and outbound connections
 	// check the interface names are unique for each descriptor (in both inbound and outbound)
@@ -386,7 +386,7 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 			return derrors.NewFailedPreconditionError("Rule Id cannot be filled").WithParams(rule.Name)
 		}
 
-		_, exists := appGroups[rule.TargetServiceGroupName]
+		ruleGroup, exists := appGroups[rule.TargetServiceGroupName]
 		if ! exists {
 			return derrors.NewFailedPreconditionError("Target Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.TargetServiceGroupName)
 		}
@@ -432,29 +432,32 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		// if the rule is related to an inbound interface -> it should be defined in inboundInterfaces
 		if rule.InboundNetInterface != "" {
 			if rule.Access != grpc_application_go.PortAccess_INBOUND_APPNET {
-				return derrors.NewFailedPreconditionError("InboundInterface defined and the access is not INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
+				return derrors.NewFailedPreconditionError("inbound_net_interface defined but the access is not INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
 			}
 			inbound, exists := interfaceNames[rule.InboundNetInterface]
 			if ! exists{
-				return derrors.NewFailedPreconditionError("InboundInterface found in security rule is not defined").WithParams(rule.InboundNetInterface)
+				return derrors.NewFailedPreconditionError("inbound_net_interface found in security rule is not defined").WithParams(rule.InboundNetInterface)
 			}
 			if inbound == false {
 				// the interface named rule.InboundInterface is an outbound
-				return derrors.NewFailedPreconditionError("InboundInterface found in security rule is defined as Outbound").WithParams(rule.InboundNetInterface)
+				return derrors.NewFailedPreconditionError("inbound_net_interface found in security rule is defined as Outbound").WithParams(rule.InboundNetInterface)
+			}
+			if ruleGroup.Specs != nil && (ruleGroup.Specs.Replicas > 1 || ruleGroup.Specs.MultiClusterReplica) {
+				return derrors.NewFailedPreconditionError("Inbound rule linked to a multireplica service group").WithParams(rule.InboundNetInterface)
 			}
 		}
 		// if the rule is related to an outbound interface -> it should be defined in outboundInterfaces
 		if rule.OutboundNetInterface != "" {
 			if rule.Access != grpc_application_go.PortAccess_OUTBOUND_APPNET {
-				return derrors.NewFailedPreconditionError("OutboundInterface defined and the access is not OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
+				return derrors.NewFailedPreconditionError("outbound_net_interface defined but the access is not OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
 			}
 			outbound, exists := interfaceNames[rule.OutboundNetInterface]
 			if ! exists{
-				return derrors.NewFailedPreconditionError("OutboundInterface found in security rule is not defined").WithParams(rule.OutboundNetInterface)
+				return derrors.NewFailedPreconditionError("outbound_net_interface found in security rule is not defined").WithParams(rule.OutboundNetInterface)
 			}
 			if outbound == true {
 				// the interface named rule.outboundInterface is an inbound
-				return derrors.NewFailedPreconditionError("OutboundInterface found in security rule is defined as inbound").WithParams(rule.OutboundNetInterface)
+				return derrors.NewFailedPreconditionError("outbound_net_interface found in security rule is defined as inbound").WithParams(rule.OutboundNetInterface)
 			}
 		}
 	}
@@ -476,8 +479,8 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 	 */
 
 	 // TODO: the service should be unique per group, not unique in the descriptor
-	appServices := make(map[string]bool)
-	appGroups := make(map[string]bool)
+	appServices := make(map[string]*grpc_application_go.Service)
+	appGroups := make(map[string]*grpc_application_go.ServiceGroup)
 
 	// at least one group should be defined
 	if appDescriptor.Groups == nil || len (appDescriptor.Groups) <=0 {
@@ -517,7 +520,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 			if exists {
 				return derrors.NewFailedPreconditionError("Service Name defined twice").WithParams(appGroup.Name, service.Name)
 			}
-			appServices[service.Name] = true
+			appServices[service.Name] = service
 
 			// ConfigFiledId is filled by system-model
 			if service.Configs != nil && len(service.Configs) > 0 {
@@ -529,7 +532,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 			}
 
 		}
-		appGroups[appGroup.Name] = true
+		appGroups[appGroup.Name] = appGroup
 	}
 
 	// - Rules refer to existing services

@@ -208,6 +208,17 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			appDesc.OutboundNetInterfaces = nil
 			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
 		})
+
+		ginkgo.It("Is not valid to link an inbound interface to a multi replica group service", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Groups[0].Specs = &grpc_application_go.ServiceGroupDeploymentSpecs{Replicas: 2}
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
+		})
+		ginkgo.It("Is not valid to link an inbound interface to a multiClusterReplica enabled group service", func() {
+			appDesc := utils.CreateAppDescriptorWithInboundAndOutbounds()
+			appDesc.Groups[0].Specs = &grpc_application_go.ServiceGroupDeploymentSpecs{MultiClusterReplica: true}
+			gomega.Expect(ValidDescriptorLogic(appDesc)).ToNot(gomega.Succeed())
+		})
 	})
 
 })
