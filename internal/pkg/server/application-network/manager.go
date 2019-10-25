@@ -57,6 +57,27 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 			addRequest.OrganizationId,addRequest.SourceInstanceId, addRequest.OutboundName, addRequest.TargetInstanceId, addRequest.InboundName))
 	}
 
+	ctxValidOutbounds, cancelValidOutbounds := common.GetContext()
+	defer cancelValidOutbounds()
+	outboundConnections, err := m.appNetClient.ListOutboundConnections(ctxValidOutbounds, &grpc_application_go.AppInstanceId{
+		OrganizationId: addRequest.OrganizationId,
+		AppInstanceId:  addRequest.SourceInstanceId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	hasOutboundUsed := false
+	for _, existingConnection := range outboundConnections.Connections {
+		if existingConnection.OutboundName == addRequest.OutboundName {
+			hasOutboundUsed = true
+			break
+		}
+	}
+	if hasOutboundUsed {
+		return nil, conversions.ToGRPCError(derrors.
+			NewFailedPreconditionError("source instance already have its outbound interface connected").
+			WithParams(addRequest))
+	}
 
 	ctxSource, cancelSource := common.GetContext()
 	defer cancelSource()
