@@ -36,6 +36,27 @@ func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient,
 	}
 }
 
+
+// getInboundServiceName returns the name of the service where the inbound is defined
+func (m *Manager) getInboundServiceName (appInstance *grpc_application_go.AppInstance, inbound string) string {
+	for _, rule := range appInstance.Rules {
+		if rule.Access == grpc_application_go.PortAccess_INBOUND_APPNET && rule.InboundNetInterface == inbound {
+			return rule.TargetServiceName
+		}
+	}
+	return ""
+}
+
+// getutboundServiceName returns the name of the service where the outbound is defined
+func (m *Manager) getOutboundServiceName (appInstance *grpc_application_go.AppInstance, outbound string) string {
+	for _, rule := range appInstance.Rules {
+		if rule.Access == grpc_application_go.PortAccess_OUTBOUND_APPNET && rule.OutboundNetInterface == outbound {
+			return rule.TargetServiceName
+		}
+	}
+	return ""
+}
+
 // AddConnection adds a new connection between one outbound and one inbound
 func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConnectionRequest) (*grpc_common_go.OpResponse, error) {
 
@@ -123,6 +144,13 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 	}
 	if !inBoundFound {
 		return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("inbound_name does not exist").WithParams(addRequest.TargetInstanceId, addRequest.InboundName))
+	}
+
+	// NP-2229. The inbound and outbound can not be in the same service
+	if targetInstance.AppInstanceId == sourceInstance.AppInstanceId {
+		if m.getInboundServiceName(targetInstance, addRequest.InboundName) == m.getOutboundServiceName(sourceInstance, addRequest.OutboundName){
+			return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("Can not create a connection between an inbound and an outbound of the same service"))
+		}
 	}
 
 	// send the message to the queue
