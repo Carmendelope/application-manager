@@ -401,15 +401,17 @@ func (m *Manager) Undeploy(undeployRequest *grpc_application_manager_go.Undeploy
 		OrganizationId: undeployRequest.OrganizationId,
 		AppInstanceId:	undeployRequest.AppInstanceId,
 	})
-	if len(instance.InboundConnections) > 0 && ! undeployRequest.UserConfirmation {
-		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError("can not undeploy the instance, it has inbound connections. User confirmation required") )
-	}
 
 	if iErr != nil {
 		log.Error().Err(iErr).Str("appInstanceId", undeployRequest.AppInstanceId).
 			Msg("error when sending the undeploy request to the queue")
 		return nil, iErr
 	}
+
+	if len(instance.InboundConnections) > 0 && ! undeployRequest.UserConfirmation {
+		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError("can not undeploy the instance, it has inbound connections. User confirmation required") )
+	}
+
 
 	// Remove Inbound connections
 	for _, conn := range instance.InboundConnections {
