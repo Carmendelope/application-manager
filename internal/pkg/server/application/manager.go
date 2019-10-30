@@ -101,19 +101,20 @@ func (m *Manager) RemoveAppDescriptor(appDescriptorID *grpc_application_go.AppDe
 
 // checkAllRequiredParametersAreFilled checks all the params defined as required are filled in deploy request
 func (m *Manager) checkAllRequiredParametersAreFilled(desc *grpc_application_go.AppDescriptor, params *grpc_application_go.InstanceParameterList) error {
-
 	// get all the required parameters
 	for _, p := range desc.Parameters {
 		if p.Required == true {
 			find := false
-			// look for it in deploy params
-			for _, deployParam := range params.Parameters {
+			if params != nil {
+				// look for it in deploy params
+				for _, deployParam := range params.Parameters {
 
-				if deployParam.ParameterName == p.Name {
-					find = true
-					break
+					if deployParam.ParameterName == p.Name {
+						find = true
+						break
+					}
+
 				}
-
 			}
 			if !find {
 				return derrors.NewFailedPreconditionError(RequiredParamNotFilled)
