@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package entities
@@ -34,7 +47,7 @@ const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 const EnvironmentVariableRegex = "[._a-zA-Z][._a-zA-Z0-9]*"
 
 // Map containing port numbers used by Nalej that cannot be used by any application.
-var NalejUsedPorts = map[int32]bool {
+var NalejUsedPorts = map[int32]bool{
 	// Port used by Zt-sidecars redirection
 	1576: true,
 	// Port used by Zt-sidecars zt daemon
@@ -48,8 +61,8 @@ func ValidOrganizationId(organizationID *grpc_organization_go.OrganizationId) de
 	return nil
 }
 
-func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
-	if toAdd.OrganizationId == ""{
+func ValidAddAppDescriptorRequest(toAdd *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+	if toAdd.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
@@ -57,7 +70,7 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 		return derrors.NewInvalidArgumentError(emptyRequestId)
 	}
 
-	if toAdd.Name == ""{
+	if toAdd.Name == "" {
 		return derrors.NewInvalidArgumentError(emptyName)
 	}
 
@@ -72,7 +85,7 @@ func ValidAddAppDescriptorRequest(toAdd * grpc_application_go.AddAppDescriptorRe
 			return derrors.NewInvalidArgumentError("service group must have at least one service").WithParams(g.Name)
 		}
 	}
-	err :=  ValidateAppRequestForNames(toAdd)
+	err := ValidateAppRequestForNames(toAdd)
 
 	if err != nil {
 		return err
@@ -106,23 +119,23 @@ func GetPath(path string) string {
 
 	if len(directories) > 1 {
 		for i := 1; i < len(directories); i++ {
-			if directories[i] == "."{
+			if directories[i] == "." {
 				// nothing to do
-			}else if directories[i] == ".."{
-				index --
+			} else if directories[i] == ".." {
+				index--
 				if index < 0 {
 					log.Warn().Str("path", path).Msg("unable to validate path")
 					return path
 				}
 			} else {
 				dirRes[index] = directories[i]
-				index ++
+				index++
 			}
 		}
 	}
 
 	res = dirRes[0]
-	for i:=1; i< index; i++ {
+	for i := 1; i < index; i++ {
 		res = fmt.Sprintf("%s/%s", res, dirRes[i])
 	}
 
@@ -130,18 +143,18 @@ func GetPath(path string) string {
 }
 
 // ValidateStoragePathAppRequest validate if the same storage path is added more than once
-func ValidateStoragePathAppRequest(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+func ValidateStoragePathAppRequest(toAdd *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
 
 	for _, group := range toAdd.Groups {
 		for _, service := range group.Services {
 			// map to store the storage paths
-			pathMap := make (map[string] bool, 0)
+			pathMap := make(map[string]bool, 0)
 			for _, sto := range service.Storage {
 
 				path := GetPath(sto.MountPath)
 				// check if the mountPath is used before
 				_, exists := pathMap[path]
-				if exists{
+				if exists {
 					return derrors.NewInvalidArgumentError("mounthPath defined twice").WithParams(sto.MountPath)
 				}
 				pathMap[path] = true
@@ -150,17 +163,15 @@ func ValidateStoragePathAppRequest(toAdd * grpc_application_go.AddAppDescriptorR
 		}
 	}
 
-
 	return nil
 }
 
-
 // ValidateDescriptor checks validity of object names, ports name, port numbers  meeting Kubernetes specs.
-func  ValidateAppRequestForNames(toAdd * grpc_application_go.AddAppDescriptorRequest) derrors.Error {
+func ValidateAppRequestForNames(toAdd *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
 	var errs []string
 	// for each group
 	for _, group := range toAdd.Groups {
-		for _,service := range group.Services {
+		for _, service := range group.Services {
 
 			// Validate service name
 			kerr := validation.IsDNS1123Label(service.Name)
@@ -169,10 +180,10 @@ func  ValidateAppRequestForNames(toAdd * grpc_application_go.AddAppDescriptorReq
 				errs = append(errs, kerr...)
 			}
 			// validate Exposed Port Name and Number
-			for _,port := range service.ExposedPorts {
+			for _, port := range service.ExposedPorts {
 				kerr = validation.IsValidPortName(port.Name)
 				if len(kerr) > 0 {
-					errs = append(errs,"PortName", port.Name)
+					errs = append(errs, "PortName", port.Name)
 					errs = append(errs, kerr...)
 				}
 				kerr = validation.IsValidPortNum(int(port.ExposedPort))
@@ -204,14 +215,14 @@ func  ValidateAppRequestForNames(toAdd * grpc_application_go.AddAppDescriptorReq
 		}
 	}
 	if len(errs) > 0 {
-		err := derrors.NewFailedPreconditionError(fmt.Sprintf("%s: %v","App descriptor validation failed",errs))
+		err := derrors.NewFailedPreconditionError(fmt.Sprintf("%s: %v", "App descriptor validation failed", errs))
 		return err
 	}
 	return nil
 }
 
-func ValidAppDescriptorID(descriptorID * grpc_application_go.AppDescriptorId) derrors.Error {
-	if descriptorID.OrganizationId == ""{
+func ValidAppDescriptorID(descriptorID *grpc_application_go.AppDescriptorId) derrors.Error {
+	if descriptorID.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
@@ -221,18 +232,18 @@ func ValidAppDescriptorID(descriptorID * grpc_application_go.AppDescriptorId) de
 	return nil
 }
 
-func ValidUpdateAppDescriptorRequest(request * grpc_application_go.UpdateAppDescriptorRequest) derrors.Error{
+func ValidUpdateAppDescriptorRequest(request *grpc_application_go.UpdateAppDescriptorRequest) derrors.Error {
 	if request.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
-	if request.AppDescriptorId == ""{
+	if request.AppDescriptorId == "" {
 		return derrors.NewInvalidArgumentError(emptyAppDescriptorId)
 	}
 	return nil
 }
 
-func ValidAppInstanceID(instanceID * grpc_application_go.AppInstanceId) derrors.Error {
-	if instanceID.OrganizationId == ""{
+func ValidAppInstanceID(instanceID *grpc_application_go.AppInstanceId) derrors.Error {
+	if instanceID.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
@@ -243,62 +254,59 @@ func ValidAppInstanceID(instanceID * grpc_application_go.AppInstanceId) derrors.
 }
 
 func ValidDeployRequest(deployRequest *grpc_application_manager_go.DeployRequest) derrors.Error {
-	if deployRequest.OrganizationId == ""{
+	if deployRequest.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
-	if deployRequest.AppDescriptorId == ""{
+	if deployRequest.AppDescriptorId == "" {
 		return derrors.NewInvalidArgumentError(emptyDescriptorId)
 	}
 
-	if deployRequest.Name == ""{
+	if deployRequest.Name == "" {
 		return derrors.NewInvalidArgumentError(emptyName)
 	}
 
 	return nil
 }
 
-
 func ValidUndeployRequest(request *grpc_application_manager_go.UndeployRequest) derrors.Error {
-	if request.OrganizationId == ""{
+	if request.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
-	if request.AppInstanceId == ""{
+	if request.AppInstanceId == "" {
 		return derrors.NewInvalidArgumentError(emptyInstanceId)
 	}
-
-
 
 	return nil
 }
 
-func ValidAppFilter (filter *grpc_application_manager_go.ApplicationFilter) derrors.Error{
-	if filter.OrganizationId == ""{
+func ValidAppFilter(filter *grpc_application_manager_go.ApplicationFilter) derrors.Error {
+	if filter.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 	if filter.DeviceGroupId == "" {
 		return derrors.NewInvalidArgumentError(emptyDeviceGroupId)
 	}
 
-	if filter.DeviceGroupName == ""{
+	if filter.DeviceGroupName == "" {
 		return derrors.NewInvalidArgumentError(emptyDeviceGroupName)
 	}
 	return nil
 }
 
-func ValidRetrieveEndpointsRequest (request *grpc_application_manager_go.RetrieveEndpointsRequest) derrors.Error{
-	if request.OrganizationId == ""{
+func ValidRetrieveEndpointsRequest(request *grpc_application_manager_go.RetrieveEndpointsRequest) derrors.Error {
+	if request.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
-	if request.AppInstanceId == ""{
+	if request.AppInstanceId == "" {
 		return derrors.NewInvalidArgumentError(emptyInstanceId)
 	}
 	return nil
 }
 
-func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error {
+func ValidAppDescriptorEnvironmentVariables(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error {
 
 	// - Environment variables must be checked with existing service names
 	// TODO: the enviroment variables only looks the service name (servicegroup should be included)
@@ -313,7 +321,6 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 			return derrors.NewFailedPreconditionError("A valid environment variable name must consist of alphabetic characters, digits, '_', '', or '.', and must not start with a digit").WithParams(key)
 		}
 
-
 		serviceValue := strings.Trim(value, " ")
 		if strings.Index(serviceValue, NalejEnvironmentVariablePrefix) == 0 {
 			// check the service exists.
@@ -321,7 +328,7 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 			if pos == -1 {
 				pos = len(serviceValue)
 			}
-			nalejService :=value[len(NalejEnvironmentVariablePrefix):pos]
+			nalejService := value[len(NalejEnvironmentVariablePrefix):pos]
 
 			// find the service
 			_, exists := appServices[strings.ToLower(nalejService)]
@@ -333,15 +340,15 @@ func ValidAppDescriptorEnvironmentVariables (appDescriptor *grpc_application_go.
 	return nil
 }
 
-func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error{
+func ValidAppDescriptorGroupSpecs(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service) derrors.Error {
 
 	// TODO: the DeployAfter only looks the service name (servicegroup should be included)
 	// - Deploy after should point to existing services
-	for _, group := range appDescriptor.Groups{
+	for _, group := range appDescriptor.Groups {
 		for _, service := range group.Services {
 			for _, after := range service.DeployAfter {
 				_, exists := appServices[after]
-				if ! exists {
+				if !exists {
 					return derrors.NewFailedPreconditionError("Service indicated in deploy after field does not exist").WithParams(after)
 				}
 			}
@@ -356,7 +363,7 @@ func ValidAppDescriptorGroupSpecs (appDescriptor *grpc_application_go.AddAppDesc
 	return nil
 }
 
-func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service, appGroups map[string]*grpc_application_go.ServiceGroup) derrors.Error{
+func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptorRequest, appServices map[string]*grpc_application_go.Service, appGroups map[string]*grpc_application_go.ServiceGroup) derrors.Error {
 
 	// NP-1962 Descriptor Validation for inbound and outbound connections
 	// check the interface names are unique for each descriptor (in both inbound and outbound)
@@ -365,21 +372,21 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 	interfaceNames := make(map[string]bool, 0)
 	for _, inbound := range appDescriptor.InboundNetInterfaces {
 		_, exists := interfaceNames[inbound.Name]
-		if exists{
+		if exists {
 			return derrors.NewFailedPreconditionError("Inbound/outbound name defined twice").WithParams(inbound.Name)
 		}
 		interfaceNames[inbound.Name] = true
 	}
 	for _, outbound := range appDescriptor.OutboundNetInterfaces {
 		_, exists := interfaceNames[outbound.Name]
-		if exists{
+		if exists {
 			return derrors.NewFailedPreconditionError("Inbound/outbound name defined twice").WithParams(outbound.Name)
 		}
 		interfaceNames[outbound.Name] = false
 	}
 
 	// - Rules refer to existing services
-	for _, rule := range appDescriptor.Rules{
+	for _, rule := range appDescriptor.Rules {
 
 		// RuleId is filed by system model
 		if rule.RuleId != "" {
@@ -387,11 +394,11 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		}
 
 		ruleGroup, exists := appGroups[rule.TargetServiceGroupName]
-		if ! exists {
+		if !exists {
 			return derrors.NewFailedPreconditionError("Target Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.TargetServiceGroupName)
 		}
 		_, exists = appServices[rule.TargetServiceName]
-		if ! exists {
+		if !exists {
 			return derrors.NewFailedPreconditionError("Target Service Name in rule not found in services definition").WithParams(rule.Name, rule.TargetServiceGroupName, rule.TargetServiceName)
 		}
 
@@ -399,23 +406,23 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 		if rule.Access == grpc_application_go.PortAccess_APP_SERVICES {
 
 			_, exists = appGroups[rule.AuthServiceGroupName]
-			if ! exists {
+			if !exists {
 				return derrors.NewFailedPreconditionError("Auth Service Group Name in rule not found in groups definition").WithParams(rule.Name, rule.AuthServiceGroupName)
 			}
 			for _, serviceName := range rule.AuthServices {
 				_, exists = appServices[serviceName]
-				if ! exists {
+				if !exists {
 					return derrors.NewFailedPreconditionError("Auth Service Name in rule not found in services definition").WithParams(rule.Name, rule.AuthServiceGroupName, serviceName)
 				}
 			}
-		}else{
-			if rule.AuthServiceGroupName != ""{
+		} else {
+			if rule.AuthServiceGroupName != "" {
 				return derrors.NewFailedPreconditionError("Auth Service Group Name should no be specified for selected access rule").WithParams(rule.Name)
 			}
-			if len(rule.AuthServices) > 0  {
+			if len(rule.AuthServices) > 0 {
 				return derrors.NewFailedPreconditionError("Auth Services should no be specified for selected access rule").WithParams(rule.Name)
 			}
-			if rule.Access == grpc_application_go.PortAccess_DEVICE_GROUP{
+			if rule.Access == grpc_application_go.PortAccess_DEVICE_GROUP {
 				// at least should be defined one device
 				if rule.DeviceGroupNames == nil || len(rule.DeviceGroupNames) <= 0 {
 					return derrors.NewFailedPreconditionError("Device group names in rule not defined").WithParams(rule.Name)
@@ -435,7 +442,7 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 				return derrors.NewFailedPreconditionError("inbound_net_interface defined but the access is not INBOUND").WithParams(rule.InboundNetInterface, rule.Access)
 			}
 			inbound, exists := interfaceNames[rule.InboundNetInterface]
-			if ! exists{
+			if !exists {
 				return derrors.NewFailedPreconditionError("inbound_net_interface found in security rule is not defined").WithParams(rule.InboundNetInterface)
 			}
 			if inbound == false {
@@ -452,7 +459,7 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 				return derrors.NewFailedPreconditionError("outbound_net_interface defined but the access is not OUTBOUND").WithParams(rule.OutboundNetInterface, rule.Access)
 			}
 			outbound, exists := interfaceNames[rule.OutboundNetInterface]
-			if ! exists{
+			if !exists {
 				return derrors.NewFailedPreconditionError("outbound_net_interface found in security rule is not defined").WithParams(rule.OutboundNetInterface)
 			}
 			if outbound == true {
@@ -469,21 +476,21 @@ func ValidAppDescriptorRules(appDescriptor *grpc_application_go.AddAppDescriptor
 func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
 
 	/*
-	   	- Rules refer to existing services
-		- Rules specifying service to service restrictions are not supported yet ???
-		- Service and service group name are uniq
-		- Environment variables must be checked with existing service names
-		- Deploy after should point to existing services
-		- Multireplicate set cannot be set with number of replicas
-	    - Validate that the inbound and outbound net interfaces are always linked to specific rules
-	 */
+		   	- Rules refer to existing services
+			- Rules specifying service to service restrictions are not supported yet ???
+			- Service and service group name are uniq
+			- Environment variables must be checked with existing service names
+			- Deploy after should point to existing services
+			- Multireplicate set cannot be set with number of replicas
+		    - Validate that the inbound and outbound net interfaces are always linked to specific rules
+	*/
 
-	 // TODO: the service should be unique per group, not unique in the descriptor
+	// TODO: the service should be unique per group, not unique in the descriptor
 	appServices := make(map[string]*grpc_application_go.Service)
 	appGroups := make(map[string]*grpc_application_go.ServiceGroup)
 
 	// at least one group should be defined
-	if appDescriptor.Groups == nil || len (appDescriptor.Groups) <=0 {
+	if appDescriptor.Groups == nil || len(appDescriptor.Groups) <= 0 {
 		return derrors.NewFailedPreconditionError("at least one group should be defined")
 	}
 
@@ -495,7 +502,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 		}
 
 		// ServiceGroupId is filled by system-model
-		if appGroup.ServiceGroupId != ""{
+		if appGroup.ServiceGroupId != "" {
 			return derrors.NewFailedPreconditionError("Service Group Id cannot be filled").WithParams(appGroup.Name)
 		}
 
@@ -516,7 +523,7 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 				return derrors.NewFailedPreconditionError("Service Group Id cannot be filled").WithParams(service.Name)
 			}
 
-			_ , exists := appServices[service.Name]
+			_, exists := appServices[service.Name]
 			if exists {
 				return derrors.NewFailedPreconditionError("Service Name defined twice").WithParams(appGroup.Name, service.Name)
 			}
@@ -577,12 +584,12 @@ func ValidAppDescriptorNetInterfaces(addAppDescriptorRequest *grpc_application_g
 				found = true
 			}
 		}
-		if ! found {
+		if !found {
 			missedInterface = inboundNetInterface.Name
 			break
 		}
 	}
-	if ! found {
+	if !found {
 		return derrors.NewFailedPreconditionError("The inbound net interface is not linked to a rule").WithParams(missedInterface)
 	}
 	for _, outboundNetInterface := range addAppDescriptorRequest.OutboundNetInterfaces {
@@ -592,19 +599,19 @@ func ValidAppDescriptorNetInterfaces(addAppDescriptorRequest *grpc_application_g
 				found = true
 			}
 		}
-		if ! found {
+		if !found {
 			missedInterface = outboundNetInterface.Name
 			break
 		}
 	}
-	if ! found {
+	if !found {
 		return derrors.NewFailedPreconditionError("The outbound net interface is not linked to a rule").WithParams(missedInterface)
 	}
 	return nil
 }
 
-func ValidAddConnectionRequest(addRequest * grpc_application_network_go.AddConnectionRequest) derrors.Error {
-	if addRequest.OrganizationId == ""{
+func ValidAddConnectionRequest(addRequest *grpc_application_network_go.AddConnectionRequest) derrors.Error {
+	if addRequest.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 	if addRequest.TargetInstanceId == "" {
@@ -623,8 +630,8 @@ func ValidAddConnectionRequest(addRequest * grpc_application_network_go.AddConne
 	return nil
 }
 
-func ValidRemoveConnectionRequest(removeRequest * grpc_application_network_go.RemoveConnectionRequest) derrors.Error {
-	if removeRequest.OrganizationId == ""{
+func ValidRemoveConnectionRequest(removeRequest *grpc_application_network_go.RemoveConnectionRequest) derrors.Error {
+	if removeRequest.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 	if removeRequest.TargetInstanceId == "" {
