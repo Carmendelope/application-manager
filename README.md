@@ -2,7 +2,7 @@
 ​
 The application manager is in charge of managing operations related to the application lifecycle and the connections between applications. ​​
 The application manager receives messages from public-api as list/get descriptors and applications, deploy/undeploy instances, add and remove connections, etc. 
-Some of these requests can be satisfied in this component and other ones should be sent to conductor and network-manager  
+Some of these requests can be satisfied in this component and others are sent to conductor and network-manager  
 
 ## Getting Started
 
@@ -11,8 +11,8 @@ Some of these requests can be satisfied in this component and other ones should 
 ​
 Before installing this component, we need to have the following deployed:​
 
-* system-model: Application manager access to the system model to request, update, delete application and connection entities. 
-* conductor: required but not used
+* system-model: Application manager access system model to request, update, delete application and connection entities. 
+* conductor: required but not used (this dependency will be removed in next release)
 * nalej-bus: Application manager needs to connect to nalej-bus to send the messages related to the deploy and undeploy of an instance, 
 and messages related to add and remove connections
 ​
