@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package application
@@ -8,11 +21,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/nalej/application-manager/internal/pkg/entities"
+	appnet "github.com/nalej/application-manager/internal/pkg/server/application-network"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-application-network-go"
-	appnet "github.com/nalej/application-manager/internal/pkg/server/application-network"
 	"github.com/nalej/grpc-common-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
@@ -400,7 +413,7 @@ func (m *Manager) Undeploy(undeployRequest *grpc_application_manager_go.Undeploy
 	// GetAppInstance returns expanded instance (with its connections)
 	instance, iErr := m.GetAppInstance(&grpc_application_go.AppInstanceId{
 		OrganizationId: undeployRequest.OrganizationId,
-		AppInstanceId:	undeployRequest.AppInstanceId,
+		AppInstanceId:  undeployRequest.AppInstanceId,
 	})
 
 	if iErr != nil {
@@ -409,20 +422,19 @@ func (m *Manager) Undeploy(undeployRequest *grpc_application_manager_go.Undeploy
 		return nil, iErr
 	}
 
-	if len(instance.InboundConnections) > 0 && ! undeployRequest.UserConfirmation {
-		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError("can not undeploy the instance, it has inbound connections. User confirmation required") )
+	if len(instance.InboundConnections) > 0 && !undeployRequest.UserConfirmation {
+		return nil, conversions.ToGRPCError(derrors.NewFailedPreconditionError("can not undeploy the instance, it has inbound connections. User confirmation required"))
 	}
-
 
 	// Remove Inbound connections
 	for _, conn := range instance.InboundConnections {
 		_, rErr := m.appNetManager.RemoveConnection(&grpc_application_network_go.RemoveConnectionRequest{
-			OrganizationId:		conn.OrganizationId,
-			SourceInstanceId: 	conn.SourceInstanceId,
-			TargetInstanceId: 	conn.TargetInstanceId,
-			InboundName: 		conn.InboundName,
-			OutboundName: 		conn.OutboundName,
-			UserConfirmation: 	true,
+			OrganizationId:   conn.OrganizationId,
+			SourceInstanceId: conn.SourceInstanceId,
+			TargetInstanceId: conn.TargetInstanceId,
+			InboundName:      conn.InboundName,
+			OutboundName:     conn.OutboundName,
+			UserConfirmation: true,
 		})
 		if rErr != nil {
 			// I think we can continue undeploying the instance, the ztNetwork is going to be deleted and the namespaces too.
@@ -432,12 +444,12 @@ func (m *Manager) Undeploy(undeployRequest *grpc_application_manager_go.Undeploy
 	}
 	for _, conn := range instance.OutboundConnections {
 		_, rErr := m.appNetManager.RemoveConnection(&grpc_application_network_go.RemoveConnectionRequest{
-			OrganizationId:		conn.OrganizationId,
-			SourceInstanceId: 	conn.SourceInstanceId,
-			TargetInstanceId: 	conn.TargetInstanceId,
-			InboundName: 		conn.InboundName,
-			OutboundName: 		conn.OutboundName,
-			UserConfirmation: 	true,
+			OrganizationId:   conn.OrganizationId,
+			SourceInstanceId: conn.SourceInstanceId,
+			TargetInstanceId: conn.TargetInstanceId,
+			InboundName:      conn.InboundName,
+			OutboundName:     conn.OutboundName,
+			UserConfirmation: true,
 		})
 		if rErr != nil {
 			// I think we can continue undeploying the instance, the ztNetwork is going to be deleted and the namespaces too.
@@ -448,7 +460,7 @@ func (m *Manager) Undeploy(undeployRequest *grpc_application_manager_go.Undeploy
 
 	appInstanceID := &grpc_conductor_go.UndeployRequest{
 		OrganizationId: undeployRequest.OrganizationId,
-		AppInstanceId: 	undeployRequest.AppInstanceId,
+		AppInstanceId:  undeployRequest.AppInstanceId,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()

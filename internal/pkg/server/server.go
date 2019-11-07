@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2018 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package server
@@ -38,11 +51,11 @@ func NewService(conf Config) *Service {
 
 // Clients structure with the gRPC clients for remote services.
 type Clients struct {
-	AppClient grpc_application_go.ApplicationsClient
+	AppClient       grpc_application_go.ApplicationsClient
 	ConductorClient grpc_conductor_go.ConductorClient
-	ClusterClient grpc_infrastructure_go.ClustersClient
-	DeviceClient  grpc_device_go.DevicesClient
-	AppNetClient grpc_application_network_go.ApplicationNetworkClient
+	ClusterClient   grpc_infrastructure_go.ClustersClient
+	DeviceClient    grpc_device_go.DevicesClient
+	AppNetClient    grpc_application_network_go.ApplicationNetworkClient
 }
 
 type BusClients struct {
@@ -51,7 +64,7 @@ type BusClients struct {
 }
 
 // GetBusClients creates the required connections with the bus
-func (s*Service) GetBusClients() (*BusClients, derrors.Error) {
+func (s *Service) GetBusClients() (*BusClients, derrors.Error) {
 	queueClient := pulsar_comcast.NewClient(s.Configuration.QueueAddress, nil)
 
 	appOpsProducer, err := ops.NewApplicationOpsProducer(queueClient, "ApplicationManager-app_ops")
@@ -64,20 +77,20 @@ func (s*Service) GetBusClients() (*BusClients, derrors.Error) {
 		return nil, err
 	}
 	return &BusClients{
-		AppOpsProducer:appOpsProducer,
-		NetOpsProducer:netOpsProducer,
+		AppOpsProducer: appOpsProducer,
+		NetOpsProducer: netOpsProducer,
 	}, nil
 }
 
 // GetClients creates the required connections with the remote clients.
-func (s * Service) GetClients() (* Clients, derrors.Error) {
+func (s *Service) GetClients() (*Clients, derrors.Error) {
 	conductorConn, err := grpc.Dial(s.Configuration.ConductorAddress, grpc.WithInsecure())
-	if err != nil{
+	if err != nil {
 		return nil, derrors.AsError(err, "cannot create connection with the conductor component")
 	}
 
 	smConn, err := grpc.Dial(s.Configuration.SystemModelAddress, grpc.WithInsecure())
-	if err != nil{
+	if err != nil {
 		return nil, derrors.AsError(err, "cannot create connection with the system model component")
 	}
 
@@ -94,7 +107,7 @@ func (s * Service) GetClients() (* Clients, derrors.Error) {
 func (s *Service) Run() error {
 	// Configuration
 	cErr := s.Configuration.Validate()
-	if cErr != nil{
+	if cErr != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("invalid configuration")
 	}
 	s.Configuration.Print()
@@ -106,16 +119,15 @@ func (s *Service) Run() error {
 
 	// Clients
 	clients, cErr := s.GetClients()
-	if cErr != nil{
+	if cErr != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create clients")
 	}
 
 	// BusClients
 	busClients, bErr := s.GetBusClients()
-	if err != nil{
+	if err != nil {
 		log.Fatal().Str("err", bErr.DebugReport()).Msg("Cannot create bus clients")
 	}
-
 
 	// Create handlers
 	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient, busClients.NetOpsProducer)
@@ -123,7 +135,6 @@ func (s *Service) Run() error {
 
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
-
 
 	grpcServer := grpc.NewServer()
 	grpc_application_manager_go.RegisterApplicationManagerServer(grpcServer, handler)

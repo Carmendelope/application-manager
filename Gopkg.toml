@@ -20,7 +20,7 @@
 
 [[constraint]]
     name="github.com/nalej/derrors"
-    version="v2.0.0"
+    version="=v2.1.0"
 
 [[constraint]]
     name="github.com/nalej/grpc-application-go"
@@ -32,11 +32,11 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-network-go"
-    version="=v0.0.14"
+    version="=v0.0.15"
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"
-    version="=v0.0.92"
+    version="=v0.0.93"
 
 [[constraint]]
     name="github.com/nalej/grpc-device-go"
@@ -68,4 +68,4 @@
 
 [[constraint]]
   name = "github.com/nalej/nalej-bus"
-  branch = "master"
+  version ="=v0.4.0"
