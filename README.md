@@ -72,11 +72,11 @@ Please read [contributing.md](contributing.md) for details on our code of conduc
 ​
 ## Versioning
 ​
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nalej/application-manager/tags). 
 ​
 ## Authors
 ​
-See also the list of [contributors](https://github.com/nalej/grpc-utils/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/nalej/application-manager/contributors) who participated in this project.
 ​
 ## License
 This project is licensed under the Apache 2.0 License - see the [LICENSE-2.0.txt](LICENSE-2.0.txt) file for details.
