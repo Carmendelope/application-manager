@@ -1,5 +1,18 @@
 /*
- * Copyright (C) 2019 Nalej - All Rights Reserved
+ * Copyright 2019 Nalej
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 
 package application_network
@@ -36,9 +49,8 @@ func NewManager(appNet grpc_application_network_go.ApplicationNetworkClient,
 	}
 }
 
-
 // getInboundServiceName returns the name of the service where the inbound is defined
-func (m *Manager) getInboundServiceName (appInstance *grpc_application_go.AppInstance, inbound string) string {
+func (m *Manager) getInboundServiceName(appInstance *grpc_application_go.AppInstance, inbound string) string {
 	for _, rule := range appInstance.Rules {
 		if rule.Access == grpc_application_go.PortAccess_INBOUND_APPNET && rule.InboundNetInterface == inbound {
 			return rule.TargetServiceName
@@ -48,7 +60,7 @@ func (m *Manager) getInboundServiceName (appInstance *grpc_application_go.AppIns
 }
 
 // getutboundServiceName returns the name of the service where the outbound is defined
-func (m *Manager) getOutboundServiceName (appInstance *grpc_application_go.AppInstance, outbound string) string {
+func (m *Manager) getOutboundServiceName(appInstance *grpc_application_go.AppInstance, outbound string) string {
 	for _, rule := range appInstance.Rules {
 		if rule.Access == grpc_application_go.PortAccess_OUTBOUND_APPNET && rule.OutboundNetInterface == outbound {
 			return rule.TargetServiceName
@@ -64,18 +76,18 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 	ctxGet, cancelGet := common.GetContext()
 	defer cancelGet()
 	exists, err := m.appNetClient.ExistsConnection(ctxGet, &grpc_application_network_go.ConnectionInstanceId{
-		OrganizationId: 	addRequest.OrganizationId,
-		SourceInstanceId:	addRequest.SourceInstanceId,
-		OutboundName: 		addRequest.OutboundName,
-		TargetInstanceId: 	addRequest.TargetInstanceId,
-		InboundName: 		addRequest.InboundName,
+		OrganizationId:   addRequest.OrganizationId,
+		SourceInstanceId: addRequest.SourceInstanceId,
+		OutboundName:     addRequest.OutboundName,
+		TargetInstanceId: addRequest.TargetInstanceId,
+		InboundName:      addRequest.InboundName,
 	})
 	if err != nil {
 		return nil, err
 	}
 	if exists.Exists {
 		return nil, conversions.ToGRPCError(derrors.NewAlreadyExistsError("connection").WithParams(
-			addRequest.OrganizationId,addRequest.SourceInstanceId, addRequest.OutboundName, addRequest.TargetInstanceId, addRequest.InboundName))
+			addRequest.OrganizationId, addRequest.SourceInstanceId, addRequest.OutboundName, addRequest.TargetInstanceId, addRequest.InboundName))
 	}
 
 	ctxValidOutbounds, cancelValidOutbounds := common.GetContext()
@@ -148,7 +160,7 @@ func (m *Manager) AddConnection(addRequest *grpc_application_network_go.AddConne
 
 	// NP-2229. The inbound and outbound can not be in the same service
 	if targetInstance.AppInstanceId == sourceInstance.AppInstanceId {
-		if m.getInboundServiceName(targetInstance, addRequest.InboundName) == m.getOutboundServiceName(sourceInstance, addRequest.OutboundName){
+		if m.getInboundServiceName(targetInstance, addRequest.InboundName) == m.getOutboundServiceName(sourceInstance, addRequest.OutboundName) {
 			return nil, conversions.ToGRPCError(derrors.NewInvalidArgumentError("Can not create a connection between an inbound and an outbound of the same service"))
 		}
 	}
@@ -176,13 +188,13 @@ func (m *Manager) RemoveConnection(removeRequest *grpc_application_network_go.Re
 
 	// check if the connection exists
 	ctx, cancel := common.GetContext()
-	defer  cancel()
+	defer cancel()
 	conn, vErr := m.appNetClient.GetConnection(ctx, &grpc_application_network_go.ConnectionInstanceId{
-		OrganizationId: 	removeRequest.OrganizationId,
-		SourceInstanceId: 	removeRequest.SourceInstanceId,
-		TargetInstanceId: 	removeRequest.TargetInstanceId,
-		InboundName: 		removeRequest.InboundName,
-		OutboundName:	 	removeRequest.OutboundName,
+		OrganizationId:   removeRequest.OrganizationId,
+		SourceInstanceId: removeRequest.SourceInstanceId,
+		TargetInstanceId: removeRequest.TargetInstanceId,
+		InboundName:      removeRequest.InboundName,
+		OutboundName:     removeRequest.OutboundName,
 	})
 	if vErr != nil {
 		return nil, vErr
