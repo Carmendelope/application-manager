@@ -78,13 +78,13 @@ jobs:
     parameters:
       modulePath: $(modulePath)
       imageList: $(imageList)
-      version: $(version)
+      version: edge
   
   - template: docker/push.yaml@ci_templates
     parameters:
       modulePath: $(modulePath)
       imageList: $(imageList)
-      version: $(version)
+      version: edge
     
   - template: docker/logout.yaml@ci_templates
 
