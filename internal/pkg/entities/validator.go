@@ -42,6 +42,9 @@ const emptySourceInstanceId = "source_instance_id cannot be empty"
 const emptyTargetInstanceId = "target_instance_id cannot be empty"
 const emptyInboundName = "inbound_name cannot be empty"
 const emptyOutboundName = "outbound_name cannot be empty"
+const emptyServiceGroupId = "service_group_id cannot be empty"
+const emptyServiceGroupInstanceId = "service_group_instance_id cannot be empty"
+const emptyServiceId = "service_id cannot be empty"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 const EnvironmentVariableRegex = "[._a-zA-Z][._a-zA-Z0-9]*"
@@ -646,5 +649,45 @@ func ValidRemoveConnectionRequest(removeRequest *grpc_application_network_go.Rem
 	if removeRequest.OutboundName == "" {
 		return derrors.NewInvalidArgumentError(emptyOutboundName)
 	}
+	return nil
+}
+
+func ValidSearchRequest (request *grpc_application_manager_go.SearchRequest) derrors.Error {
+	if request.OrganizationId == "" {
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+
+	// validate the field dependencies,
+	if request.ServiceGroupId != "" && request.AppInstanceId == ""{
+		return derrors.NewInvalidArgumentError(emptyInstanceId)
+	}
+	if request.ServiceGroupInstanceId != "" {
+		if request.AppInstanceId == "" {
+			return derrors.NewInvalidArgumentError(emptyInstanceId)
+		}else if request.ServiceGroupId == "" {
+			return derrors.NewInvalidArgumentError(emptyServiceGroupId)
+		}
+	}
+	if request.ServiceId != "" {
+		if request.AppInstanceId == "" {
+			return derrors.NewInvalidArgumentError(emptyInstanceId)
+		}else if request.ServiceGroupId == "" {
+			return derrors.NewInvalidArgumentError(emptyServiceGroupId)
+		}else if request.ServiceGroupInstanceId == "" {
+			return derrors.NewInvalidArgumentError(emptyServiceGroupInstanceId)
+		}
+	}
+	if request.ServiceInstanceId != "" {
+		if request.AppInstanceId == "" {
+			return derrors.NewInvalidArgumentError(emptyInstanceId)
+		}else if request.ServiceGroupId == "" {
+			return derrors.NewInvalidArgumentError(emptyServiceGroupId)
+		}else if request.ServiceGroupInstanceId == "" {
+			return derrors.NewInvalidArgumentError(emptyServiceGroupInstanceId)
+		}else if request.ServiceId == "" {
+			return derrors.NewInvalidArgumentError(emptyServiceId)
+		}
+	}
+
 	return nil
 }

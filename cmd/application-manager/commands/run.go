@@ -47,5 +47,7 @@ func init() {
 		"Conductor address (host:port)")
 	runCmd.PersistentFlags().StringVar(&config.QueueAddress, "queueAddress", "localhost:6550",
 		"Queue system address (host:port)")
+	runCmd.PersistentFlags().StringVar(&config.UnifiedLoggingAddress, "unifiedLoggingAddress", "localhost:8323",
+		"Unified Logging Coordinator address (host:port)")
 	rootCmd.AddCommand(runCmd)
 }
