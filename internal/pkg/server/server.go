@@ -147,7 +147,7 @@ func (s *Service) Run() error {
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
 
-	unifiedLogManager := unified_logging.NewManager(clients.UnLogClient)
+	unifiedLogManager := unified_logging.NewManager(clients.UnLogClient, clients.AppClient)
 	unifiedLogHandler := unified_logging.NewHandler(unifiedLogManager)
 
 	grpcServer := grpc.NewServer()
