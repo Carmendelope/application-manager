@@ -24,11 +24,11 @@
 
 [[constraint]]
     name="github.com/nalej/grpc-application-go"
-    version="=v0.0.86"
+    version="=v0.0.91"
 
 [[constraint]]
     name="github.com/nalej/grpc-application-manager-go"
-    version="=v0.0.43"
+    version="=v0.0.45"
 
 [[constraint]]
     name="github.com/nalej/grpc-application-network-go"
@@ -69,3 +69,11 @@
 [[constraint]]
   name = "github.com/nalej/nalej-bus"
   version ="=v0.4.0"
+
+[[constraint]]
+  name = "github.com/nalej/grpc-unified-logging-go"
+  version = "v0.0.6"
+
+[[constraint]]
+    name="github.com/hashicorp/golang-lru"
+    version="v0.5.0"

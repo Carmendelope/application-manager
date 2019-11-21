@@ -31,6 +31,8 @@ type Config struct {
 	SystemModelAddress string
 	// Address where the queue system can be reached
 	QueueAddress string
+	// UnifiedLoggingAddress with the host:port to connect to the Unified Logging Coordinator component.
+	UnifiedLoggingAddress string
 }
 
 func (conf *Config) Validate() derrors.Error {
@@ -47,6 +49,10 @@ func (conf *Config) Validate() derrors.Error {
 		return derrors.NewInvalidArgumentError("queueAddress must be set")
 	}
 
+	if conf.UnifiedLoggingAddress == "" {
+		return derrors.NewInvalidArgumentError("unifiedLoggingAddress must be set")
+	}
+
 	return nil
 }
 
@@ -55,4 +61,6 @@ func (conf *Config) Print() {
 	log.Info().Str("URL", conf.ConductorAddress).Msg("Conductor")
 	log.Info().Str("URL", conf.SystemModelAddress).Msg("System Model")
 	log.Info().Str("URL", conf.QueueAddress).Msg("Queue address")
+	log.Info().Str("URL", conf.UnifiedLoggingAddress).Msg("Unified Logging Coordinator Service")
+
 }
