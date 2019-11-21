@@ -20,6 +20,7 @@ package unified_logging
 import (
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/application-manager/internal/pkg/utils"
+	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-unified-logging-go"
@@ -27,6 +28,7 @@ import (
 )
 
 const DefaultCacheEntries = 100
+const unknownField = "Unknown"
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
@@ -36,12 +38,15 @@ type Manager struct {
 }
 
 // NewManager creates a Manager using a set of clients.
-func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient) Manager {
-	helper, _ := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
-	return Manager{
+func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient) (*Manager, derrors.Error) {
+	helper, err := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
+	if err != nil {
+		return nil, err
+	}
+	return &Manager{
 		unifiedLogging: unifiedLogging,
 		instHelper:     helper,
-	}
+	}, nil
 }
 
 /// TODO fill isDead field, wait until catalog is finished
@@ -97,8 +102,8 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 // getNamesFromSummary returns the name of the serviceGroupId and the serviceId
 func (m *Manager) getNamesFromSummary(serviceGroupId string, serviceId string, inst *grpc_application_go.AppInstanceReducedSummary) (string, string) {
 
-	groupName := ""
-	serviceName := ""
+	groupName := unknownField
+	serviceName := unknownField
 
 	if inst == nil {
 		return groupName, serviceName
@@ -126,6 +131,9 @@ func (m *Manager) expandInformation(organizationId string, logEntry *grpc_applic
 	}
 	if logEntry.AppInstanceId == "" {
 		log.Warn().Msg("unable to expand log information, app_instance_id is empty")
+		logEntry.AppDescriptorName = unknownField
+		logEntry.ServiceGroupName = unknownField
+		logEntry.ServiceName = unknownField
 		return logEntry
 	}
 

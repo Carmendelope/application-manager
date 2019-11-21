@@ -67,7 +67,7 @@ func (i *InstancesHelper) RetrieveInstanceSummary(organizationId string, appInst
 		return nil, conversions.ToDerror(err)
 	}
 
-	_ = i.cache.Add(pk, summary)
+	_ = i.cache.Add(pk, retrievedSummary)
 	return retrievedSummary, nil
 
 }
