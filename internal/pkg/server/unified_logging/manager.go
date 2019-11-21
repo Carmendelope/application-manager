@@ -23,37 +23,38 @@ import (
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-unified-logging-go"
-	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/rs/zerolog/log"
-	"sync"
 )
+
+const DefaultCacheEntries = 100
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
 	unifiedLogging grpc_unified_logging_go.CoordinatorClient
 	appClient      grpc_application_go.ApplicationsClient
-	cache          utils.InstanceCache
+	instHelper     *utils.InstancesHelper
 }
 
 // NewManager creates a Manager using a set of clients.
 func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient) Manager {
+	helper, _ := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
 	return Manager{
 		unifiedLogging: unifiedLogging,
-		cache:          utils.NewInstCache(appClient)}
+		instHelper:     helper,
+	}
 }
 
-// callToSearch call to unified-logging search and store the result in the channel
-func (m *Manager) callToSearch(respond chan<- grpc_unified_logging_go.LogResponse, wg *sync.WaitGroup,
-	request *grpc_unified_logging_go.SearchRequest,	instance string) {
+/// TODO fill isDead field, wait until catalog is finished
+func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*grpc_application_manager_go.LogResponse, error) {
 
-	defer wg.Done()
-
+	log.Debug().Interface("request", request).Msg("search request")
 	ctx, cancel := common.GetContext()
 	defer cancel()
 
-	list, err := m.unifiedLogging.Search(ctx, &grpc_unified_logging_go.SearchRequest{
+	response, err := m.unifiedLogging.Search(ctx, &grpc_unified_logging_go.SearchRequest{
 		OrganizationId:         request.OrganizationId,
-		AppInstanceId:          instance,
+		AppDescriptorId:        request.AppDescriptorId,
+		AppInstanceId:          request.AppInstanceId,
 		ServiceGroupId:         request.ServiceGroupId,
 		ServiceGroupInstanceId: request.ServiceGroupInstanceId,
 		ServiceId:              request.ServiceId,
@@ -64,94 +65,26 @@ func (m *Manager) callToSearch(respond chan<- grpc_unified_logging_go.LogRespons
 	})
 
 	if err != nil {
-		log.Error().Err(err).Msg("error sending search to unified-logging")
+		return nil, err
 	}
+	logResponse := make([]*grpc_application_manager_go.LogEntryResponse, len(response.Entries))
 
-	respond <- *list
-}
+	// convert unified_logging.LogEntryResponse to grpc_application_manager_go.LogEntryResponse
+	// and expand info if proceeded
+	for i, entry := range response.Entries {
+		logResponse[i] = m.expandInformation(request.OrganizationId, &grpc_application_manager_go.LogEntryResponse{
 
-
-// TODO fill isDead field, wait until catalog is finished
-func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*grpc_application_manager_go.LogResponse, error) {
-
-	// array to store all appInstanceIds for which we have to ask
-	var instances []string
-	if request.AppInstanceId != "" {
-		instances = []string{request.AppInstanceId}
-	} else {
-		// update memory structure
-		err := m.cache.UpdateInstanceList(request.OrganizationId)
-		if err != nil {
-			return nil, conversions.ToGRPCError(err)
-		}
-
-		if request.AppDescriptorId != "" {
-			instances = m.cache.RetrieveInstancesOfADescriptor(request.OrganizationId, request.AppDescriptorId)
-		} else {
-			instances = m.cache.RetrieveInstancesOfAnOrganization(request.OrganizationId)
-		}
+			// IsDead: ask the catalog
+			AppDescriptorId:        response.AppDescriptorId,
+			AppInstanceId:          response.AppInstanceId,
+			ServiceGroupId:         response.ServiceGroupId,
+			ServiceGroupInstanceId: response.ServiceGroupInstanceId,
+			ServiceId:              response.ServiceId,
+			ServiceInstanceId:      response.ServiceInstanceId,
+			Timestamp:              entry.Timestamp,
+			Msg:                    entry.Msg,
+		}, request.IncludeMetadata)
 	}
-
-	log.Debug().Interface("instances", instances).Msg("instances to ask for")
-
-	logResponse := make([]*grpc_application_manager_go.LogEntryResponse, 0)
-
-	if len(instances) == 0 {
-		// TODO: reguntar a Dani si devuelvo error o vacio
-		return &grpc_application_manager_go.LogResponse{
-			OrganizationId: request.OrganizationId,
-			From:           request.From,
-			To:             request.To,
-			Entries:        logResponse,
-		}, nil
-	}
-
-	respond := make(chan grpc_unified_logging_go.LogResponse, len(instances))
-	var wg sync.WaitGroup
-	wg.Add(len(instances))
-
-	for _, instance := range instances {
-
-		// call to unified-logging search
-		go m.callToSearch(respond, &wg, &grpc_unified_logging_go.SearchRequest{
-			OrganizationId:         request.OrganizationId,
-			AppInstanceId:          instance,
-			ServiceGroupId:         request.ServiceGroupId,
-			ServiceGroupInstanceId: request.ServiceGroupInstanceId,
-			ServiceId:              request.ServiceId,
-			ServiceInstanceId:      request.ServiceInstanceId,
-			MsgQueryFilter:         request.MsgQueryFilter,
-			From:                   request.From,
-			To:                     request.To,
-		}, instance)
-
-
-	}
-
-	wg.Wait()
-	close(respond)
-
-	for response := range respond {
-		for _, entry := range response.Entries {
-			logResponse = append(logResponse, m.expandInformation(request.OrganizationId, &grpc_application_manager_go.LogEntryResponse{
-				//AppDescriptorId
-				//AppDescriptorName
-				//AppInstanceName:
-				//ServiceGroupName:
-				//ServiceName:
-				// IsDead: ask the catalog
-				AppInstanceId:          response.AppInstanceId,
-				ServiceGroupId:         response.ServiceGroupId,
-				ServiceGroupInstanceId: response.ServiceGroupInstanceId,
-				ServiceId:              response.ServiceId,
-				ServiceInstanceId:      response.ServiceInstanceId,
-				Timestamp:              entry.Timestamp,
-				Msg:                    entry.Msg,
-			}, true))//request.IncludeMetadata))
-		}
-	}
-
-	log.Debug().Int("len", len(logResponse)).Msg(" TOTAL: Search result")
 
 	return &grpc_application_manager_go.LogResponse{
 		OrganizationId: request.OrganizationId,
@@ -161,8 +94,8 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	}, nil
 }
 
-// getServiceGroupName returns the name of the serviceGroupId and the serviceId
-func (m *Manager) getNames (serviceGroupId string, serviceId string, inst *grpc_application_go.AppInstance) (string, string) {
+// getNamesFromSummary returns the name of the serviceGroupId and the serviceId
+func (m *Manager) getNamesFromSummary(serviceGroupId string, serviceId string, inst *grpc_application_go.AppInstanceReducedSummary) (string, string) {
 
 	groupName := ""
 	serviceName := ""
@@ -173,10 +106,10 @@ func (m *Manager) getNames (serviceGroupId string, serviceId string, inst *grpc_
 
 	for _, group := range inst.Groups {
 		if group.ServiceGroupId == serviceGroupId {
-			groupName = group.Name
+			groupName = group.ServiceGroupName
 			for _, service := range group.ServiceInstances {
 				if service.ServiceId == serviceId {
-					serviceName = service.Name
+					serviceName = service.ServiceName
 					return groupName, serviceName
 				}
 			}
@@ -186,29 +119,27 @@ func (m *Manager) getNames (serviceGroupId string, serviceId string, inst *grpc_
 }
 
 // expandInformation fill the logEntry with the descriptor and names
-func (m *Manager) expandInformation(organizationId string, logEntry *grpc_application_manager_go.LogEntryResponse, expand bool)*grpc_application_manager_go.LogEntryResponse{
+func (m *Manager) expandInformation(organizationId string, logEntry *grpc_application_manager_go.LogEntryResponse, expand bool) *grpc_application_manager_go.LogEntryResponse {
 
-	inst, err := m.cache.RetrieveInstanceInformation(organizationId, logEntry.AppInstanceId)
+	if !expand {
+		return logEntry
+	}
+	if logEntry.AppInstanceId == "" {
+		log.Warn().Msg("unable to expand log information, app_instance_id is empty")
+		return logEntry
+	}
+
+	summary, err := m.instHelper.RetrieveInstanceSummary(organizationId, logEntry.AppInstanceId)
 	if err != nil {
-		log.Error().Err(err).Str("organizationId", organizationId).Str("appInstanceId", logEntry.AppInstanceId).
-			Msg("error getting instance information")
+		log.Warn().Interface("trace", err.StackTrace()).Str("organizationId", organizationId).Str("appInstanceId", logEntry.AppInstanceId).Msg("error getting reduced summary")
+		return logEntry
 	}
 
-	logEntry.AppDescriptorId = inst.AppDescriptorId
+	logEntry.AppDescriptorName = summary.AppDescriptorName
+	groupName, serviceName := m.getNamesFromSummary(logEntry.ServiceGroupId, logEntry.ServiceId, summary)
+	logEntry.ServiceGroupName = groupName
+	logEntry.ServiceName = serviceName
 
-	if expand {
-		name, err := m.cache.RetrieveDescriptorName(organizationId, logEntry.AppDescriptorId)
-		if err != nil {
-			logEntry.AppDescriptorName = name
-		}
-		logEntry.AppInstanceName = inst.Name
-		if logEntry.ServiceGroupId != "" {
-			groupName, serviceName := m.getNames(logEntry.ServiceGroupId, logEntry.ServiceId, inst)
-			logEntry.ServiceGroupName = groupName
-			logEntry.ServiceName = serviceName
-		}
-
-	}
 	return logEntry
 
 }

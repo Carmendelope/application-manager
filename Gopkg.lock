@@ -53,6 +53,17 @@
   version = "v1.12.1"
 
 [[projects]]
+  digest = "1:7f6f07500a0b7d3766b00fa466040b97f2f5b5f3eef2ecabfe516e703b05119a"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru",
+  ]
+  pruneopts = ""
+  revision = "7f827b33c0f158ec5dfbba01bb0b14a4541fd81d"
+  version = "v0.5.3"
+
+[[projects]]
   digest = "1:b3c5b95e56c06f5aa72cb2500e6ee5f44fcd122872d4fec2023a488e561218bc"
   name = "github.com/hpcloud/tail"
   packages = [
@@ -91,12 +102,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:b6844eec3faae47051ba88f4c003264e94833a3cc74de0f7e6bd936ccf7ca19b"
+  digest = "1:db80629ec1cb6f46cf6c92f350131811fc773fc67b5f9d5b57a84c1a01183613"
   name = "github.com/nalej/grpc-application-go"
   packages = ["."]
   pruneopts = ""
-  revision = "27d9d79c7f2d3967057c0934355660d6615d1c45"
-  version = "v0.0.86"
+  revision = "23d094052316a074143e6fc61c5436320c8e2fb0"
+  version = "v0.0.91"
 
 [[projects]]
   digest = "1:ac5518d7f423344804483a40b088ac9484a893781d7ba256abd3f230a9a18190"
@@ -227,12 +238,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:c98cb0eedf841e8403a81e4d504a2f5f039e3c79b0e77595e87a9319acff2f44"
+  digest = "1:68607a8341f50bf3c833f344ea3e0deb01fc1e6f98351839050d1238ab079c51"
   name = "github.com/nalej/grpc-unified-logging-go"
   packages = ["."]
   pruneopts = ""
-  revision = "6db7e7a3dad49cb0ad7ca5093f718b6b959126aa"
-  version = "v0.0.5"
+  revision = "2df3d89032969e23e43eed0a052c49bf74a4fb3d"
+  version = "v0.0.6"
 
 [[projects]]
   digest = "1:3c48d4db5e7f6c3cda75e4fc1f9b061eb121ec26587bec82059eba37bac619be"
@@ -316,7 +327,7 @@
   version = "v1.7.1"
 
 [[projects]]
-  digest = "1:349884fbc84da0cc04726aacc98616d2a229cbb4139d96b5def6a6b7016e354b"
+  digest = "1:bb20b170036a4c2c75c40fe0aaf908437e7d03e33f28d9ddbad54f8ed017fb57"
   name = "github.com/rs/zerolog"
   packages = [
     ".",
@@ -325,8 +336,8 @@
     "log",
   ]
   pruneopts = ""
-  revision = "7592fcbe604741a8d6044390c09d70c01569e1b3"
-  version = "v1.16.0"
+  revision = "f1dd50b8c64d79be1392edf1d8fda5cedea4916d"
+  version = "v1.17.2"
 
 [[projects]]
   digest = "1:0c63b3c7ad6d825a898f28cb854252a3b29d37700c68a117a977263f5ec94efe"
@@ -370,7 +381,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8e651b343c0f5aaf26364983b87406bde30dcfb659d30499c5380e8acfb487fd"
+  digest = "1:1de58c5f172054bd703e3abfc245557214c2c4a798d338eeeaadbe15a34db483"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -385,15 +396,15 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "f9c8255933865a6f8452ccf0cc47ac980da5ac56"
+  revision = "fc4aabc6c91483155dade6fbb627cc953a723260"
 
 [[projects]]
   branch = "master"
-  digest = "1:663c4d17df09f9991342576a048bb9275e7b6d312d2fec95b0021ac6a60e0de7"
+  digest = "1:11845cae7402f689cdea0c89f6979f1e9ec2e15e413a4ebf6ce3d5eaee33aa87"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "cf1e2d57716972ea102acf35e82471062c8906a1"
+  revision = "bd437916bb0eb726b873ee8e9b2dcf212d32e2fd"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
@@ -511,16 +522,16 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:16c45073e621eb4261d14740daeaf985e53657ebb40b14fc56499c23e876f84a"
+  digest = "1:5a53f6ef09fb1ac261a97f8a72e8837ff53cbaa969022a6679da210e4cbe9b0f"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = ""
-  revision = "f90ceb4f409096b60e2e9076b38b304b8246e5fa"
-  version = "v2.2.5"
+  revision = "1f64d6156d11335c3f22d9330b0ad14fc1e789ce"
+  version = "v2.2.7"
 
 [[projects]]
   branch = "master"
-  digest = "1:43187a882c671956057b60cf6f9bab7e257de99c1c95d823433e6149a0ba2e39"
+  digest = "1:ebe6841dab09284a758103248a80009c7512074ed8bede2ef5b25d42cd90ba80"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -529,13 +540,14 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "08e4eafd6d117bf3ae812cf000257303af8c43d2"
+  revision = "41065c7a8c2a807d7fbd6d734a36200a76e5cacb"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/google/uuid",
+    "github.com/hashicorp/golang-lru",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
     "github.com/nalej/grpc-application-manager-go",

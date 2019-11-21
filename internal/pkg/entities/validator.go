@@ -652,39 +652,39 @@ func ValidRemoveConnectionRequest(removeRequest *grpc_application_network_go.Rem
 	return nil
 }
 
-func ValidSearchRequest (request *grpc_application_manager_go.SearchRequest) derrors.Error {
+func ValidSearchRequest(request *grpc_application_manager_go.SearchRequest) derrors.Error {
 	if request.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
 	}
 
 	// validate the field dependencies,
-	if request.ServiceGroupId != "" && request.AppInstanceId == ""{
+	if request.ServiceGroupId != "" && request.AppInstanceId == "" {
 		return derrors.NewInvalidArgumentError(emptyInstanceId)
 	}
 	if request.ServiceGroupInstanceId != "" {
 		if request.AppInstanceId == "" {
 			return derrors.NewInvalidArgumentError(emptyInstanceId)
-		}else if request.ServiceGroupId == "" {
+		} else if request.ServiceGroupId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceGroupId)
 		}
 	}
 	if request.ServiceId != "" {
 		if request.AppInstanceId == "" {
 			return derrors.NewInvalidArgumentError(emptyInstanceId)
-		}else if request.ServiceGroupId == "" {
+		} else if request.ServiceGroupId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceGroupId)
-		}else if request.ServiceGroupInstanceId == "" {
+		} else if request.ServiceGroupInstanceId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceGroupInstanceId)
 		}
 	}
 	if request.ServiceInstanceId != "" {
 		if request.AppInstanceId == "" {
 			return derrors.NewInvalidArgumentError(emptyInstanceId)
-		}else if request.ServiceGroupId == "" {
+		} else if request.ServiceGroupId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceGroupId)
-		}else if request.ServiceGroupInstanceId == "" {
+		} else if request.ServiceGroupInstanceId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceGroupInstanceId)
-		}else if request.ServiceId == "" {
+		} else if request.ServiceId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceId)
 		}
 	}

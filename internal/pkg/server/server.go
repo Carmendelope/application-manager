@@ -58,7 +58,7 @@ type Clients struct {
 	ClusterClient   grpc_infrastructure_go.ClustersClient
 	DeviceClient    grpc_device_go.DevicesClient
 	AppNetClient    grpc_application_network_go.ApplicationNetworkClient
-	UnLogClient 	grpc_unified_logging_go.CoordinatorClient
+	UnLogClient     grpc_unified_logging_go.CoordinatorClient
 }
 
 type BusClients struct {
@@ -109,9 +109,8 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 	appNetClient := grpc_application_network_go.NewApplicationNetworkClient(smConn)
 	ulClient := grpc_unified_logging_go.NewCoordinatorClient(ulConn)
 
-
 	return &Clients{aClient, cClient, clClient,
-	dvClient, appNetClient, ulClient}, nil
+		dvClient, appNetClient, ulClient}, nil
 }
 
 // Run the service, launch the REST service handler.

@@ -34,7 +34,7 @@ func NewHandler(manager Manager) *Handler {
 	return &Handler{manager}
 }
 
-func (h *Handler) Search(_ context.Context, in *grpc_application_manager_go.SearchRequest) (*grpc_application_manager_go.LogResponse, error){
+func (h *Handler) Search(_ context.Context, in *grpc_application_manager_go.SearchRequest) (*grpc_application_manager_go.LogResponse, error) {
 	vErr := entities.ValidSearchRequest(in)
 	if vErr != nil {
 		return nil, conversions.ToGRPCError(vErr)
