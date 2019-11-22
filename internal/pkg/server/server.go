@@ -146,7 +146,7 @@ func (s *Service) Run() error {
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
 
-	unifiedLogManager, err  := unified_logging.NewManager(clients.UnLogClient, clients.AppClient)
+	unifiedLogManager, err := unified_logging.NewManager(clients.UnLogClient, clients.AppClient)
 	if err != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create unified-logging manager")
 	}
