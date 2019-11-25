@@ -56,7 +56,7 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	ctx, cancel := common.GetContext()
 	defer cancel()
 
-	response, err := m.unifiedLogging.Search(ctx, &grpc_unified_logging_go.SearchRequest{
+	searchResponse, err := m.unifiedLogging.Search(ctx, &grpc_unified_logging_go.SearchRequest{
 		OrganizationId:         request.OrganizationId,
 		AppDescriptorId:        request.AppDescriptorId,
 		AppInstanceId:          request.AppInstanceId,
@@ -72,29 +72,32 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	if err != nil {
 		return nil, err
 	}
-	logResponse := make([]*grpc_application_manager_go.LogEntryResponse, len(response.Entries))
+	logResponse := make([]*grpc_application_manager_go.LogEntryResponse, 0)
 
 	// convert unified_logging.LogEntryResponse to grpc_application_manager_go.LogEntryResponse
 	// and expand info if proceeded
-	for i, entry := range response.Entries {
-		logResponse[i] = m.expandInformation(request.OrganizationId, &grpc_application_manager_go.LogEntryResponse{
+	for _, response := range searchResponse.Responses {
+		for _, entry := range response.Entries {
 
-			// IsDead: ask the catalog
-			AppDescriptorId:        response.AppDescriptorId,
-			AppInstanceId:          response.AppInstanceId,
-			ServiceGroupId:         response.ServiceGroupId,
-			ServiceGroupInstanceId: response.ServiceGroupInstanceId,
-			ServiceId:              response.ServiceId,
-			ServiceInstanceId:      response.ServiceInstanceId,
-			Timestamp:              entry.Timestamp,
-			Msg:                    entry.Msg,
-		}, request.IncludeMetadata)
+			logResponse = append(logResponse, m.expandInformation(request.OrganizationId, &grpc_application_manager_go.LogEntryResponse{
+
+				// IsDead: ask the catalog
+				AppDescriptorId:        response.AppDescriptorId,
+				AppInstanceId:          response.AppInstanceId,
+				ServiceGroupId:         response.ServiceGroupId,
+				ServiceGroupInstanceId: response.ServiceGroupInstanceId,
+				ServiceId:              response.ServiceId,
+				ServiceInstanceId:      response.ServiceInstanceId,
+				Timestamp:              entry.Timestamp,
+				Msg:                    entry.Msg,
+			}, request.IncludeMetadata))
+		}
 	}
 
 	return &grpc_application_manager_go.LogResponse{
-		OrganizationId: request.OrganizationId,
-		From:           request.From,
-		To:             request.To,
+		OrganizationId: searchResponse.OrganizationId,
+		From:           searchResponse.From,
+		To:             searchResponse.To,
 		Entries:        logResponse,
 	}, nil
 }
