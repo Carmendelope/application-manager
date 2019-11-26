@@ -45,6 +45,7 @@ const emptyOutboundName = "outbound_name cannot be empty"
 const emptyServiceGroupId = "service_group_id cannot be empty"
 const emptyServiceGroupInstanceId = "service_group_instance_id cannot be empty"
 const emptyServiceId = "service_id cannot be empty"
+const impossibleDuration = "to cannot be greater than from"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 const EnvironmentVariableRegex = "[._a-zA-Z][._a-zA-Z0-9]*"
@@ -687,6 +688,18 @@ func ValidSearchRequest(request *grpc_application_manager_go.SearchRequest) derr
 		} else if request.ServiceId == "" {
 			return derrors.NewInvalidArgumentError(emptyServiceId)
 		}
+	}
+
+	return nil
+}
+
+func ValidAvailableLogRequest(request *grpc_application_manager_go.AvailableLogRequest) derrors.Error {
+	if request.OrganizationId == "" {
+		return derrors.NewInvalidArgumentError(emptyOrganizationId)
+	}
+
+	if request.To < request.From {
+		return derrors.NewInvalidArgumentError(impossibleDuration)
 	}
 
 	return nil

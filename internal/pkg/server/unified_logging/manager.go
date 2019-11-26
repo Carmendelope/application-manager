@@ -32,20 +32,22 @@ const unknownField = "Unknown"
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
-	unifiedLogging grpc_unified_logging_go.CoordinatorClient
-	appClient      grpc_application_go.ApplicationsClient
-	instHelper     *utils.InstancesHelper
+	coordinatorClient    grpc_unified_logging_go.CoordinatorClient
+	appsClient           grpc_application_go.ApplicationsClient
+	instHelper           *utils.InstancesHelper
+	unifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient
 }
 
 // NewManager creates a Manager using a set of clients.
-func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient) (*Manager, derrors.Error) {
+func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient, unifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient) (*Manager, derrors.Error) {
 	helper, err := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
 	if err != nil {
 		return nil, err
 	}
 	return &Manager{
-		unifiedLogging: unifiedLogging,
-		instHelper:     helper,
+		coordinatorClient:    coordinatorClient,
+		instHelper:           helper,
+		unifiedLoggingClient: unifiedLoggingClient,
 	}, nil
 }
 
@@ -56,7 +58,7 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	ctx, cancel := common.GetContext()
 	defer cancel()
 
-	searchResponse, err := m.unifiedLogging.Search(ctx, &grpc_unified_logging_go.SearchRequest{
+	searchResponse, err := m.coordinatorClient.Search(ctx, &grpc_unified_logging_go.SearchRequest{
 		OrganizationId:         request.OrganizationId,
 		AppDescriptorId:        request.AppDescriptorId,
 		AppInstanceId:          request.AppInstanceId,
@@ -100,6 +102,19 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 		To:             searchResponse.To,
 		Entries:        logResponse,
 	}, nil
+}
+
+func (m *Manager) Catalog(request *grpc_application_manager_go.AvailableLogRequest) (*grpc_application_manager_go.AvailableLogResponse, error) {
+	log.Debug().Interface("request", request).Msg("available log request")
+	ctx, cancel := common.GetContext()
+	defer cancel()
+
+	availableLogResponse, cErr := m.unifiedLoggingClient.Catalog(ctx, request)
+
+	if cErr != nil {
+		return nil, cErr
+	}
+	return availableLogResponse, nil
 }
 
 // getNamesFromSummary returns the name of the serviceGroupId and the serviceId

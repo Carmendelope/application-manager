@@ -41,3 +41,11 @@ func (h *Handler) Search(_ context.Context, in *grpc_application_manager_go.Sear
 	}
 	return h.Manager.Search(in)
 }
+
+func (h *Handler) Catalog(ctx context.Context, availableLogsRequest *grpc_application_manager_go.AvailableLogRequest) (*grpc_application_manager_go.AvailableLogResponse, error) {
+	vErr := entities.ValidAvailableLogRequest(availableLogsRequest)
+	if vErr != nil {
+		return nil, conversions.ToGRPCError(vErr)
+	}
+	return h.Manager.Catalog(availableLogsRequest)
+}
