@@ -24,6 +24,21 @@ import (
 
 const DefaultTimeout = time.Minute
 
+const (
+	// Annotation application instance
+	NALEJ_ANNOTATION_APP_DESCRIPTOR = "kubernetes.labels.nalej-app-descriptor"
+	// Annotation application instance
+	NALEJ_ANNOTATION_APP_INSTANCE_ID = "kubernetes.labels.nalej-app-instance-id"
+	// Annotation for metadata to identify the group
+	NALEJ_ANNOTATION_SERVICE_GROUP_ID = "kubernetes.labels.nalej-service-group-id"
+	// Annotation for metadata to identify the group service
+	NALEJ_ANNOTATION_SERVICE_GROUP_INSTANCE_ID = "kubernetes.labels.nalej-service-group-instance-id"
+	// Annotation for metadata to identify the service
+	NALEJ_ANNOTATION_SERVICE_ID = "kubernetes.labels.nalej-service-id"
+	// Annotation for metadata to identify the service instance
+	NALEJ_ANNOTATION_SERVICE_INSTANCE_ID = "kubernetes.labels.nalej-service-instance-id"
+)
+
 // GetContext returns a context with a default timeout for internal communications. Notice that the context does not
 // have any security related information attached to it.
 func GetContext() (context.Context, context.CancelFunc) {

@@ -110,6 +110,14 @@
   version = "v0.0.91"
 
 [[projects]]
+  digest = "1:0a59039a032ea25d8febb1a3730cb55f5a0dc87af71748d885ab9a7752a1dcc2"
+  name = "github.com/nalej/grpc-application-history-logs-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "072dd6a1b05cd6b9289e7b21faa2b0d8dd7b252e"
+  version = "v0.0.1"
+
+[[projects]]
   digest = "1:ac5518d7f423344804483a40b088ac9484a893781d7ba256abd3f230a9a18190"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
@@ -238,12 +246,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:8c9cc1c5f49b9687beb6e2297f5f447b10a099482d7e0c8cebe0ae25bc94c504"
+  digest = "1:3414f6c72a327bfcf0f2604a2ef0d3f2bf936e82b8d94f97fe2112dd5364713d"
   name = "github.com/nalej/grpc-unified-logging-go"
   packages = ["."]
   pruneopts = ""
-  revision = "d0a49f5f4240790cf7dfa5060a414accc98e01f6"
-  version = "v0.0.7"
+  revision = "2dd16708ab59deaf60fc4a1b564e3f6f87c63429"
+  version = "v0.0.8"
 
 [[projects]]
   digest = "1:3c48d4db5e7f6c3cda75e4fc1f9b061eb121ec26587bec82059eba37bac619be"
@@ -381,7 +389,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1de58c5f172054bd703e3abfc245557214c2c4a798d338eeeaadbe15a34db483"
+  digest = "1:b61fcec495a334d36135a43a5fd3eda2d8d61b764033c2434e26761398b7da00"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -396,7 +404,7 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "fc4aabc6c91483155dade6fbb627cc953a723260"
+  revision = "ffdde105785063a81acd95bdf89ea53f6e0aac2d"
 
 [[projects]]
   branch = "master"
@@ -531,7 +539,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ebe6841dab09284a758103248a80009c7512074ed8bede2ef5b25d42cd90ba80"
+  digest = "1:c53b9c97bab2cf9f29a29f7daf3dadd4ff53a64236e429e37275521062abfede"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -540,7 +548,7 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "41065c7a8c2a807d7fbd6d734a36200a76e5cacb"
+  revision = "4c4803ed55e31c024ba6c245cba8fc441fb04edd"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -550,6 +558,7 @@
     "github.com/hashicorp/golang-lru",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
+    "github.com/nalej/grpc-application-history-logs-go",
     "github.com/nalej/grpc-application-manager-go",
     "github.com/nalej/grpc-application-network-go",
     "github.com/nalej/grpc-common-go",

@@ -24,6 +24,7 @@ import (
 	"github.com/nalej/application-manager/internal/pkg/server/unified_logging"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
+	"github.com/nalej/grpc-application-history-logs-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-conductor-go"
@@ -59,6 +60,7 @@ type Clients struct {
 	DeviceClient    grpc_device_go.DevicesClient
 	AppNetClient    grpc_application_network_go.ApplicationNetworkClient
 	UnLogClient     grpc_unified_logging_go.CoordinatorClient
+	CatalogClient   grpc_application_history_logs_go.ApplicationHistoryLogsClient
 }
 
 type BusClients struct {
@@ -108,9 +110,10 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 	dvClient := grpc_device_go.NewDevicesClient(smConn)
 	appNetClient := grpc_application_network_go.NewApplicationNetworkClient(smConn)
 	ulClient := grpc_unified_logging_go.NewCoordinatorClient(ulConn)
+	catClient := grpc_application_history_logs_go.NewApplicationHistoryLogsClient(smConn)
 
 	return &Clients{aClient, cClient, clClient,
-		dvClient, appNetClient, ulClient}, nil
+		dvClient, appNetClient, ulClient, catClient}, nil
 }
 
 // Run the service, launch the REST service handler.
@@ -146,7 +149,7 @@ func (s *Service) Run() error {
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
 
-	unifiedLogManager, err := unified_logging.NewManager(clients.UnLogClient, clients.AppClient)
+	unifiedLogManager, err := unified_logging.NewManager(clients.UnLogClient, clients.AppClient, clients.CatalogClient)
 	if err != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create unified-logging manager")
 	}

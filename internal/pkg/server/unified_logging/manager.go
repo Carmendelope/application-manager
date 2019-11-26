@@ -22,9 +22,13 @@ import (
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
+	"github.com/nalej/grpc-application-history-logs-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-unified-logging-go"
+	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/rs/zerolog/log"
+	"strings"
+	"time"
 )
 
 const DefaultCacheEntries = 100
@@ -34,11 +38,13 @@ const unknownField = "Unknown"
 type Manager struct {
 	unifiedLogging grpc_unified_logging_go.CoordinatorClient
 	appClient      grpc_application_go.ApplicationsClient
+	catalogClient  grpc_application_history_logs_go.ApplicationHistoryLogsClient
 	instHelper     *utils.InstancesHelper
 }
 
 // NewManager creates a Manager using a set of clients.
-func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient) (*Manager, derrors.Error) {
+func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient,
+	catClient grpc_application_history_logs_go.ApplicationHistoryLogsClient) (*Manager, derrors.Error) {
 	helper, err := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
 	if err != nil {
 		return nil, err
@@ -46,13 +52,134 @@ func NewManager(unifiedLogging grpc_unified_logging_go.CoordinatorClient, appCli
 	return &Manager{
 		unifiedLogging: unifiedLogging,
 		instHelper:     helper,
+		catalogClient:  catClient,
 	}, nil
+}
+
+func (m *Manager) checkConditions(request grpc_application_manager_go.SearchRequest, event grpc_application_history_logs_go.ServiceInstanceLog) bool {
+	review := true
+
+	if request.ServiceGroupInstanceId != "" && request.ServiceGroupInstanceId != event.ServiceGroupInstanceId {
+		review = false
+	}
+	if request.ServiceInstanceId != "" && request.ServiceInstanceId != event.ServiceInstanceId {
+		review = false
+	}
+	if request.ServiceGroupId != "" && request.ServiceGroupId != event.ServiceGroupId {
+		review = false
+	}
+	if request.ServiceId != "" && request.ServiceId != event.ServiceId {
+		review = false
+	}
+	if request.AppInstanceId != "" && request.AppInstanceId != event.AppInstanceId {
+		review = false
+	}
+	if request.AppDescriptorId != "" && request.AppDescriptorId != event.AppDescriptorId {
+		review = false
+	}
+
+	return review
+}
+
+// grepMsgQueryFilter returns a map with the identifiers of those fields whose name contains the string msgQueryFilter
+func (m *Manager) grepMsgQueryFilter(request *grpc_application_manager_go.SearchRequest) (map[string]*grpc_unified_logging_go.IdList /*map[string][]string*/, derrors.Error) {
+
+	descriptorList := make([]string, 0)
+	instanceList := make([]string, 0)
+	serviceGroupList := make([]string, 0)
+	serviceList := make([]string, 0)
+
+	// initialize the identifiers map
+	res := map[string]*grpc_unified_logging_go.IdList{}
+
+	ctxCat, cancelCat := common.GetContext()
+	defer cancelCat()
+
+	// TODO: store the catalog response in a cache
+	response, err := m.catalogClient.Search(ctxCat, &grpc_application_history_logs_go.SearchLogRequest{
+		OrganizationId: request.OrganizationId,
+		From:           request.From,
+		To:             request.To,
+	})
+	if err != nil {
+		return res, conversions.ToDerror(err)
+	}
+
+	for _, event := range response.Events {
+		if m.checkConditions(*request, *event) {
+			summary, err := m.instHelper.RetrieveInstanceSummary(event.OrganizationId, event.AppInstanceId)
+			if err != nil {
+				log.Warn().Str("trace", err.DebugReport()).Str("organizationId", event.OrganizationId).
+					Str("app_instance_id", event.AppInstanceId).Msg("error getting summary")
+			} else {
+				// TODO: summary and request.MsgQueryFilter to lowerCase
+				// APP_DESCRIPTOR_NAME
+				if strings.Contains(summary.AppDescriptorName, request.MsgQueryFilter) {
+					descriptorList = append(descriptorList, event.AppDescriptorId)
+				}
+				// APP_INSTANCE_NAME
+				if strings.Contains(summary.AppInstanceName, request.MsgQueryFilter) {
+					instanceList = append(instanceList, event.AppInstanceId)
+				}
+				// SERVICE_GROUP_NAME
+				for _, group := range summary.Groups {
+					if strings.Contains(group.ServiceGroupName, request.MsgQueryFilter) {
+						serviceGroupList = append(serviceGroupList, group.ServiceGroupId)
+					}
+					// SERVICE_NAME
+					for _, service := range group.ServiceInstances {
+						if strings.Contains(service.ServiceName, request.MsgQueryFilter) {
+							serviceList = append(serviceList, service.ServiceId)
+						}
+					}
+				}
+			}
+		}
+	}
+	if len(descriptorList) > 0 {
+		res[common.NALEJ_ANNOTATION_APP_DESCRIPTOR] = &grpc_unified_logging_go.IdList{
+			Ids: descriptorList,
+		}
+	}
+	if len(instanceList) > 0 {
+		res[common.NALEJ_ANNOTATION_APP_INSTANCE_ID] = &grpc_unified_logging_go.IdList{
+			Ids: instanceList,
+		}
+	}
+	if len(serviceGroupList) > 0 {
+		res[common.NALEJ_ANNOTATION_SERVICE_GROUP_ID] = &grpc_unified_logging_go.IdList{
+			Ids: serviceGroupList,
+		}
+	}
+	if len(serviceList) > 0 {
+		res[common.NALEJ_ANNOTATION_SERVICE_ID] = &grpc_unified_logging_go.IdList{
+			Ids: serviceList,
+		}
+	}
+
+	return res, nil
 }
 
 /// TODO fill isDead field, wait until catalog is finished
 func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*grpc_application_manager_go.LogResponse, error) {
 
 	log.Debug().Interface("request", request).Msg("search request")
+	// if we don't have date range, we ask for the last hour
+	if request.From == 0 && request.To == 0 {
+		oneHourAgo := time.Now().Add(time.Hour * (-1))
+		request.From = oneHourAgo.Unix()
+	}
+
+	k8sQuery := make(map[string]*grpc_unified_logging_go.IdList, 0)
+
+	// if request.MsgQueryFilter is filled -> ask to the catalog
+	if request.MsgQueryFilter != "" {
+		queryIds, err := m.grepMsgQueryFilter(request)
+		if err != nil {
+			k8sQuery = queryIds
+		}
+	}
+
 	ctx, cancel := common.GetContext()
 	defer cancel()
 
@@ -64,6 +191,7 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 		ServiceGroupInstanceId: request.ServiceGroupInstanceId,
 		ServiceId:              request.ServiceId,
 		ServiceInstanceId:      request.ServiceInstanceId,
+		K8SIdQueryFilter:       k8sQuery,
 		MsgQueryFilter:         request.MsgQueryFilter,
 		From:                   request.From,
 		To:                     request.To,
