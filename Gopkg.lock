@@ -110,6 +110,14 @@
   version = "v0.0.91"
 
 [[projects]]
+  digest = "1:0a59039a032ea25d8febb1a3730cb55f5a0dc87af71748d885ab9a7752a1dcc2"
+  name = "github.com/nalej/grpc-application-history-logs-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "072dd6a1b05cd6b9289e7b21faa2b0d8dd7b252e"
+  version = "v0.0.1"
+
+[[projects]]
   digest = "1:87c0e694b06b0e75022b13a024fb8e201c7957246e65e3d611909fdb52c148b6"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
@@ -271,6 +279,7 @@
     "pkg/bus",
     "pkg/bus/pulsar-comcast",
     "pkg/queue",
+    "pkg/queue/application/events",
     "pkg/queue/application/ops",
     "pkg/queue/network/ops",
   ]
@@ -550,6 +559,7 @@
     "github.com/hashicorp/golang-lru",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
+    "github.com/nalej/grpc-application-history-logs-go",
     "github.com/nalej/grpc-application-manager-go",
     "github.com/nalej/grpc-application-network-go",
     "github.com/nalej/grpc-common-go",
@@ -561,6 +571,7 @@
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
     "github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast",
+    "github.com/nalej/nalej-bus/pkg/queue/application/events",
     "github.com/nalej/nalej-bus/pkg/queue/application/ops",
     "github.com/nalej/nalej-bus/pkg/queue/network/ops",
     "github.com/onsi/ginkgo",

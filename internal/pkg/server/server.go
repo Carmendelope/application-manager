@@ -21,9 +21,10 @@ import (
 	"fmt"
 	"github.com/nalej/application-manager/internal/pkg/server/application"
 	"github.com/nalej/application-manager/internal/pkg/server/application-network"
-	"github.com/nalej/application-manager/internal/pkg/server/unified_logging"
+	"github.com/nalej/application-manager/internal/pkg/server/unified-logging"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
+	grpc_application_history_logs_go "github.com/nalej/grpc-application-history-logs-go"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-application-network-go"
 	"github.com/nalej/grpc-conductor-go"
@@ -31,6 +32,7 @@ import (
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-unified-logging-go"
 	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
+	"github.com/nalej/nalej-bus/pkg/queue/application/events"
 	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
 	networkOps "github.com/nalej/nalej-bus/pkg/queue/network/ops"
 	"github.com/rs/zerolog/log"
@@ -53,17 +55,20 @@ func NewService(conf Config) *Service {
 
 // Clients structure with the gRPC clients for remote services.
 type Clients struct {
-	AppClient       grpc_application_go.ApplicationsClient
-	ConductorClient grpc_conductor_go.ConductorClient
-	ClusterClient   grpc_infrastructure_go.ClustersClient
-	DeviceClient    grpc_device_go.DevicesClient
-	AppNetClient    grpc_application_network_go.ApplicationNetworkClient
-	UnLogClient     grpc_unified_logging_go.CoordinatorClient
+	AppClient         grpc_application_go.ApplicationsClient
+	ConductorClient   grpc_conductor_go.ConductorClient
+	ClusterClient     grpc_infrastructure_go.ClustersClient
+	DeviceClient      grpc_device_go.DevicesClient
+	AppNetClient      grpc_application_network_go.ApplicationNetworkClient
+	CoordinatorClient grpc_unified_logging_go.CoordinatorClient
+	UnifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient
+	AppHistoryLogsClient grpc_application_history_logs_go.ApplicationHistoryLogsClient
 }
 
 type BusClients struct {
 	AppOpsProducer *ops.ApplicationOpsProducer
 	NetOpsProducer *networkOps.NetworkOpsProducer
+	AppEventsConsumer *events.ApplicationEventsConsumer
 }
 
 // GetBusClients creates the required connections with the bus
@@ -79,9 +84,16 @@ func (s *Service) GetBusClients() (*BusClients, derrors.Error) {
 	if err != nil {
 		return nil, err
 	}
+
+	appEventsConfig := events.NewConfigApplicationEventsConsumer(1, events.ConsumableStructsApplicationEventsConsumer{
+		DeploymentServiceUpdateRequest: true,
+	})
+	appEventsConsumer, err := events.NewApplicationEventsConsumer(queueClient, "network-manager-application-events", true, appEventsConfig)
+
 	return &BusClients{
 		AppOpsProducer: appOpsProducer,
 		NetOpsProducer: netOpsProducer,
+		AppEventsConsumer: appEventsConsumer,
 	}, nil
 }
 
@@ -97,9 +109,19 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 		return nil, derrors.AsError(err, "cannot create connection with the system model component")
 	}
 
-	ulConn, err := grpc.Dial(s.Configuration.UnifiedLoggingAddress, grpc.WithInsecure())
+	coordConn, err := grpc.Dial(s.Configuration.UnifiedLoggingAddress, grpc.WithInsecure())
 	if err != nil {
 		return nil, derrors.AsError(err, "cannot create connection with unified logging coordinator")
+	}
+
+	ulConn, err := grpc.Dial(s.Configuration.UnifiedLoggingAddress, grpc.WithInsecure())
+	if err != nil {
+		return nil, derrors.AsError(err, "cannot create connection with unified logging")
+	}
+
+	ahlConn, err := grpc.Dial(s.Configuration.SystemModelAddress, grpc.WithInsecure())
+	if err != nil {
+		return nil, derrors.AsError(err, "cannot create connection with the system model component")
 	}
 
 	aClient := grpc_application_go.NewApplicationsClient(smConn)
@@ -107,10 +129,13 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 	clClient := grpc_infrastructure_go.NewClustersClient(smConn)
 	dvClient := grpc_device_go.NewDevicesClient(smConn)
 	appNetClient := grpc_application_network_go.NewApplicationNetworkClient(smConn)
-	ulClient := grpc_unified_logging_go.NewCoordinatorClient(ulConn)
+	coordClient := grpc_unified_logging_go.NewCoordinatorClient(coordConn)
+	ulClient := grpc_application_manager_go.NewUnifiedLoggingClient(ulConn)
+	ahlClient := grpc_application_history_logs_go.NewApplicationHistoryLogsClient(ahlConn)
+
 
 	return &Clients{aClient, cClient, clClient,
-		dvClient, appNetClient, ulClient}, nil
+		dvClient, appNetClient, coordClient, ulClient, ahlClient}, nil
 }
 
 // Run the service, launch the REST service handler.
@@ -146,7 +171,7 @@ func (s *Service) Run() error {
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
 
-	unifiedLogManager, err := unified_logging.NewManager(clients.UnLogClient, clients.AppClient)
+	unifiedLogManager, err := unified_logging.NewManager(clients.CoordinatorClient, clients.AppClient, clients.UnifiedLoggingClient, clients.AppHistoryLogsClient, busClients.AppEventsConsumer)
 	if err != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create unified-logging manager")
 	}

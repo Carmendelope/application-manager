@@ -18,28 +18,38 @@
 package unified_logging
 
 import (
+	"context"
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/nalej/grpc-application-history-logs-go"
+	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-unified-logging-go"
 	"github.com/rs/zerolog/log"
+	"github.com/nalej/nalej-bus/pkg/queue/application/events"
+	"time"
 )
 
-const DefaultCacheEntries = 100
-const unknownField = "Unknown"
+const (
+	ApplicationManagerTimeout = time.Second * 3
+	DefaultCacheEntries = 100
+	unknownField = "Unknown"
+)
 
 // Manager structure with the required clients for roles operations.
 type Manager struct {
-	coordinatorClient    grpc_unified_logging_go.CoordinatorClient
-	appsClient           grpc_application_go.ApplicationsClient
-	instHelper           *utils.InstancesHelper
-	unifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient
+	coordinatorClient         grpc_unified_logging_go.CoordinatorClient
+	appsClient                grpc_application_go.ApplicationsClient
+	instHelper                *utils.InstancesHelper
+	unifiedLoggingClient      grpc_application_manager_go.UnifiedLoggingClient
+	appHistoryLogsClient		grpc_application_history_logs_go.ApplicationHistoryLogsClient
+	applicationEventsConsumer *events.ApplicationEventsConsumer
 }
 
 // NewManager creates a Manager using a set of clients.
-func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient, unifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient) (*Manager, derrors.Error) {
+func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient, unifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient, appHistoryLogsClient grpc_application_history_logs_go.ApplicationHistoryLogsClient, appEventsConsumer *events.ApplicationEventsConsumer) (*Manager, derrors.Error) {
 	helper, err := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
 	if err != nil {
 		return nil, err
@@ -48,6 +58,9 @@ func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, app
 		coordinatorClient:    coordinatorClient,
 		instHelper:           helper,
 		unifiedLoggingClient: unifiedLoggingClient,
+		appHistoryLogsClient: appHistoryLogsClient,
+		applicationEventsConsumer:appEventsConsumer,
+
 	}, nil
 }
 
@@ -168,4 +181,35 @@ func (m *Manager) expandInformation(organizationId string, logEntry *grpc_applic
 
 	return logEntry
 
+}
+
+// ManageCatalog receives DeploymentServiceUpdateRequest messages from the bus and manages the catalog entries to be sent to system-model
+func (m *Manager) ManageCatalog (request *grpc_conductor_go.DeploymentServiceUpdateRequest) error {
+	addCtx, addCancel := context.WithTimeout(context.Background(), ApplicationManagerTimeout)
+	defer addCancel()
+	for _, service := range request.List {
+		appInstanceReducedSummary, sumErr := m.appsClient.GetAppInstanceReducedSummary(addCtx, &grpc_application_go.AppInstanceId{
+			OrganizationId:       request.OrganizationId,
+			AppInstanceId:        service.ApplicationInstanceId,
+		})
+		if sumErr != nil {
+			return sumErr
+		}
+
+		_, addErr := m.appHistoryLogsClient.Add(addCtx, &grpc_application_history_logs_go.AddLogRequest{
+			OrganizationId:         request.OrganizationId,
+			AppInstanceId:          service.ApplicationInstanceId,
+			AppDescriptorId:        appInstanceReducedSummary.AppDescriptorId,
+			ServiceGroupId:         service.ServiceGroupId,
+			ServiceGroupInstanceId:	service.ServiceGroupInstanceId,
+			ServiceId:              service.ServiceId,
+			ServiceInstanceId:      service.ServiceInstanceId,
+			Created:                time.Now().UnixNano(),
+		})
+		if addErr != nil {
+			return addErr
+		}
+	}
+
+	return nil
 }
