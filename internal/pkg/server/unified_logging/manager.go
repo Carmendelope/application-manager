@@ -34,7 +34,6 @@ const unknownField = "Unknown"
 type Manager struct {
 	unifiedLogging grpc_unified_logging_go.CoordinatorClient
 	appClient      grpc_application_go.ApplicationsClient
-	catalogClient  grp
 	instHelper     *utils.InstancesHelper
 }
 
