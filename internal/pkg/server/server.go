@@ -19,6 +19,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/nalej/application-manager/internal/pkg/queue"
 	"github.com/nalej/application-manager/internal/pkg/server/application"
 	"github.com/nalej/application-manager/internal/pkg/server/application-network"
 	"github.com/nalej/application-manager/internal/pkg/server/unified-logging"
@@ -85,7 +86,7 @@ func (s *Service) GetBusClients() (*BusClients, derrors.Error) {
 		return nil, err
 	}
 
-	appEventsConfig := events.NewConfigApplicationEventsConsumer(1, events.ConsumableStructsApplicationEventsConsumer{
+	appEventsConfig := events.NewConfigApplicationEventsConsumer(5, events.ConsumableStructsApplicationEventsConsumer{
 		DeploymentServiceUpdateRequest: true,
 	})
 	appEventsConsumer, err := events.NewApplicationEventsConsumer(queueClient, "network-manager-application-events", true, appEventsConfig)
@@ -168,14 +169,18 @@ func (s *Service) Run() error {
 	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient, busClients.NetOpsProducer)
 	appNetHandler := application_network.NewHandler(appNetManager)
 
+
 	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
 
-	unifiedLogManager, err := unified_logging.NewManager(clients.CoordinatorClient, clients.AppClient, clients.UnifiedLoggingClient, clients.AppHistoryLogsClient, busClients.AppEventsConsumer)
+	unifiedLoggingManager, err := unified_logging.NewManager(clients.CoordinatorClient, clients.AppClient, clients.UnifiedLoggingClient, clients.AppHistoryLogsClient, busClients.AppEventsConsumer)
 	if err != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create unified-logging manager")
 	}
-	unifiedLogHandler := unified_logging.NewHandler(*unifiedLogManager)
+	unifiedLogHandler := unified_logging.NewHandler(*unifiedLoggingManager)
+
+	appEventsHandler := queue.NewAppEventsHandler(unifiedLoggingManager, busClients.AppEventsConsumer)
+	appEventsHandler.Run()
 
 	grpcServer := grpc.NewServer()
 	grpc_application_manager_go.RegisterApplicationManagerServer(grpcServer, handler)

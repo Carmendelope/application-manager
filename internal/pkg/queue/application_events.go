@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const ApplicationEventsTimeout = time.Minute * 60
+const ApplicationEventsTimeout = time.Minute
 
 type AppEventsHandler struct {
 	// unified logging manager
@@ -66,7 +66,7 @@ func (a AppEventsHandler) waitRequests() {
 	}
 }
 
-// conductor sends DeploymentServiceStatusUpdateRequest to the bus ant network-manager consumes them
+// conductor sends DeploymentServiceStatusUpdateRequest to the bus and application-manager consumes them
 func (a AppEventsHandler) consumeDeploymentServiceStatusUpdateRequest() {
 	log.Debug().Msg("waiting for service status update requests...")
 	for {

@@ -27,6 +27,7 @@ import (
 	"github.com/nalej/grpc-application-history-logs-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-unified-logging-go"
+	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/rs/zerolog/log"
 	"github.com/nalej/nalej-bus/pkg/queue/application/events"
 	"time"
@@ -60,7 +61,6 @@ func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, app
 		unifiedLoggingClient: unifiedLoggingClient,
 		appHistoryLogsClient: appHistoryLogsClient,
 		applicationEventsConsumer:appEventsConsumer,
-
 	}, nil
 }
 
@@ -188,26 +188,43 @@ func (m *Manager) ManageCatalog (request *grpc_conductor_go.DeploymentServiceUpd
 	addCtx, addCancel := context.WithTimeout(context.Background(), ApplicationManagerTimeout)
 	defer addCancel()
 	for _, service := range request.List {
-		appInstanceReducedSummary, sumErr := m.appsClient.GetAppInstanceReducedSummary(addCtx, &grpc_application_go.AppInstanceId{
-			OrganizationId:       request.OrganizationId,
-			AppInstanceId:        service.ApplicationInstanceId,
-		})
-		if sumErr != nil {
-			return sumErr
+		log.Debug().Str("app instance id", service.ApplicationInstanceId).Msg("incoming service update request")
+		if service.Status == grpc_application_go.ServiceStatus_SERVICE_DEPLOYING {
+			log.Debug().Str("service instance id", service.ServiceInstanceId).Msg("adding service to service history logs")
+			appInstanceReducedSummary, sumErr := m.instHelper.RetrieveInstanceSummary(request.OrganizationId, service.ApplicationInstanceId)
+			if sumErr != nil {
+				log.Debug().Msg("error retrieving service instance id")
+				return conversions.ToGRPCError(sumErr)
+			}
+
+			_, addErr := m.appHistoryLogsClient.Add(addCtx, &grpc_application_history_logs_go.AddLogRequest{
+				OrganizationId:         request.OrganizationId,
+				AppInstanceId:          service.ApplicationInstanceId,
+				AppDescriptorId:        appInstanceReducedSummary.AppDescriptorId,
+				ServiceGroupId:         service.ServiceGroupId,
+				ServiceGroupInstanceId:	service.ServiceGroupInstanceId,
+				ServiceId:              service.ServiceId,
+				ServiceInstanceId:      service.ServiceInstanceId,
+				Created:                time.Now().UnixNano(),
+			})
+			if addErr != nil {
+				log.Debug().Msg("error adding service instance log")
+				return addErr
+			}
 		}
 
-		_, addErr := m.appHistoryLogsClient.Add(addCtx, &grpc_application_history_logs_go.AddLogRequest{
-			OrganizationId:         request.OrganizationId,
-			AppInstanceId:          service.ApplicationInstanceId,
-			AppDescriptorId:        appInstanceReducedSummary.AppDescriptorId,
-			ServiceGroupId:         service.ServiceGroupId,
-			ServiceGroupInstanceId:	service.ServiceGroupInstanceId,
-			ServiceId:              service.ServiceId,
-			ServiceInstanceId:      service.ServiceInstanceId,
-			Created:                time.Now().UnixNano(),
-		})
-		if addErr != nil {
-			return addErr
+		if service.Status == grpc_application_go.ServiceStatus_SERVICE_ERROR || service.Status == grpc_application_go.ServiceStatus_SERVICE_TERMINATING {
+			log.Debug().Str("service instance id", service.ServiceInstanceId).Msg("updating service from service history logs")
+			_, updateErr := m.appHistoryLogsClient.Update(addCtx, &grpc_application_history_logs_go.UpdateLogRequest{
+				OrganizationId:       request.OrganizationId,
+				AppInstanceId:        service.ApplicationInstanceId,
+				ServiceInstanceId:    service.ServiceInstanceId,
+				Terminated:           time.Now().UnixNano(),
+			})
+			if updateErr != nil {
+				log.Debug().Msg("error updating service instance log")
+				return updateErr
+			}
 		}
 	}
 
