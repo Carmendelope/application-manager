@@ -50,9 +50,8 @@ stages:
     - template: steps/docker-main.yaml@ci_templates
 
 - stage: 'ComponentDeploy'
-  #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  #dependsOn: 'ImageBuild'
-  dependsOn: 'BinaryBuild'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  dependsOn: 'ImageBuild'
   jobs:
   - job: 
     pool:
@@ -103,6 +102,17 @@ stages:
       parameters:
         kubeconfig: $(kubeconfig)
         namespace: $(namespace)
+
+- stage: 'AssetPublish'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  dependsOn: 'ComponentDeploy'
+  jobs:
+  - job: 
+    pool:
+      vmImage: 'ubuntu-latest'  
+    steps:
+    - template: misc/nalej-component.yaml@ci_templates
+    - template: steps/assets-main.yaml@ci_templates
 
 - stage: 'SlackFinish'
   condition: always()
