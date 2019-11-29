@@ -158,12 +158,12 @@
   version = "v0.0.34"
 
 [[projects]]
-  digest = "1:c2ab0c51eed3e768bc06ac62357569a0c0b511acdb14b2d4d8cba3662437b21e"
+  digest = "1:442429f610e3934106628ab549ddce78c45195ded6ba88ad76339b2a7756dc27"
   name = "github.com/nalej/grpc-conductor-go"
   packages = ["."]
   pruneopts = ""
-  revision = "c45dccf8ff6751f1cf0b11493b1b45806e06a733"
-  version = "v0.0.95"
+  revision = "9cbe44351c8dbd004186abc61dff0430d497022a"
+  version = "v0.0.96"
 
 [[projects]]
   digest = "1:98b6027953482c9efb9ff40892c51d876d819a3a58543c7b5eb7c099c90d2d13"
@@ -246,12 +246,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:b13419a29c7dafeb4e13ab44da7b7e4bbe21329bdddcd4c6499eb32c5544ff77"
+  digest = "1:1870a2fdb0c64a4559db09751d8f9961419c6b0b270293ea523e294b362098c0"
   name = "github.com/nalej/grpc-unified-logging-go"
   packages = ["."]
   pruneopts = ""
-  revision = "0778fab370d49004f88285b0996e5e98b4762610"
-  version = "v0.0.9"
+  revision = "584d5f2609960879356f983328ae6aefe0358932"
+  version = "v0.0.10"
 
 [[projects]]
   digest = "1:3c48d4db5e7f6c3cda75e4fc1f9b061eb121ec26587bec82059eba37bac619be"
@@ -274,7 +274,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c8e342b6de258bb8b3f5a3c801deb240593c73f378a30d989d955727a2ac46dc"
+  digest = "1:dd766528d3ced759913f33959e0f759dbf4c7bde3228ae111b68b233f9864e62"
   name = "github.com/nalej/nalej-bus"
   packages = [
     "pkg/bus",
@@ -285,7 +285,7 @@
     "pkg/queue/network/ops",
   ]
   pruneopts = ""
-  revision = "68ef91b8277602c1da4d3af549a1f6c27aec11ae"
+  revision = "dbed3aa209cfddf356f7003ad4b54c3ce8b5b09a"
 
 [[projects]]
   digest = "1:10d0f0b6be91698ca098ef472bfce7effe5eebedb411f8910f72d406cd19e309"
@@ -409,11 +409,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a269e5fdd70aeaa38e64e852729cd20cd6631fb34f44a1896adedbfc3907b441"
+  digest = "1:6530ff3e6639af9bab7d2cf1e141c348e63af92058fa64d0660a6e8817d41640"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "63cb32ae39b28d6bb8e7e215c1fc39dd80dcdb02"
+  revision = "6d18c012aee9febd81bbf9806760c8c4480e870d"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"

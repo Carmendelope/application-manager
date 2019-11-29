@@ -19,7 +19,6 @@ package unified_logging
 
 import (
 	"context"
-	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/derrors"
@@ -135,58 +134,9 @@ func (m *Manager) Catalog(request *grpc_application_manager_go.AvailableLogReque
 		return nil, cErr
 	}
 
-	serviceInstanceLogSummaries := make([]*grpc_application_manager_go.ServiceInstanceLogSummary, 0)
-	serviceGroupInstanceLogSummaries := make([]*grpc_application_manager_go.ServiceGroupInstanceLogSummary, 0)
-	appInstanceLogSummaries := make([]*grpc_application_manager_go.AppInstanceLogSummary, 0)
-	appDescriptorLogSummaries := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
+	availableLogResponse := Organize(logResponse)
 
-
-	for _, serviceInstanceLog := range logResponse.Events {
-		serviceInstanceLogSummary := grpc_application_manager_go.ServiceInstanceLogSummary{
-			ServiceId:            serviceInstanceLog.ServiceId,
-			ServiceInstanceId:    serviceInstanceLog.ServiceId,
-			Name:                 "mal", // service instance name
-		}
-
-		serviceInstanceLogSummaries = append(serviceInstanceLogSummaries, &serviceInstanceLogSummary)
-		serviceGroupInstanceLogSummary := grpc_application_manager_go.ServiceGroupInstanceLogSummary{
-			ServiceGroupId:         serviceInstanceLog.ServiceGroupId,
-			ServiceGroupInstanceId: serviceInstanceLog.ServiceGroupInstanceId,
-			Name:                   "mal", // service group instance name
-			ServiceInstances:       serviceInstanceLogSummaries,
-		}
-
-		serviceGroupInstanceLogSummaries = append (serviceGroupInstanceLogSummaries, &serviceGroupInstanceLogSummary)
-		appInstanceLogSummary := grpc_application_manager_go.AppInstanceLogSummary{
-			OrganizationId:       serviceInstanceLog.OrganizationId,
-			AppInstanceId:        serviceInstanceLog.AppInstanceId,
-			AppInstanceName:      "mal", // app instance name
-			AppDescriptorId:      serviceInstanceLog.AppDescriptorId,
-			AppDescriptorName:    "mal", // app descriptor name
-			CurrentLabels:        nil,
-			Groups:               serviceGroupInstanceLogSummaries,
-		}
-
-		appInstanceLogSummaries = append(appInstanceLogSummaries, &appInstanceLogSummary)
-		appDescriptorSummary := grpc_application_manager_go.AppDescriptorLogSummary{
-			OrganizationId:       serviceInstanceLog.OrganizationId,
-			AppDescriptorId:      serviceInstanceLog.AppDescriptorId,
-			AppDescriptorName:    "mal", //app descriptor name
-			CurrentLabels:        nil,
-			Instances:            nil,
-		}
-
-		appDescriptorLogSummaries = append (appDescriptorLogSummaries, &appDescriptorSummary)
-	}
-
-	toReturn := &grpc_application_manager_go.AvailableLogResponse{
-		OrganizationId:          request.OrganizationId,
-		AppDescriptorLogSummary: appDescriptorLogSummary,
-		AppInstanceLogSummary:   appInstanceLogSummary,
-		From:                    request.From,
-		To:                      request.To,
-	}
-	return toReturn, nil
+	return availableLogResponse, nil
 }
 
 // getNamesFromSummary returns the name of the serviceGroupId and the serviceId
