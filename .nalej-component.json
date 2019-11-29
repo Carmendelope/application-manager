@@ -8,6 +8,9 @@
   "image_list": [
     "application-manager"
   ],
+  "component_list": [
+    "application-manager"
+  ],
   "tools": [
     "k8s",
     "docker"
