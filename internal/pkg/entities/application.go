@@ -41,3 +41,33 @@ func ToAppInstance(source *grpc_application_go.AppInstance) *grpc_application_ma
 		OutboundNetInterfaces: source.OutboundNetInterfaces,
 	}
 }
+type AppDescriptorLogSummary struct {
+	OrganizationId string
+	AppDescriptorId string
+	AppDescriptorName string
+	CurrentLabels map[string]string
+	Instances []AppInstanceLogSummary
+}
+
+type AppInstanceLogSummary struct {
+	OrganizationId string
+	AppInstanceId string
+	AppInstanceName string
+	AppDescriptorId string
+	AppDescriptorName string
+	CurrentLabels map[string]string
+	Groups []ServiceGroupInstanceLogSummary
+}
+
+type ServiceGroupInstanceLogSummary struct {
+	ServiceGroupId string
+	ServiceGroupInstanceId string
+	Name string
+	ServiceInstances []ServiceInstanceLogSummary
+}
+
+type ServiceInstanceLogSummary struct {
+	ServiceId string
+	ServiceInstanceId string
+	Name string
+}

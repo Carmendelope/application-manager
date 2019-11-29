@@ -19,24 +19,25 @@ package unified_logging
 
 import (
 	"context"
+	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/application-manager/internal/pkg/utils"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
-	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-application-history-logs-go"
+	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-unified-logging-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
-	"github.com/rs/zerolog/log"
 	"github.com/nalej/nalej-bus/pkg/queue/application/events"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
 const (
 	ApplicationManagerTimeout = time.Second * 3
-	DefaultCacheEntries = 100
-	unknownField = "Unknown"
+	DefaultCacheEntries       = 100
+	unknownField              = "Unknown"
 )
 
 // Manager structure with the required clients for roles operations.
@@ -44,23 +45,24 @@ type Manager struct {
 	coordinatorClient         grpc_unified_logging_go.CoordinatorClient
 	appsClient                grpc_application_go.ApplicationsClient
 	instHelper                *utils.InstancesHelper
-	unifiedLoggingClient      grpc_application_manager_go.UnifiedLoggingClient
-	appHistoryLogsClient		grpc_application_history_logs_go.ApplicationHistoryLogsClient
+	appHistoryLogsClient      grpc_application_history_logs_go.ApplicationHistoryLogsClient
+	appHistoryLogsHelper	  *utils.AppHistoryLogsHelper
 	applicationEventsConsumer *events.ApplicationEventsConsumer
 }
 
 // NewManager creates a Manager using a set of clients.
-func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient, unifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient, appHistoryLogsClient grpc_application_history_logs_go.ApplicationHistoryLogsClient, appEventsConsumer *events.ApplicationEventsConsumer) (*Manager, derrors.Error) {
-	helper, err := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
+func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, appClient grpc_application_go.ApplicationsClient, appHistoryLogsClient grpc_application_history_logs_go.ApplicationHistoryLogsClient, appEventsConsumer *events.ApplicationEventsConsumer) (*Manager, derrors.Error) {
+	instHelper, err := utils.NewInstancesHelper(appClient, DefaultCacheEntries)
 	if err != nil {
 		return nil, err
 	}
+	appHistoryLogsHelper, err := utils.NewAppHistoryLogsHelper(appHistoryLogsClient, DefaultCacheEntries)
 	return &Manager{
-		coordinatorClient:    coordinatorClient,
-		instHelper:           helper,
-		unifiedLoggingClient: unifiedLoggingClient,
-		appHistoryLogsClient: appHistoryLogsClient,
-		applicationEventsConsumer:appEventsConsumer,
+		coordinatorClient:         coordinatorClient,
+		instHelper:                instHelper,
+		appHistoryLogsHelper:appHistoryLogsHelper,
+		appHistoryLogsClient:      appHistoryLogsClient,
+		applicationEventsConsumer: appEventsConsumer,
 	}, nil
 }
 
@@ -122,12 +124,69 @@ func (m *Manager) Catalog(request *grpc_application_manager_go.AvailableLogReque
 	ctx, cancel := common.GetContext()
 	defer cancel()
 
-	availableLogResponse, cErr := m.unifiedLoggingClient.Catalog(ctx, request)
+	searchRequest := &grpc_application_history_logs_go.SearchLogRequest{
+		OrganizationId: request.OrganizationId,
+		From:           request.From,
+		To:             request.To,
+	}
 
+	logResponse, cErr := m.appHistoryLogsClient.Search(ctx, searchRequest)
 	if cErr != nil {
 		return nil, cErr
 	}
-	return availableLogResponse, nil
+
+	serviceInstanceLogSummaries := make([]*grpc_application_manager_go.ServiceInstanceLogSummary, 0)
+	serviceGroupInstanceLogSummaries := make([]*grpc_application_manager_go.ServiceGroupInstanceLogSummary, 0)
+	appInstanceLogSummaries := make([]*grpc_application_manager_go.AppInstanceLogSummary, 0)
+	appDescriptorLogSummaries := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
+
+
+	for _, serviceInstanceLog := range logResponse.Events {
+		serviceInstanceLogSummary := grpc_application_manager_go.ServiceInstanceLogSummary{
+			ServiceId:            serviceInstanceLog.ServiceId,
+			ServiceInstanceId:    serviceInstanceLog.ServiceId,
+			Name:                 "mal", // service instance name
+		}
+
+		serviceInstanceLogSummaries = append(serviceInstanceLogSummaries, &serviceInstanceLogSummary)
+		serviceGroupInstanceLogSummary := grpc_application_manager_go.ServiceGroupInstanceLogSummary{
+			ServiceGroupId:         serviceInstanceLog.ServiceGroupId,
+			ServiceGroupInstanceId: serviceInstanceLog.ServiceGroupInstanceId,
+			Name:                   "mal", // service group instance name
+			ServiceInstances:       serviceInstanceLogSummaries,
+		}
+
+		serviceGroupInstanceLogSummaries = append (serviceGroupInstanceLogSummaries, &serviceGroupInstanceLogSummary)
+		appInstanceLogSummary := grpc_application_manager_go.AppInstanceLogSummary{
+			OrganizationId:       serviceInstanceLog.OrganizationId,
+			AppInstanceId:        serviceInstanceLog.AppInstanceId,
+			AppInstanceName:      "mal", // app instance name
+			AppDescriptorId:      serviceInstanceLog.AppDescriptorId,
+			AppDescriptorName:    "mal", // app descriptor name
+			CurrentLabels:        nil,
+			Groups:               serviceGroupInstanceLogSummaries,
+		}
+
+		appInstanceLogSummaries = append(appInstanceLogSummaries, &appInstanceLogSummary)
+		appDescriptorSummary := grpc_application_manager_go.AppDescriptorLogSummary{
+			OrganizationId:       serviceInstanceLog.OrganizationId,
+			AppDescriptorId:      serviceInstanceLog.AppDescriptorId,
+			AppDescriptorName:    "mal", //app descriptor name
+			CurrentLabels:        nil,
+			Instances:            nil,
+		}
+
+		appDescriptorLogSummaries = append (appDescriptorLogSummaries, &appDescriptorSummary)
+	}
+
+	toReturn := &grpc_application_manager_go.AvailableLogResponse{
+		OrganizationId:          request.OrganizationId,
+		AppDescriptorLogSummary: appDescriptorLogSummary,
+		AppInstanceLogSummary:   appInstanceLogSummary,
+		From:                    request.From,
+		To:                      request.To,
+	}
+	return toReturn, nil
 }
 
 // getNamesFromSummary returns the name of the serviceGroupId and the serviceId
@@ -184,7 +243,7 @@ func (m *Manager) expandInformation(organizationId string, logEntry *grpc_applic
 }
 
 // ManageCatalog receives DeploymentServiceUpdateRequest messages from the bus and manages the catalog entries to be sent to system-model
-func (m *Manager) ManageCatalog (request *grpc_conductor_go.DeploymentServiceUpdateRequest) error {
+func (m *Manager) ManageCatalog(request *grpc_conductor_go.DeploymentServiceUpdateRequest) error {
 	addCtx, addCancel := context.WithTimeout(context.Background(), ApplicationManagerTimeout)
 	defer addCancel()
 	for _, service := range request.List {
@@ -202,7 +261,7 @@ func (m *Manager) ManageCatalog (request *grpc_conductor_go.DeploymentServiceUpd
 				AppInstanceId:          service.ApplicationInstanceId,
 				AppDescriptorId:        appInstanceReducedSummary.AppDescriptorId,
 				ServiceGroupId:         service.ServiceGroupId,
-				ServiceGroupInstanceId:	service.ServiceGroupInstanceId,
+				ServiceGroupInstanceId: service.ServiceGroupInstanceId,
 				ServiceId:              service.ServiceId,
 				ServiceInstanceId:      service.ServiceInstanceId,
 				Created:                time.Now().UnixNano(),
@@ -216,10 +275,10 @@ func (m *Manager) ManageCatalog (request *grpc_conductor_go.DeploymentServiceUpd
 		if service.Status == grpc_application_go.ServiceStatus_SERVICE_ERROR || service.Status == grpc_application_go.ServiceStatus_SERVICE_TERMINATING {
 			log.Debug().Str("service instance id", service.ServiceInstanceId).Msg("updating service from service history logs")
 			_, updateErr := m.appHistoryLogsClient.Update(addCtx, &grpc_application_history_logs_go.UpdateLogRequest{
-				OrganizationId:       request.OrganizationId,
-				AppInstanceId:        service.ApplicationInstanceId,
-				ServiceInstanceId:    service.ServiceInstanceId,
-				Terminated:           time.Now().UnixNano(),
+				OrganizationId:    request.OrganizationId,
+				AppInstanceId:     service.ApplicationInstanceId,
+				ServiceInstanceId: service.ServiceInstanceId,
+				Terminated:        time.Now().UnixNano(),
 			})
 			if updateErr != nil {
 				log.Debug().Msg("error updating service instance log")
