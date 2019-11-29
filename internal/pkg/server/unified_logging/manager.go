@@ -79,18 +79,22 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	for _, response := range searchResponse.Responses {
 		for _, entry := range response.Entries {
 
-			logResponse = append(logResponse, m.expandInformation(request.OrganizationId, &grpc_application_manager_go.LogEntryResponse{
+			logResponse = append(logResponse, &grpc_application_manager_go.LogEntryResponse{
 
 				// IsDead: ask the catalog
 				AppDescriptorId:        response.AppDescriptorId,
+				AppDescriptorName:      response.AppDescriptorName,
 				AppInstanceId:          response.AppInstanceId,
+				AppInstanceName:        response.AppInstanceName,
 				ServiceGroupId:         response.ServiceGroupId,
+				ServiceGroupName:       response.ServiceGroupName,
 				ServiceGroupInstanceId: response.ServiceGroupInstanceId,
 				ServiceId:              response.ServiceId,
+				ServiceName:            response.ServiceName,
 				ServiceInstanceId:      response.ServiceInstanceId,
 				Timestamp:              entry.Timestamp,
 				Msg:                    entry.Msg,
-			}, request.IncludeMetadata))
+			})
 		}
 	}
 
@@ -102,55 +106,3 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	}, nil
 }
 
-// getNamesFromSummary returns the name of the serviceGroupId and the serviceId
-func (m *Manager) getNamesFromSummary(serviceGroupId string, serviceId string, inst *grpc_application_go.AppInstanceReducedSummary) (string, string) {
-
-	groupName := unknownField
-	serviceName := unknownField
-
-	if inst == nil {
-		return groupName, serviceName
-	}
-
-	for _, group := range inst.Groups {
-		if group.ServiceGroupId == serviceGroupId {
-			groupName = group.ServiceGroupName
-			for _, service := range group.ServiceInstances {
-				if service.ServiceId == serviceId {
-					serviceName = service.ServiceName
-					return groupName, serviceName
-				}
-			}
-		}
-	}
-	return groupName, serviceName
-}
-
-// expandInformation fill the logEntry with the descriptor and names
-func (m *Manager) expandInformation(organizationId string, logEntry *grpc_application_manager_go.LogEntryResponse, expand bool) *grpc_application_manager_go.LogEntryResponse {
-
-	if !expand {
-		return logEntry
-	}
-	if logEntry.AppInstanceId == "" {
-		log.Warn().Msg("unable to expand log information, app_instance_id is empty")
-		logEntry.AppDescriptorName = unknownField
-		logEntry.ServiceGroupName = unknownField
-		logEntry.ServiceName = unknownField
-		return logEntry
-	}
-
-	summary, err := m.instHelper.RetrieveInstanceSummary(organizationId, logEntry.AppInstanceId)
-	if err != nil {
-		log.Warn().Interface("trace", err.StackTrace()).Str("organizationId", organizationId).Str("appInstanceId", logEntry.AppInstanceId).Msg("error getting reduced summary")
-		return logEntry
-	}
-
-	logEntry.AppDescriptorName = summary.AppDescriptorName
-	groupName, serviceName := m.getNamesFromSummary(logEntry.ServiceGroupId, logEntry.ServiceId, summary)
-	logEntry.ServiceGroupName = groupName
-	logEntry.ServiceName = serviceName
-
-	return logEntry
-
-}

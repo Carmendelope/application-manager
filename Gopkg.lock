@@ -238,12 +238,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:8c9cc1c5f49b9687beb6e2297f5f447b10a099482d7e0c8cebe0ae25bc94c504"
+  digest = "1:b13419a29c7dafeb4e13ab44da7b7e4bbe21329bdddcd4c6499eb32c5544ff77"
   name = "github.com/nalej/grpc-unified-logging-go"
   packages = ["."]
   pruneopts = ""
-  revision = "d0a49f5f4240790cf7dfa5060a414accc98e01f6"
-  version = "v0.0.7"
+  revision = "0778fab370d49004f88285b0996e5e98b4762610"
+  version = "v0.0.9"
 
 [[projects]]
   digest = "1:3c48d4db5e7f6c3cda75e4fc1f9b061eb121ec26587bec82059eba37bac619be"
@@ -381,7 +381,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1de58c5f172054bd703e3abfc245557214c2c4a798d338eeeaadbe15a34db483"
+  digest = "1:f58e146d19d1af39792c0b599b24b13de51f75b073ba52c1aa658fe535be9120"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -396,15 +396,15 @@
     "trace",
   ]
   pruneopts = ""
-  revision = "fc4aabc6c91483155dade6fbb627cc953a723260"
+  revision = "ef20fe5d793301b553005db740f730d87993f778"
 
 [[projects]]
   branch = "master"
-  digest = "1:11845cae7402f689cdea0c89f6979f1e9ec2e15e413a4ebf6ce3d5eaee33aa87"
+  digest = "1:6530ff3e6639af9bab7d2cf1e141c348e63af92058fa64d0660a6e8817d41640"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = ""
-  revision = "bd437916bb0eb726b873ee8e9b2dcf212d32e2fd"
+  revision = "6d18c012aee9febd81bbf9806760c8c4480e870d"
 
 [[projects]]
   digest = "1:740b51a55815493a8d0f2b1e0d0ae48fe48953bf7eaf3fcc4198823bf67768c0"
@@ -531,7 +531,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ebe6841dab09284a758103248a80009c7512074ed8bede2ef5b25d42cd90ba80"
+  digest = "1:c53b9c97bab2cf9f29a29f7daf3dadd4ff53a64236e429e37275521062abfede"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/util/errors",
@@ -540,7 +540,7 @@
     "pkg/util/validation/field",
   ]
   pruneopts = ""
-  revision = "41065c7a8c2a807d7fbd6d734a36200a76e5cacb"
+  revision = "4c4803ed55e31c024ba6c245cba8fc441fb04edd"
 
 [solve-meta]
   analyzer-name = "dep"
