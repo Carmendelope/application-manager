@@ -103,6 +103,7 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 		From:           searchResponse.From,
 		To:             searchResponse.To,
 		Entries:        logResponse,
+		FailedClusterIds: searchResponse.FailedClusterIds,
 	}, nil
 }
 

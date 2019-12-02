@@ -110,12 +110,20 @@
   version = "v0.0.91"
 
 [[projects]]
-  digest = "1:ac5518d7f423344804483a40b088ac9484a893781d7ba256abd3f230a9a18190"
+  digest = "1:0a59039a032ea25d8febb1a3730cb55f5a0dc87af71748d885ab9a7752a1dcc2"
+  name = "github.com/nalej/grpc-application-history-logs-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "072dd6a1b05cd6b9289e7b21faa2b0d8dd7b252e"
+  version = "v0.0.1"
+
+[[projects]]
+  digest = "1:d9d5ca00bc59f16d99d35dc4fd4a5eaa9415e9c19664cd999f91fb299aeb053a"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
   pruneopts = ""
-  revision = "742ab37d567f1304428a4352d5735392c8a520de"
-  version = "v0.0.45"
+  revision = "17fe8c29f334cc3ade2cc139f783d61824690df6"
+  version = "v0.0.48"
 
 [[projects]]
   digest = "1:91d68907774a954e8652f0086fe9284838315ff04cbcf44f73cc1fa24b2df565"
@@ -238,12 +246,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:b13419a29c7dafeb4e13ab44da7b7e4bbe21329bdddcd4c6499eb32c5544ff77"
+  digest = "1:18d316170b65da520a335ae2e11818ed9a481cb57d8fb6c72ee2dc437bb148c4"
   name = "github.com/nalej/grpc-unified-logging-go"
   packages = ["."]
   pruneopts = ""
-  revision = "0778fab370d49004f88285b0996e5e98b4762610"
-  version = "v0.0.9"
+  revision = "206ef6835662f9ab80271758948b247756d9284b"
+  version = "v0.0.11"
 
 [[projects]]
   digest = "1:3c48d4db5e7f6c3cda75e4fc1f9b061eb121ec26587bec82059eba37bac619be"
@@ -550,6 +558,7 @@
     "github.com/hashicorp/golang-lru",
     "github.com/nalej/derrors",
     "github.com/nalej/grpc-application-go",
+    "github.com/nalej/grpc-application-history-logs-go",
     "github.com/nalej/grpc-application-manager-go",
     "github.com/nalej/grpc-application-network-go",
     "github.com/nalej/grpc-common-go",
