@@ -20,6 +20,7 @@ package unified_logging
 import (
 	"context"
 	"github.com/nalej/application-manager/internal/pkg/entities"
+	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-manager-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 )
@@ -40,4 +41,9 @@ func (h *Handler) Search(_ context.Context, in *grpc_application_manager_go.Sear
 		return nil, conversions.ToGRPCError(vErr)
 	}
 	return h.Manager.Search(in)
+}
+
+
+func (h *Handler) Catalog(_ context.Context, in *grpc_application_manager_go.AvailableLogRequest) (*grpc_application_manager_go.AvailableLogResponse, error) {
+	return nil, conversions.ToGRPCError(derrors.NewUnimplementedError("not implemented yet"))
 }
