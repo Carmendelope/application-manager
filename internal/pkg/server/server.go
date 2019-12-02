@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package server
@@ -56,19 +55,19 @@ func NewService(conf Config) *Service {
 
 // Clients structure with the gRPC clients for remote services.
 type Clients struct {
-	AppClient         grpc_application_go.ApplicationsClient
-	ConductorClient   grpc_conductor_go.ConductorClient
-	ClusterClient     grpc_infrastructure_go.ClustersClient
-	DeviceClient      grpc_device_go.DevicesClient
-	AppNetClient      grpc_application_network_go.ApplicationNetworkClient
-	CoordinatorClient grpc_unified_logging_go.CoordinatorClient
+	AppClient            grpc_application_go.ApplicationsClient
+	ConductorClient      grpc_conductor_go.ConductorClient
+	ClusterClient        grpc_infrastructure_go.ClustersClient
+	DeviceClient         grpc_device_go.DevicesClient
+	AppNetClient         grpc_application_network_go.ApplicationNetworkClient
+	CoordinatorClient    grpc_unified_logging_go.CoordinatorClient
 	UnifiedLoggingClient grpc_application_manager_go.UnifiedLoggingClient
 	AppHistoryLogsClient grpc_application_history_logs_go.ApplicationHistoryLogsClient
 }
 
 type BusClients struct {
-	AppOpsProducer *ops.ApplicationOpsProducer
-	NetOpsProducer *networkOps.NetworkOpsProducer
+	AppOpsProducer    *ops.ApplicationOpsProducer
+	NetOpsProducer    *networkOps.NetworkOpsProducer
 	AppEventsConsumer *events.ApplicationEventsConsumer
 }
 
@@ -92,8 +91,8 @@ func (s *Service) GetBusClients() (*BusClients, derrors.Error) {
 	appEventsConsumer, err := events.NewApplicationEventsConsumer(queueClient, "network-manager-application-events", true, appEventsConfig)
 
 	return &BusClients{
-		AppOpsProducer: appOpsProducer,
-		NetOpsProducer: netOpsProducer,
+		AppOpsProducer:    appOpsProducer,
+		NetOpsProducer:    netOpsProducer,
 		AppEventsConsumer: appEventsConsumer,
 	}, nil
 }
@@ -134,7 +133,6 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 	ulClient := grpc_application_manager_go.NewUnifiedLoggingClient(ulConn)
 	ahlClient := grpc_application_history_logs_go.NewApplicationHistoryLogsClient(ahlConn)
 
-
 	return &Clients{aClient, cClient, clClient,
 		dvClient, appNetClient, coordClient, ulClient, ahlClient}, nil
 }
@@ -169,15 +167,14 @@ func (s *Service) Run() error {
 	appNetManager := application_network.NewManager(clients.AppNetClient, clients.AppClient, busClients.NetOpsProducer)
 	appNetHandler := application_network.NewHandler(appNetManager)
 
-
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
-	handler := application.NewHandler(manager)
-
 	unifiedLoggingManager, err := unified_logging.NewManager(clients.CoordinatorClient, clients.AppClient, clients.AppHistoryLogsClient, busClients.AppEventsConsumer)
 	if err != nil {
 		log.Fatal().Str("err", cErr.DebugReport()).Msg("Cannot create unified-logging manager")
 	}
 	unifiedLogHandler := unified_logging.NewHandler(*unifiedLoggingManager)
+
+	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
+	handler := application.NewHandler(manager)
 
 	appEventsHandler := queue.NewAppEventsHandler(unifiedLoggingManager, busClients.AppEventsConsumer)
 	appEventsHandler.Run()

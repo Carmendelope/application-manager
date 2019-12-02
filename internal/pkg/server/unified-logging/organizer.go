@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package unified_logging
@@ -22,46 +21,54 @@ import (
 	"github.com/nalej/grpc-application-manager-go"
 )
 
-func createDescriptorLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.AppDescriptorLogSummary{
+func (m *Manager) createDescriptorLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.AppDescriptorLogSummary {
+	instanceNames := m.instHelper.GetNames(event.OrganizationId, event.AppInstanceId, event.ServiceGroupId, event.ServiceId)
+	labels := m.instHelper.GetLabels(event.OrganizationId, event.AppDescriptorId)
 	return &grpc_application_manager_go.AppDescriptorLogSummary{
-		OrganizationId:       event.OrganizationId,
-		AppDescriptorId:      event.AppDescriptorId,
-		AppDescriptorName:    "missing",
-		CurrentLabels:        nil,
-		Instances:            []*grpc_application_manager_go.AppInstanceLogSummary{createInstanceLogSummary(event)},
+		OrganizationId:    event.OrganizationId,
+		AppDescriptorId:   event.AppDescriptorId,
+		AppDescriptorName: instanceNames.AppDescriptorName,
+		CurrentLabels:     labels,
+		Instances:         []*grpc_application_manager_go.AppInstanceLogSummary{m.createInstanceLogSummary(event)},
 	}
 }
 
-func createInstanceLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.AppInstanceLogSummary{
+func (m *Manager) createInstanceLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.AppInstanceLogSummary {
+	instanceNames := m.instHelper.GetNames(event.OrganizationId, event.AppInstanceId, event.ServiceGroupId, event.ServiceId)
+	labels := m.instHelper.GetLabels(event.OrganizationId, event.AppDescriptorId)
 	return &grpc_application_manager_go.AppInstanceLogSummary{
-		OrganizationId:       event.OrganizationId,
-		AppInstanceId:        event.AppInstanceId,
-		AppInstanceName:      "missing",
-		AppDescriptorId:      event.AppDescriptorId,
-		AppDescriptorName:    "missing",
-		CurrentLabels:        nil,
-		Groups:               []*grpc_application_manager_go.ServiceGroupInstanceLogSummary{createServiceGroupLogSummary(event)},
+		OrganizationId:    event.OrganizationId,
+		AppInstanceId:     event.AppInstanceId,
+		AppInstanceName:   instanceNames.AppInstanceName,
+		AppDescriptorId:   event.AppDescriptorId,
+		AppDescriptorName: instanceNames.AppDescriptorName,
+		CurrentLabels:     labels,
+		Groups:            []*grpc_application_manager_go.ServiceGroupInstanceLogSummary{m.createServiceGroupLogSummary(event)},
 	}
 }
 
-func createServiceGroupLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.ServiceGroupInstanceLogSummary{
+func (m *Manager) createServiceGroupLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.ServiceGroupInstanceLogSummary {
+	instanceNames := m.instHelper.GetNames(event.OrganizationId, event.AppInstanceId, event.ServiceGroupId, event.ServiceId)
+
 	return &grpc_application_manager_go.ServiceGroupInstanceLogSummary{
 		ServiceGroupId:         event.ServiceGroupId,
 		ServiceGroupInstanceId: event.ServiceGroupInstanceId,
-		Name:                   "missing",
-		ServiceInstances:       []*grpc_application_manager_go.ServiceInstanceLogSummary{createServiceInstanceLogSummary(event)},
+		Name:                   instanceNames.ServiceGroupName,
+		ServiceInstances:       []*grpc_application_manager_go.ServiceInstanceLogSummary{m.createServiceInstanceLogSummary(event)},
 	}
 }
 
-func createServiceInstanceLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.ServiceInstanceLogSummary {
+func (m *Manager) createServiceInstanceLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.ServiceInstanceLogSummary {
+	instanceNames := m.instHelper.GetNames(event.OrganizationId, event.AppInstanceId, event.ServiceGroupId, event.ServiceId)
+
 	return &grpc_application_manager_go.ServiceInstanceLogSummary{
-		ServiceId:            event.ServiceId,
-		ServiceInstanceId:    event.ServiceInstanceId,
-		Name:                 "missing",
+		ServiceId:         event.ServiceId,
+		ServiceInstanceId: event.ServiceInstanceId,
+		Name:              instanceNames.ServiceName,
 	}
 }
 
-func Organize(logResponse *grpc_application_history_logs_go.LogResponse) *grpc_application_manager_go.AvailableLogResponse {
+func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResponse) *grpc_application_manager_go.AvailableLogResponse {
 	// LogResponse entries organized according to the structure needed
 	var appDescriptorLogSummary *grpc_application_manager_go.AppDescriptorLogSummary
 	var appInstanceLogSummary *grpc_application_manager_go.AppInstanceLogSummary
@@ -81,42 +88,42 @@ func Organize(logResponse *grpc_application_history_logs_go.LogResponse) *grpc_a
 			}
 		}
 		if !found {
-			appDescriptorLogSummaries = append(appDescriptorLogSummaries, createDescriptorLogSummary(event))
+			appDescriptorLogSummaries = append(appDescriptorLogSummaries, m.createDescriptorLogSummary(event))
 			continue
 		}
 
 		// Instance
-		for i:=0; i<len(appDescriptorLogSummary.Instances) && !found; i++ {
+		for i := 0; i < len(appDescriptorLogSummary.Instances) && !found; i++ {
 			if appDescriptorLogSummary.Instances[i].AppInstanceId == event.AppInstanceId {
 				found = true
 				appInstanceLogSummary = appDescriptorLogSummary.Instances[i]
 			}
 		}
 		if !found {
-			appDescriptorLogSummary.Instances = append(appDescriptorLogSummary.Instances, createInstanceLogSummary(event))
+			appDescriptorLogSummary.Instances = append(appDescriptorLogSummary.Instances, m.createInstanceLogSummary(event))
 			continue
 		}
 
 		// Service Group
-		for i:=0; i<len(appInstanceLogSummary.Groups) && !found; i++ {
+		for i := 0; i < len(appInstanceLogSummary.Groups) && !found; i++ {
 			if appInstanceLogSummary.Groups[i].ServiceGroupId == event.ServiceGroupId {
 				found = true
 				serviceGroupInstanceLogSummary = appInstanceLogSummary.Groups[i]
 			}
 		}
 		if !found {
-			appInstanceLogSummary.Groups = append(appInstanceLogSummary.Groups, createServiceGroupLogSummary(event))
+			appInstanceLogSummary.Groups = append(appInstanceLogSummary.Groups, m.createServiceGroupLogSummary(event))
 			continue
 		}
 
 		// Service Instance
-		for i:=0; i<len(serviceGroupInstanceLogSummary.ServiceInstances) && !found; i++ {
+		for i := 0; i < len(serviceGroupInstanceLogSummary.ServiceInstances) && !found; i++ {
 			if serviceGroupInstanceLogSummary.ServiceInstances[i].ServiceInstanceId == event.ServiceGroupId {
 				found = true
 			}
 		}
 		if !found {
-			serviceGroupInstanceLogSummary.ServiceInstances = append(serviceGroupInstanceLogSummary.ServiceInstances, createServiceInstanceLogSummary(event))
+			serviceGroupInstanceLogSummary.ServiceInstances = append(serviceGroupInstanceLogSummary.ServiceInstances, m.createServiceInstanceLogSummary(event))
 			continue
 		}
 	}
@@ -125,8 +132,8 @@ func Organize(logResponse *grpc_application_history_logs_go.LogResponse) *grpc_a
 		OrganizationId:          logResponse.OrganizationId,
 		AppDescriptorLogSummary: appDescriptorLogSummaries,
 		AppInstanceLogSummary:   appInstanceLogSummaries,
-		From:                    0,
-		To:                      0,
+		From:                    logResponse.From,
+		To:                      logResponse.To,
 	}
 
 	return &availableLogResponse

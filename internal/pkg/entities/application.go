@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package entities
@@ -41,33 +40,34 @@ func ToAppInstance(source *grpc_application_go.AppInstance) *grpc_application_ma
 		OutboundNetInterfaces: source.OutboundNetInterfaces,
 	}
 }
+
 type AppDescriptorLogSummary struct {
-	OrganizationId string
-	AppDescriptorId string
+	OrganizationId    string
+	AppDescriptorId   string
 	AppDescriptorName string
-	CurrentLabels map[string]string
-	Instances []AppInstanceLogSummary
+	CurrentLabels     map[string]string
+	Instances         []AppInstanceLogSummary
 }
 
 type AppInstanceLogSummary struct {
-	OrganizationId string
-	AppInstanceId string
-	AppInstanceName string
-	AppDescriptorId string
+	OrganizationId    string
+	AppInstanceId     string
+	AppInstanceName   string
+	AppDescriptorId   string
 	AppDescriptorName string
-	CurrentLabels map[string]string
-	Groups []ServiceGroupInstanceLogSummary
+	CurrentLabels     map[string]string
+	Groups            []ServiceGroupInstanceLogSummary
 }
 
 type ServiceGroupInstanceLogSummary struct {
-	ServiceGroupId string
+	ServiceGroupId         string
 	ServiceGroupInstanceId string
-	Name string
-	ServiceInstances []ServiceInstanceLogSummary
+	Name                   string
+	ServiceInstances       []ServiceInstanceLogSummary
 }
 
 type ServiceInstanceLogSummary struct {
-	ServiceId string
+	ServiceId         string
 	ServiceInstanceId string
-	Name string
+	Name              string
 }

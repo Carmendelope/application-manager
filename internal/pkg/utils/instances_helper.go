@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package utils
@@ -20,10 +19,12 @@ package utils
 import (
 	"fmt"
 	"github.com/hashicorp/golang-lru"
+	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
+	"github.com/rs/zerolog/log"
 )
 
 type InstancesHelper struct {
@@ -69,5 +70,44 @@ func (i *InstancesHelper) RetrieveInstanceSummary(organizationId string, appInst
 
 	_ = i.cache.Add(pk, retrievedSummary)
 	return retrievedSummary, nil
+}
 
+func (i *InstancesHelper) GetNames(organizationId string, appInstanceId string, serviceGroupId string, serviceId string) *entities.InstanceNames {
+	appInstanceReducedSummary, err := i.RetrieveInstanceSummary(organizationId, appInstanceId)
+	if err != nil {
+		log.Error().Msg(err.DebugReport())
+		return nil
+	}
+	instanceNames := &entities.InstanceNames{
+		AppInstanceName:   appInstanceReducedSummary.AppInstanceName,
+		AppDescriptorName: appInstanceReducedSummary.AppDescriptorName,
+	}
+
+	for _, serviceGroup := range appInstanceReducedSummary.Groups {
+		if serviceGroup.ServiceGroupId == serviceGroupId {
+			instanceNames.ServiceGroupName = serviceGroup.ServiceGroupName
+			for _, serviceInstance := range serviceGroup.ServiceInstances {
+				if serviceInstance.ServiceId == serviceId {
+					instanceNames.ServiceName = serviceInstance.ServiceName
+				}
+			}
+		}
+	}
+
+	return instanceNames
+}
+
+func (i InstancesHelper) GetLabels(organizationId string, appDescriptorId string) map[string]string {
+	ctx, cancel := common.GetContext()
+	defer cancel()
+	appDescriptor, err := i.appClient.GetAppDescriptor(ctx, &grpc_application_go.AppDescriptorId{
+		OrganizationId:  organizationId,
+		AppDescriptorId: appDescriptorId,
+	})
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return nil
+	}
+
+	return appDescriptor.Labels
 }

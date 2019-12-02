@@ -18,8 +18,8 @@ package queue
 
 import (
 	"context"
-	"github.com/nalej/nalej-bus/pkg/queue/application/events"
 	"github.com/nalej/application-manager/internal/pkg/server/unified-logging"
+	"github.com/nalej/nalej-bus/pkg/queue/application/events"
 	"github.com/rs/zerolog/log"
 	"time"
 )

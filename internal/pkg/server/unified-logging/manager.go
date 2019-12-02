@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package unified_logging
@@ -45,7 +44,6 @@ type Manager struct {
 	appsClient                grpc_application_go.ApplicationsClient
 	instHelper                *utils.InstancesHelper
 	appHistoryLogsClient      grpc_application_history_logs_go.ApplicationHistoryLogsClient
-	appHistoryLogsHelper	  *utils.AppHistoryLogsHelper
 	applicationEventsConsumer *events.ApplicationEventsConsumer
 }
 
@@ -55,11 +53,9 @@ func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, app
 	if err != nil {
 		return nil, err
 	}
-	appHistoryLogsHelper, err := utils.NewAppHistoryLogsHelper(appHistoryLogsClient, DefaultCacheEntries)
 	return &Manager{
 		coordinatorClient:         coordinatorClient,
 		instHelper:                instHelper,
-		appHistoryLogsHelper:appHistoryLogsHelper,
 		appHistoryLogsClient:      appHistoryLogsClient,
 		applicationEventsConsumer: appEventsConsumer,
 	}, nil
@@ -134,7 +130,7 @@ func (m *Manager) Catalog(request *grpc_application_manager_go.AvailableLogReque
 		return nil, cErr
 	}
 
-	availableLogResponse := Organize(logResponse)
+	availableLogResponse := m.Organize(logResponse)
 
 	return availableLogResponse, nil
 }
