@@ -114,20 +114,21 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 		To:   (searchResponse.To + 1) * 1000000000,
 	}
 
+	descriptors := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
+	instances := make([]*grpc_application_manager_go.AppInstanceLogSummary, 0)
+
 	logHistoryResponse, cErr := m.appHistoryLogsClient.Search(ctx, searchRequest)
 	if cErr != nil {
 		log.Error().Err(err).Msg("unable to return the catalog")
 		// TODO: ask what to do here
+	}else{
+		// 3.- Fill the list returned by system-model with the names and labels
+		availableList := m.Organize(logHistoryResponse)
+
+		descriptors = availableList.AppDescriptorLogSummary
+		instances = availableList.AppInstanceLogSummary
 	}
 
-	descriptors := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
-	instances := make([]*grpc_application_manager_go.AppInstanceLogSummary, 0)
-
-	// 3.- Fill the list returned by system-model with the names and labels
-	availableList := m.Organize(logHistoryResponse)
-
-	descriptors = availableList.AppDescriptorLogSummary
-	instances = availableList.AppInstanceLogSummary
 	logResponse := make([]*grpc_application_manager_go.LogEntryResponse, 0)
 
 	// convert unified_logging.LogEntryResponse to grpc_application_manager_go.LogEntryResponse
