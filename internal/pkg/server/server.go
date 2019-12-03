@@ -88,7 +88,7 @@ func (s *Service) GetBusClients() (*BusClients, derrors.Error) {
 	appEventsConfig := events.NewConfigApplicationEventsConsumer(5, events.ConsumableStructsApplicationEventsConsumer{
 		DeploymentServiceUpdateRequest: true,
 	})
-	appEventsConsumer, err := events.NewApplicationEventsConsumer(queueClient, "network-manager-application-events", true, appEventsConfig)
+	appEventsConsumer, err := events.NewApplicationEventsConsumer(queueClient, "application-manager-application-events", true, appEventsConfig)
 
 	return &BusClients{
 		AppOpsProducer:    appOpsProducer,

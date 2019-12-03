@@ -17,12 +17,18 @@
 package unified_logging
 
 import (
+	grpc_application_go "github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-history-logs-go"
+	"github.com/nalej/grpc-utils/pkg/test"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/test/bufconn"
+	"time"
 )
 
-func create() *grpc_application_history_logs_go.LogResponse {
+func createLogResponse() *grpc_application_history_logs_go.LogResponse {
+	organizationId := "org"
 	s11 := &grpc_application_history_logs_go.ServiceInstanceLog{
 		AppDescriptorId: "1",
 		AppInstanceId:   "1",
@@ -60,16 +66,44 @@ func create() *grpc_application_history_logs_go.LogResponse {
 	}
 	events := []*grpc_application_history_logs_go.ServiceInstanceLog{s11, s12, s13, s21, s22, s23, s31}
 	return &grpc_application_history_logs_go.LogResponse{
-		Events: events,
+		OrganizationId: organizationId,
+		From:           time.Now().UnixNano() - 50*time.Hour.Nanoseconds(),
+		To:             time.Now().UnixNano() + 50*time.Hour.Nanoseconds(),
+		Events:         events,
 	}
 }
 
 var _ = ginkgo.Describe("Test", func() {
+	// gRPC server
+	var server *grpc.Server
+	// grpc test listener
+	var listener *bufconn.Listener
+	// manager
+	var manager *Manager
+
+	ginkgo.BeforeSuite(func() {
+		listener = test.GetDefaultListener()
+		server = grpc.NewServer()
+
+		appcConn, err := test.GetConn(*listener)
+		gomega.Expect(err).Should(gomega.Succeed())
+		appsClient := grpc_application_go.NewApplicationsClient(appcConn)
+
+		// Register the service
+		manager, _ = NewManager(nil, appsClient, nil, nil)
+
+		test.LaunchServer(server, listener)
+	})
+
+	ginkgo.AfterSuite(func() {
+		server.Stop()
+		_ = listener.Close()
+	})
+
 	ginkgo.Context("U-L", func() {
 		ginkgo.It("-----", func() {
-			response := Organize(create())
-			gomega.Expect(response).NotTo(gomega.BeNil())
-
+			availableLogResponse := manager.Organize(createLogResponse())
+			gomega.Expect(availableLogResponse).NotTo(gomega.BeNil())
 		})
 	})
 })

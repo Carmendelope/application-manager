@@ -15,17 +15,3 @@
  */
 
 package entities
-
-const (
-	UnknownName  = "unknown-name"
-	UnknownLabel = "unknown-label"
-	UnknownValue = "unknown-value"
-)
-
-// InstanceNames contains all the names required by the Catalog method
-type InstanceNames struct {
-	AppInstanceName   string
-	AppDescriptorName string
-	ServiceGroupName  string
-	ServiceName       string
-}

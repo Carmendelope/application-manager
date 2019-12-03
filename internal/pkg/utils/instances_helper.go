@@ -19,7 +19,6 @@ package utils
 import (
 	"fmt"
 	"github.com/hashicorp/golang-lru"
-	"github.com/nalej/application-manager/internal/pkg/entities"
 	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
@@ -41,6 +40,20 @@ func NewInstancesHelper(appClient grpc_application_go.ApplicationsClient, numCac
 		appClient: appClient,
 		cache:     *lruCache,
 	}, nil
+}
+
+const (
+	UnknownName  = "unknown-name"
+	UnknownLabel = "unknown-label"
+	UnknownValue = "unknown-value"
+)
+
+// InstanceNames contains all the names required by the Catalog method
+type InstanceNames struct {
+	AppInstanceName   string
+	AppDescriptorName string
+	ServiceGroupName  string
+	ServiceName       string
 }
 
 func (i *InstancesHelper) composePK(organizationId string, instanceId string) string {
@@ -72,11 +85,19 @@ func (i *InstancesHelper) RetrieveInstanceSummary(organizationId string, appInst
 	return retrievedSummary, nil
 }
 
-func (i *InstancesHelper) GetNames(organizationId string, appInstanceId string, serviceGroupId string, serviceId string) *entities.InstanceNames {
+func (i *InstancesHelper) GetNames(organizationId string, appInstanceId string, serviceGroupId string, serviceId string) *InstanceNames {
+	if organizationId == "" || appInstanceId == "" {
+		return &InstanceNames{
+			AppInstanceName:   UnknownName,
+			AppDescriptorName: UnknownName,
+			ServiceGroupName:  UnknownName,
+			ServiceName:       UnknownName,
+		}
+	}
 	appInstanceReducedSummary, _ := i.RetrieveInstanceSummary(organizationId, appInstanceId)
 
 	if appInstanceReducedSummary != nil {
-		instanceNames := &entities.InstanceNames{
+		instanceNames := &InstanceNames{
 			AppInstanceName:   appInstanceReducedSummary.AppInstanceName,
 			AppDescriptorName: appInstanceReducedSummary.AppDescriptorName,
 		}
@@ -94,17 +115,22 @@ func (i *InstancesHelper) GetNames(organizationId string, appInstanceId string, 
 
 		return instanceNames
 	} else {
-		return &entities.InstanceNames{
-			AppInstanceName:   entities.UnknownName,
-			AppDescriptorName: entities.UnknownName,
-			ServiceGroupName:  entities.UnknownName,
-			ServiceName:       entities.UnknownName,
+		return &InstanceNames{
+			AppInstanceName:   UnknownName,
+			AppDescriptorName: UnknownName,
+			ServiceGroupName:  UnknownName,
+			ServiceName:       UnknownName,
 		}
 	}
 
 }
 
 func (i InstancesHelper) GetLabels(organizationId string, appDescriptorId string) map[string]string {
+	if organizationId == "" || appDescriptorId == "" {
+		log.Error().Msg("organization id or app descriptor id is empty")
+		return nil
+	}
+
 	ctx, cancel := common.GetContext()
 	defer cancel()
 	appDescriptor, err := i.appClient.GetAppDescriptor(ctx, &grpc_application_go.AppDescriptorId{
