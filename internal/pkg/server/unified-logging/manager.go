@@ -61,13 +61,33 @@ func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, app
 	}, nil
 }
 
-/// TODO fill isDead field, wait until catalog is finished
+func (m *Manager) isDead(response *grpc_unified_logging_go.LogResponse, catalog *grpc_application_history_logs_go.LogResponse) bool {
+	isDead := false
+
+	for _, desc := range catalog.Events {
+		if desc.AppDescriptorId == response.AppDescriptorId && desc.AppInstanceId == response.AppInstanceId &&
+			desc.ServiceGroupId == response.ServiceGroupId && desc.ServiceGroupInstanceId == response.ServiceGroupInstanceId &&
+			desc.ServiceId == response.ServiceId && desc.ServiceInstanceId == response.ServiceInstanceId {
+			if desc.Terminated != 0 {
+				return true
+			} else {
+				return false
+			}
+		}
+	}
+	return isDead
+}
+
+// Search returns a list of log entries that follow the conditions of the request and
+// returns two lists of services that have been active in the time period of the logs returned
+// one group by application descriptors and another one group application instances
 func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*grpc_application_manager_go.LogResponse, error) {
 
 	log.Debug().Interface("request", request).Msg("search request")
+
 	ctx, cancel := common.GetContext()
 	defer cancel()
-
+	// 1.- call to unified logging to retrieve log entries
 	searchResponse, err := m.coordinatorClient.Search(ctx, &grpc_unified_logging_go.SearchRequest{
 		OrganizationId:         request.OrganizationId,
 		AppDescriptorId:        request.AppDescriptorId,
@@ -84,13 +104,38 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	if err != nil {
 		return nil, err
 	}
+
+
+	// 2.- go to system model to retrieve a list of service_history_logs
+	searchRequest := &grpc_application_history_logs_go.SearchLogRequest{
+		OrganizationId: request.OrganizationId,
+		// TODO: delete this when timestamp is in nanoseconds
+		From: searchResponse.From * 1000000000,
+		To:   (searchResponse.To + 1) * 1000000000,
+	}
+
+	logHistoryResponse, cErr := m.appHistoryLogsClient.Search(ctx, searchRequest)
+	if cErr != nil {
+		log.Error().Err(err).Msg("unable to return the catalog")
+		// TODO: ask what to do here
+	}
+
+	descriptors := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
+	instances := make([]*grpc_application_manager_go.AppInstanceLogSummary, 0)
+
+	// 3.- Fill the list returned by system-model with the names and labels
+	availableList := m.Organize(logHistoryResponse)
+
+	descriptors = availableList.AppDescriptorLogSummary
+	instances = availableList.AppInstanceLogSummary
 	logResponse := make([]*grpc_application_manager_go.LogEntryResponse, 0)
 
 	// convert unified_logging.LogEntryResponse to grpc_application_manager_go.LogEntryResponse
 	// and expand info if proceeded
 	for _, response := range searchResponse.Responses {
+		// check if the service_instance_id is dead or not
+		isDead := m.isDead(response, logHistoryResponse)
 		for _, entry := range response.Entries {
-
 			logResponse = append(logResponse, &grpc_application_manager_go.LogEntryResponse{
 
 				// IsDead: ask the catalog
@@ -106,16 +151,20 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 				ServiceInstanceId:      response.ServiceInstanceId,
 				Timestamp:              entry.Timestamp,
 				Msg:                    entry.Msg,
+				IsDead:                 isDead,
 			})
 		}
 	}
 
+	// Return
 	return &grpc_application_manager_go.LogResponse{
-		OrganizationId: searchResponse.OrganizationId,
-		From:           searchResponse.From,
-		To:             searchResponse.To,
-		Entries:        logResponse,
-		FailedClusterIds: searchResponse.FailedClusterIds,
+		OrganizationId:          searchResponse.OrganizationId,
+		From:                    searchResponse.From,
+		To:                      searchResponse.To,
+		Entries:                 logResponse,
+		AppDescriptorLogSummary: descriptors,
+		AppInstanceLogSummary:   instances,
+		FailedClusterIds:        searchResponse.FailedClusterIds,
 	}, nil
 }
 
