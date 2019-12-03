@@ -158,12 +158,12 @@
   version = "v0.0.34"
 
 [[projects]]
-  digest = "1:7358a1267b048fb7ecd6ab88893b813eab3d2c52d571edcd76916e9fe79d45df"
+  digest = "1:442429f610e3934106628ab549ddce78c45195ded6ba88ad76339b2a7756dc27"
   name = "github.com/nalej/grpc-conductor-go"
   packages = ["."]
   pruneopts = ""
-  revision = "97e91f492ecb1ddb85ba746189121655d4c3fe75"
-  version = "v0.0.93"
+  revision = "9cbe44351c8dbd004186abc61dff0430d497022a"
+  version = "v0.0.96"
 
 [[projects]]
   digest = "1:98b6027953482c9efb9ff40892c51d876d819a3a58543c7b5eb7c099c90d2d13"
@@ -273,18 +273,19 @@
   version = "v1.5.0"
 
 [[projects]]
-  digest = "1:34dae958b602bc4e551b2d7b1370d310a892304d16221636c42bcd0402347119"
+  branch = "master"
+  digest = "1:dd766528d3ced759913f33959e0f759dbf4c7bde3228ae111b68b233f9864e62"
   name = "github.com/nalej/nalej-bus"
   packages = [
     "pkg/bus",
     "pkg/bus/pulsar-comcast",
     "pkg/queue",
+    "pkg/queue/application/events",
     "pkg/queue/application/ops",
     "pkg/queue/network/ops",
   ]
   pruneopts = ""
-  revision = "1dd74ce7d95af3f0b5f15f27043c0255ee0a05d1"
-  version = "v0.4.0"
+  revision = "dbed3aa209cfddf356f7003ad4b54c3ce8b5b09a"
 
 [[projects]]
   digest = "1:10d0f0b6be91698ca098ef472bfce7effe5eebedb411f8910f72d406cd19e309"
@@ -570,6 +571,7 @@
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
     "github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast",
+    "github.com/nalej/nalej-bus/pkg/queue/application/events",
     "github.com/nalej/nalej-bus/pkg/queue/application/ops",
     "github.com/nalej/nalej-bus/pkg/queue/network/ops",
     "github.com/onsi/ginkgo",

@@ -31,12 +31,16 @@
     version="=v0.0.48"
 
 [[constraint]]
+    name="github.com/nalej/grpc-application-history-logs-go"
+    version="=v0.0.1"
+
+[[constraint]]
     name="github.com/nalej/grpc-application-network-go"
     version="=v0.0.15"
 
 [[constraint]]
     name="github.com/nalej/grpc-conductor-go"
-    version="=v0.0.93"
+    version="=v0.0.96"
 
 [[constraint]]
     name="github.com/nalej/grpc-device-go"
@@ -68,7 +72,8 @@
 
 [[constraint]]
   name = "github.com/nalej/nalej-bus"
-  version ="=v0.4.0"
+#  version ="=v0.4.0"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/nalej/grpc-unified-logging-go"

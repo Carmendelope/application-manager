@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package application
@@ -537,7 +536,6 @@ func (m *Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceI
 	// get inbound and outbound connections for the instance
 	expandInstance := m.getInstanceConnections(appInstance)
 	return expandInstance, nil
-
 }
 
 func (m *Manager) ListInstanceParameters(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {

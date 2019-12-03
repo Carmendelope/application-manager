@@ -99,11 +99,10 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	}
 
 	return &grpc_application_manager_go.LogResponse{
-		OrganizationId: searchResponse.OrganizationId,
-		From:           searchResponse.From,
-		To:             searchResponse.To,
-		Entries:        logResponse,
+		OrganizationId:   searchResponse.OrganizationId,
+		From:             searchResponse.From,
+		To:               searchResponse.To,
+		Entries:          logResponse,
 		FailedClusterIds: searchResponse.FailedClusterIds,
 	}, nil
 }
-
