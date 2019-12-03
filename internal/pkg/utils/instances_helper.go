@@ -73,28 +73,35 @@ func (i *InstancesHelper) RetrieveInstanceSummary(organizationId string, appInst
 }
 
 func (i *InstancesHelper) GetNames(organizationId string, appInstanceId string, serviceGroupId string, serviceId string) *entities.InstanceNames {
-	appInstanceReducedSummary, err := i.RetrieveInstanceSummary(organizationId, appInstanceId)
-	if err != nil {
-		log.Error().Msg(err.DebugReport())
-		return nil
-	}
-	instanceNames := &entities.InstanceNames{
-		AppInstanceName:   appInstanceReducedSummary.AppInstanceName,
-		AppDescriptorName: appInstanceReducedSummary.AppDescriptorName,
-	}
+	appInstanceReducedSummary, _ := i.RetrieveInstanceSummary(organizationId, appInstanceId)
 
-	for _, serviceGroup := range appInstanceReducedSummary.Groups {
-		if serviceGroup.ServiceGroupId == serviceGroupId {
-			instanceNames.ServiceGroupName = serviceGroup.ServiceGroupName
-			for _, serviceInstance := range serviceGroup.ServiceInstances {
-				if serviceInstance.ServiceId == serviceId {
-					instanceNames.ServiceName = serviceInstance.ServiceName
+	if appInstanceReducedSummary != nil {
+		instanceNames := &entities.InstanceNames{
+			AppInstanceName:   appInstanceReducedSummary.AppInstanceName,
+			AppDescriptorName: appInstanceReducedSummary.AppDescriptorName,
+		}
+
+		for _, serviceGroup := range appInstanceReducedSummary.Groups {
+			if serviceGroup.ServiceGroupId == serviceGroupId {
+				instanceNames.ServiceGroupName = serviceGroup.ServiceGroupName
+				for _, serviceInstance := range serviceGroup.ServiceInstances {
+					if serviceInstance.ServiceId == serviceId {
+						instanceNames.ServiceName = serviceInstance.ServiceName
+					}
 				}
 			}
 		}
+
+		return instanceNames
+	} else {
+		return &entities.InstanceNames{
+			AppInstanceName:   entities.UnknownName,
+			AppDescriptorName: entities.UnknownName,
+			ServiceGroupName:  entities.UnknownName,
+			ServiceName:       entities.UnknownName,
+		}
 	}
 
-	return instanceNames
 }
 
 func (i InstancesHelper) GetLabels(organizationId string, appDescriptorId string) map[string]string {
@@ -105,7 +112,7 @@ func (i InstancesHelper) GetLabels(organizationId string, appDescriptorId string
 		AppDescriptorId: appDescriptorId,
 	})
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msg("can't retrieve app labels")
 		return nil
 	}
 

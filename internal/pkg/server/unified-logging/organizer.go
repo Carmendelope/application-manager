@@ -19,6 +19,7 @@ package unified_logging
 import (
 	"github.com/nalej/grpc-application-history-logs-go"
 	"github.com/nalej/grpc-application-manager-go"
+	"github.com/rs/zerolog/log"
 )
 
 func (m *Manager) createDescriptorLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.AppDescriptorLogSummary {
@@ -49,7 +50,6 @@ func (m *Manager) createInstanceLogSummary(event *grpc_application_history_logs_
 
 func (m *Manager) createServiceGroupLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.ServiceGroupInstanceLogSummary {
 	instanceNames := m.instHelper.GetNames(event.OrganizationId, event.AppInstanceId, event.ServiceGroupId, event.ServiceId)
-
 	return &grpc_application_manager_go.ServiceGroupInstanceLogSummary{
 		ServiceGroupId:         event.ServiceGroupId,
 		ServiceGroupInstanceId: event.ServiceGroupInstanceId,
@@ -60,7 +60,6 @@ func (m *Manager) createServiceGroupLogSummary(event *grpc_application_history_l
 
 func (m *Manager) createServiceInstanceLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.ServiceInstanceLogSummary {
 	instanceNames := m.instHelper.GetNames(event.OrganizationId, event.AppInstanceId, event.ServiceGroupId, event.ServiceId)
-
 	return &grpc_application_manager_go.ServiceInstanceLogSummary{
 		ServiceId:         event.ServiceId,
 		ServiceInstanceId: event.ServiceInstanceId,
@@ -79,9 +78,11 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 
 	for _, event := range logResponse.Events {
 
+		log.Debug().Interface("event", event).Msg("event")
+
 		// Descriptor
 		found := false
-		for i := 0; i < len(appDescriptorLogSummaries) && !found; i++ {
+		for i := 0; i < len(appDescriptorLogSummaries) && !found && appDescriptorLogSummaries != nil; i++ {
 			if appDescriptorLogSummaries[i].AppDescriptorId == event.AppDescriptorId {
 				found = true
 				appDescriptorLogSummary = appDescriptorLogSummaries[i]
@@ -93,7 +94,7 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		}
 
 		// Instance
-		for i := 0; i < len(appDescriptorLogSummary.Instances) && !found; i++ {
+		for i := 0; i < len(appDescriptorLogSummary.Instances) && !found && appDescriptorLogSummary.Instances != nil; i++ {
 			if appDescriptorLogSummary.Instances[i].AppInstanceId == event.AppInstanceId {
 				found = true
 				appInstanceLogSummary = appDescriptorLogSummary.Instances[i]
@@ -105,7 +106,7 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		}
 
 		// Service Group
-		for i := 0; i < len(appInstanceLogSummary.Groups) && !found; i++ {
+		for i := 0; appInstanceLogSummary != nil && i < len(appInstanceLogSummary.Groups) && !found; i++ {
 			if appInstanceLogSummary.Groups[i].ServiceGroupId == event.ServiceGroupId {
 				found = true
 				serviceGroupInstanceLogSummary = appInstanceLogSummary.Groups[i]
@@ -117,7 +118,7 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		}
 
 		// Service Instance
-		for i := 0; i < len(serviceGroupInstanceLogSummary.ServiceInstances) && !found; i++ {
+		for i := 0; serviceGroupInstanceLogSummary != nil && i < len(serviceGroupInstanceLogSummary.ServiceInstances) && !found; i++ {
 			if serviceGroupInstanceLogSummary.ServiceInstances[i].ServiceInstanceId == event.ServiceGroupId {
 				found = true
 			}
@@ -125,6 +126,12 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		if !found {
 			serviceGroupInstanceLogSummary.ServiceInstances = append(serviceGroupInstanceLogSummary.ServiceInstances, m.createServiceInstanceLogSummary(event))
 			continue
+		}
+	}
+
+	for _, appDescriptorLogSummary := range appDescriptorLogSummaries {
+		for _, appInstanceLogSummary := range appDescriptorLogSummary.Instances {
+			appInstanceLogSummaries = append(appInstanceLogSummaries, appInstanceLogSummary)
 		}
 	}
 

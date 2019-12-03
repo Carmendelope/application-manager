@@ -536,7 +536,6 @@ func (m *Manager) GetAppInstance(appInstanceID *grpc_application_go.AppInstanceI
 	// get inbound and outbound connections for the instance
 	expandInstance := m.getInstanceConnections(appInstance)
 	return expandInstance, nil
-
 }
 
 func (m *Manager) ListInstanceParameters(appInstanceID *grpc_application_go.AppInstanceId) (*grpc_application_go.InstanceParameterList, error) {
