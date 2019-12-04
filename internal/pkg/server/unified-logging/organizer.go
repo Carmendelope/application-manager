@@ -19,7 +19,6 @@ package unified_logging
 import (
 	"github.com/nalej/grpc-application-history-logs-go"
 	"github.com/nalej/grpc-application-manager-go"
-	"github.com/rs/zerolog/log"
 )
 
 func (m *Manager) createDescriptorLogSummary(event *grpc_application_history_logs_go.ServiceInstanceLog) *grpc_application_manager_go.AppDescriptorLogSummary {
@@ -69,16 +68,18 @@ func (m *Manager) createServiceInstanceLogSummary(event *grpc_application_histor
 
 func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResponse) *grpc_application_manager_go.AvailableLogResponse {
 	// LogResponse entries organized according to the structure needed
-	var appDescriptorLogSummary *grpc_application_manager_go.AppDescriptorLogSummary
-	var appInstanceLogSummary *grpc_application_manager_go.AppInstanceLogSummary
-	var serviceGroupInstanceLogSummary *grpc_application_manager_go.ServiceGroupInstanceLogSummary
+	//var appDescriptorLogSummary *grpc_application_manager_go.AppDescriptorLogSummary
+	//var appInstanceLogSummary *grpc_application_manager_go.AppInstanceLogSummary
+	//var serviceGroupInstanceLogSummary *grpc_application_manager_go.ServiceGroupInstanceLogSummary
 
 	appDescriptorLogSummaries := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
 	appInstanceLogSummaries := make([]*grpc_application_manager_go.AppInstanceLogSummary, 0)
 
 	for _, event := range logResponse.Events {
 
-		log.Debug().Interface("event", event).Msg("event")
+		var appDescriptorLogSummary *grpc_application_manager_go.AppDescriptorLogSummary
+		var appInstanceLogSummary *grpc_application_manager_go.AppInstanceLogSummary
+		var serviceGroupInstanceLogSummary *grpc_application_manager_go.ServiceGroupInstanceLogSummary
 
 		// Descriptor
 		found := false
@@ -94,6 +95,7 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		}
 
 		// Instance
+		found = false
 		for i := 0; i < len(appDescriptorLogSummary.Instances) && !found && appDescriptorLogSummary.Instances != nil; i++ {
 			if appDescriptorLogSummary.Instances[i].AppInstanceId == event.AppInstanceId {
 				found = true
@@ -106,6 +108,7 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		}
 
 		// Service Group
+		found = false
 		for i := 0; appInstanceLogSummary != nil && i < len(appInstanceLogSummary.Groups) && !found; i++ {
 			if appInstanceLogSummary.Groups[i].ServiceGroupId == event.ServiceGroupId {
 				found = true
@@ -118,6 +121,7 @@ func (m *Manager) Organize(logResponse *grpc_application_history_logs_go.LogResp
 		}
 
 		// Service Instance
+		found = false
 		for i := 0; serviceGroupInstanceLogSummary != nil && i < len(serviceGroupInstanceLogSummary.ServiceInstances) && !found; i++ {
 			if serviceGroupInstanceLogSummary.ServiceInstances[i].ServiceInstanceId == event.ServiceGroupId {
 				found = true
