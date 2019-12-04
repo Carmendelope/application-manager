@@ -64,14 +64,16 @@ func NewManager(coordinatorClient grpc_unified_logging_go.CoordinatorClient, app
 func (m *Manager) isDead(response *grpc_unified_logging_go.LogResponse, catalog *grpc_application_history_logs_go.LogResponse) bool {
 	isDead := false
 
-	for _, desc := range catalog.Events {
-		if desc.AppDescriptorId == response.AppDescriptorId && desc.AppInstanceId == response.AppInstanceId &&
-			desc.ServiceGroupId == response.ServiceGroupId && desc.ServiceGroupInstanceId == response.ServiceGroupInstanceId &&
-			desc.ServiceId == response.ServiceId && desc.ServiceInstanceId == response.ServiceInstanceId {
-			if desc.Terminated != 0 {
-				return true
-			} else {
-				return false
+	if catalog != nil {
+		for _, desc := range catalog.Events {
+			if desc.AppDescriptorId == response.AppDescriptorId && desc.AppInstanceId == response.AppInstanceId &&
+				desc.ServiceGroupId == response.ServiceGroupId && desc.ServiceGroupInstanceId == response.ServiceGroupInstanceId &&
+				desc.ServiceId == response.ServiceId && desc.ServiceInstanceId == response.ServiceInstanceId {
+				if desc.Terminated != 0 {
+					return true
+				} else {
+					return false
+				}
 			}
 		}
 	}
@@ -109,9 +111,8 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	// 2.- go to system model to retrieve a list of service_history_logs
 	searchRequest := &grpc_application_history_logs_go.SearchLogRequest{
 		OrganizationId: request.OrganizationId,
-		// TODO: delete this when timestamp is in nanoseconds
-		From: searchResponse.From * 1000000000,
-		To:   (searchResponse.To + 1) * 1000000000,
+		From: searchResponse.From ,
+		To:   searchResponse.To,
 	}
 
 	descriptors := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)
