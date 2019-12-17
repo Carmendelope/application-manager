@@ -101,6 +101,7 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 		MsgQueryFilter:         request.MsgQueryFilter,
 		From:                   request.From,
 		To:                     request.To,
+		NFirst: request.NFirst,
 	})
 
 	if err != nil {
@@ -111,8 +112,8 @@ func (m *Manager) Search(request *grpc_application_manager_go.SearchRequest) (*g
 	// 2.- go to system model to retrieve a list of service_history_logs
 	searchRequest := &grpc_application_history_logs_go.SearchLogRequest{
 		OrganizationId: request.OrganizationId,
-		From: searchResponse.From ,
-		To:   searchResponse.To,
+		From: request.From ,
+		To:   request.To,
 	}
 
 	descriptors := make([]*grpc_application_manager_go.AppDescriptorLogSummary, 0)

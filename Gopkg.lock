@@ -118,12 +118,12 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:d9d5ca00bc59f16d99d35dc4fd4a5eaa9415e9c19664cd999f91fb299aeb053a"
+  digest = "1:8af3c4d2e22766dbef7376257903f4020e715108bf4062c22290c7f9e8ee5f48"
   name = "github.com/nalej/grpc-application-manager-go"
   packages = ["."]
   pruneopts = ""
-  revision = "17fe8c29f334cc3ade2cc139f783d61824690df6"
-  version = "v0.0.48"
+  revision = "24a98d3f61a613940ff51f9fc91aa928362f2479"
+  version = "v0.0.49"
 
 [[projects]]
   digest = "1:91d68907774a954e8652f0086fe9284838315ff04cbcf44f73cc1fa24b2df565"
@@ -246,12 +246,12 @@
   version = "v0.0.3"
 
 [[projects]]
-  digest = "1:18d316170b65da520a335ae2e11818ed9a481cb57d8fb6c72ee2dc437bb148c4"
+  digest = "1:9996325ca6794ee35aea9478f041ef73eaf4e4a4f8418943e6c9aec1a9f5a211"
   name = "github.com/nalej/grpc-unified-logging-go"
   packages = ["."]
   pruneopts = ""
-  revision = "206ef6835662f9ab80271758948b247756d9284b"
-  version = "v0.0.11"
+  revision = "e88c269365df2395e0e82fefc44fb5a9c8028024"
+  version = "v0.0.12"
 
 [[projects]]
   digest = "1:3c48d4db5e7f6c3cda75e4fc1f9b061eb121ec26587bec82059eba37bac619be"
