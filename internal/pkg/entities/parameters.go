@@ -207,8 +207,9 @@ func copyEndPoint(endpoint *grpc_application_go.Endpoint) *grpc_application_go.E
 		return nil
 	}
 	return &grpc_application_go.Endpoint{
-		Type: endpoint.Type,
-		Path: endpoint.Path,
+		Type:    endpoint.Type,
+		Path:    endpoint.Path,
+		Options: endpoint.Options,
 	}
 }
 

@@ -64,6 +64,7 @@ func ValidOrganizationId(organizationID *grpc_organization_go.OrganizationId) de
 	return nil
 }
 
+// TODO: include the endpoint options validation
 func ValidAddAppDescriptorRequest(toAdd *grpc_application_go.AddAppDescriptorRequest) derrors.Error {
 	if toAdd.OrganizationId == "" {
 		return derrors.NewInvalidArgumentError(emptyOrganizationId)
@@ -537,6 +538,23 @@ func ValidDescriptorLogic(appDescriptor *grpc_application_go.AddAppDescriptorReq
 				for _, config := range service.Configs {
 					if config.ConfigFileId != "" {
 						return derrors.NewFailedPreconditionError("Config File Id cannot be filled").WithParams(config.Name)
+					}
+				}
+			}
+			// validate the options in the endpoints
+			// the allowed values are: CLIENT_MAX_BODY_SIZE or HOST_HEADER_CONFIGURATION
+			// if and only if Type = WEB
+			for _, port := range service.ExposedPorts {
+				for _, endpoint := range port.Endpoints {
+					if endpoint.Options != nil && len(endpoint.Options) > 0 {
+						if endpoint.Type != grpc_application_go.EndpointType_WEB {
+							return derrors.NewFailedPreconditionError("Endpoint options not allowed for this endpoint type").WithParams(endpoint.Type.String())
+						}
+						for key := range endpoint.Options {
+							if key != grpc_application_go.EndpointOptions_CLIENT_MAX_BODY_SIZE.String() && key != grpc_application_go.EndpointOptions_HOST_HEADER_CONFIGURATION.String() {
+								return derrors.NewFailedPreconditionError("Endpoint option not allowed").WithParams(key)
+							}
+						}
 					}
 				}
 			}
