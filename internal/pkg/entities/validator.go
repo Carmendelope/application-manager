@@ -48,6 +48,10 @@ const impossibleDuration = "to cannot be greater than from"
 
 const NalejEnvironmentVariablePrefix = "NALEJ_SERV_"
 const EnvironmentVariableRegex = "[._a-zA-Z][._a-zA-Z0-9]*"
+// DeployNameRegex with the regular expresion for application names.
+const DeployNameRegex = "^[a-zA-Z0-9]+$"
+// MinDeployRequestNameLength with the minimal required length for an application name.
+const MinDeployRequestNameLength = 3
 
 // Map containing port numbers used by Nalej that cannot be used by any application.
 var NalejUsedPorts = map[int32]bool{
@@ -266,8 +270,23 @@ func ValidDeployRequest(deployRequest *grpc_application_manager_go.DeployRequest
 		return derrors.NewInvalidArgumentError(emptyDescriptorId)
 	}
 
-	if deployRequest.Name == "" {
-		return derrors.NewInvalidArgumentError(emptyName)
+	nameErr := ValidDeployRequestName(deployRequest)
+	if nameErr != nil{
+		return nameErr
+	}
+
+	return nil
+}
+
+// ValidDeployRequestName checks the conditions for the name of the deployed application.
+func ValidDeployRequestName(deployRequest * grpc_application_manager_go.DeployRequest) derrors.Error{
+	if len(deployRequest.Name) < MinDeployRequestNameLength {
+		return derrors.NewInvalidArgumentError(fmt.Sprintf("name cannot be empty and has a minimum length of %d", MinDeployRequestNameLength))
+	}
+
+	re := regexp.MustCompile(DeployNameRegex)
+	if re.FindString(deployRequest.Name) == "" {
+		return derrors.NewFailedPreconditionError(fmt.Sprintf("Invalid application name; it must adhere to %s", DeployNameRegex))
 	}
 
 	return nil
