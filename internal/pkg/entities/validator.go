@@ -280,7 +280,7 @@ func ValidDeployRequest(deployRequest *grpc_application_manager_go.DeployRequest
 
 // ValidDeployRequestName checks the conditions for the name of the deployed application.
 func ValidDeployRequestName(deployRequest * grpc_application_manager_go.DeployRequest) derrors.Error{
-	if deployRequest.Name == "" || len(deployRequest.Name) < MinDeployRequestNameLength {
+	if len(deployRequest.Name) < MinDeployRequestNameLength {
 		return derrors.NewInvalidArgumentError(fmt.Sprintf("name cannot be empty and has a minimum length of %d", MinDeployRequestNameLength))
 	}
 
