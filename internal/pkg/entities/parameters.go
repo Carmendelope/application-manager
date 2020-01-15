@@ -79,7 +79,7 @@ func copyServiceGroupSpecs(spec *grpc_application_go.ServiceGroupDeploymentSpecs
 }
 
 // copyServiceGroup returns a copy of a given ServiceGroup
-func copyServiceGroup(group *grpc_application_go.ServiceGroup) *grpc_application_go.ServiceGroup {
+func copyServiceGroup(group *grpc_application_go.ServiceGroup, settings *OrganizationSettings) *grpc_application_go.ServiceGroup {
 
 	if group == nil {
 		return nil
@@ -87,7 +87,7 @@ func copyServiceGroup(group *grpc_application_go.ServiceGroup) *grpc_application
 
 	services := make([]*grpc_application_go.Service, 0)
 	for _, service := range group.Services {
-		services = append(services, copyService(service))
+		services = append(services, copyService(service, settings))
 	}
 
 	return &grpc_application_go.ServiceGroup{
@@ -103,7 +103,7 @@ func copyServiceGroup(group *grpc_application_go.ServiceGroup) *grpc_application
 }
 
 // copyService returns a copy of a given Service
-func copyService(service *grpc_application_go.Service) *grpc_application_go.Service {
+func copyService(service *grpc_application_go.Service, settings *OrganizationSettings) *grpc_application_go.Service {
 
 	if service == nil {
 		return nil
@@ -111,7 +111,7 @@ func copyService(service *grpc_application_go.Service) *grpc_application_go.Serv
 
 	storage := make([]*grpc_application_go.Storage, 0)
 	for _, sto := range service.Storage {
-		storage = append(storage, copyStorage(sto))
+		storage = append(storage, copyStorage(sto, settings))
 	}
 
 	ports := make([]*grpc_application_go.Port, 0)
@@ -146,12 +146,21 @@ func copyService(service *grpc_application_go.Service) *grpc_application_go.Serv
 }
 
 // copyStorage returns a copy of a given Storage
-func copyStorage(storage *grpc_application_go.Storage) *grpc_application_go.Storage {
+func copyStorage(storage *grpc_application_go.Storage, settings *OrganizationSettings) *grpc_application_go.Storage {
 	if storage == nil {
 		return nil
 	}
+
+	size := storage.Size
+	if size == 0 {
+		// apply the setting
+		if settings != nil {
+			size = settings.StoreSize
+		}
+
+	}
 	return &grpc_application_go.Storage{
-		Size:      storage.Size,
+		Size:      size,
 		MountPath: storage.MountPath,
 		Type:      storage.Type,
 	}
@@ -229,7 +238,7 @@ func copyConfigFile(configFile *grpc_application_go.ConfigFile) *grpc_applicatio
 }
 
 // newParametrizedDescriptorFromDescriptor returns a parameterized descriptor as a copy of a given descriptor
-func newParametrizedDescriptorFromDescriptor(descriptor *grpc_application_go.AppDescriptor) *grpc_application_go.ParametrizedDescriptor {
+func newParametrizedDescriptorFromDescriptor(descriptor *grpc_application_go.AppDescriptor, settings *OrganizationSettings) *grpc_application_go.ParametrizedDescriptor {
 	if descriptor == nil {
 		return nil
 	}
@@ -239,7 +248,7 @@ func newParametrizedDescriptorFromDescriptor(descriptor *grpc_application_go.App
 	}
 	groups := make([]*grpc_application_go.ServiceGroup, 0)
 	for _, group := range descriptor.Groups {
-		groups = append(groups, copyServiceGroup(group))
+		groups = append(groups, copyServiceGroup(group, settings))
 	}
 
 	return &grpc_application_go.ParametrizedDescriptor{
@@ -337,9 +346,10 @@ func validateInstanceParameter(paramDefinition grpc_application_go.AppParameter,
 // CreateParametrizedDescriptor returns a parameterized descriptor once the parameters of the instance
 // have been validated and applied to the given descriptor
 func CreateParametrizedDescriptor(descriptor *grpc_application_go.AppDescriptor,
-	parameters *grpc_application_go.InstanceParameterList) (*grpc_application_go.ParametrizedDescriptor, derrors.Error) {
+	parameters *grpc_application_go.InstanceParameterList,
+	settings *OrganizationSettings) (*grpc_application_go.ParametrizedDescriptor, derrors.Error) {
 
-	parametrized := newParametrizedDescriptorFromDescriptor(descriptor)
+	parametrized := newParametrizedDescriptorFromDescriptor(descriptor, settings)
 
 	if parameters == nil || parameters.Parameters == nil || len(parameters.Parameters) == 0 {
 		return parametrized, nil

@@ -18,6 +18,7 @@
 RUN_INTEGRATION_TEST=true
 IT_SM_ADDRESS=localhost:8800
 IT_CONDUCTOR_ADDRESS=localhost:5000
+IT_ORGMNG_ADDRESS=localhost:8950
 */
 
 package application
@@ -35,6 +36,7 @@ import (
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
+	"github.com/nalej/grpc-organization-manager-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/grpc-utils/pkg/test"
 	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
@@ -146,7 +148,7 @@ func CreateAppDescriptorWithParameters(name string, organizationID string, appCl
 	return desc
 }
 
-func CreateOrganization(name string, orgClient grpc_organization_go.OrganizationsClient) *grpc_organization_go.Organization {
+func CreateOrganization(name string, orgClient grpc_organization_manager_go.OrganizationsClient) *grpc_organization_manager_go.Organization {
 	toAdd := &grpc_organization_go.AddOrganizationRequest{
 		Name: fmt.Sprintf("%s-%d-%d", name, ginkgo.GinkgoRandomSeed(), rand.Int()),
 	}
@@ -167,9 +169,10 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		systemModelAddress = os.Getenv("IT_SM_ADDRESS")
 		conductorAddress   = os.Getenv("IT_CONDUCTOR_ADDRESS")
 		busAddress         = os.Getenv("IT_BUS_ADDRESS")
+		orgAddress = os.Getenv("IT_ORGMNG_ADDRESS")
 	)
 
-	if systemModelAddress == "" || conductorAddress == "" {
+	if systemModelAddress == "" || conductorAddress == "" || orgAddress == ""{
 		ginkgo.Fail("missing environment variables")
 	}
 
@@ -178,7 +181,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	// grpc test listener
 	var listener *bufconn.Listener
 	// client
-	var orgClient grpc_organization_go.OrganizationsClient
+	var orgClient grpc_organization_manager_go.OrganizationsClient
 	var appClient grpc_application_go.ApplicationsClient
 	var conductorClient grpc_conductor_go.ConductorClient
 	var clusterClient grpc_infrastructure_go.ClustersClient
@@ -190,7 +193,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 	var client grpc_application_manager_go.ApplicationManagerClient
 
 	// Target organization.
-	var targetOrganization *grpc_organization_go.Organization
+	var targetOrganization *grpc_organization_manager_go.Organization
 	var targetAppDescriptor *grpc_application_go.AppDescriptor
 
 	var deviceGroupNames []string
@@ -201,7 +204,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		server = grpc.NewServer()
 
 		smConn = utils.GetConnection(systemModelAddress)
-		orgClient = grpc_organization_go.NewOrganizationsClient(smConn)
+		orgClient = grpc_organization_manager_go.NewOrganizationsClient(smConn)
 		appClient = grpc_application_go.NewApplicationsClient(smConn)
 		conductorConn = utils.GetConnection(conductorAddress)
 		conductorClient = grpc_conductor_go.NewConductorClient(conductorConn)
@@ -221,7 +224,7 @@ var _ = ginkgo.Describe("Application Manager service", func() {
 		// Register the service
 		appNetManager := application_network.NewManager(apNetClient, appClient, netOpsProducer)
 
-		manager := NewManager(appClient, conductorClient, clusterClient, deviceClient, apNetClient, appOpsProducer, appNetManager)
+		manager := NewManager(appClient, orgClient, conductorClient, clusterClient, deviceClient, apNetClient, appOpsProducer, appNetManager)
 		handler := NewHandler(manager)
 		grpc_application_manager_go.RegisterApplicationManagerServer(server, handler)
 
