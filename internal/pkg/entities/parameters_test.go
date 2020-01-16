@@ -57,7 +57,7 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 
 			descriptor := utils.CreateTestDescriptor()
 
-			parametrized := newParametrizedDescriptorFromDescriptor(descriptor)
+			parametrized := newParametrizedDescriptorFromDescriptor(descriptor, nil)
 			gomega.Expect(parametrized).NotTo(gomega.BeNil())
 
 			// update descriptor and parametrized to check they are not the same
@@ -73,7 +73,7 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			parameters := grpc_application_go.InstanceParameterList{
 				Parameters: []*grpc_application_go.InstanceParameter{{ParameterName: "replicas", Value: "10"}, {ParameterName: "env1", Value: "modified"}},
 			}
-			parametrized, err := CreateParametrizedDescriptor(descriptor, &parameters)
+			parametrized, err := CreateParametrizedDescriptor(descriptor, &parameters, nil)
 			gomega.Expect(parametrized).NotTo(gomega.BeNil())
 			gomega.Expect(err).To(gomega.Succeed())
 			gomega.Expect(parametrized.Groups[0].Specs.Replicas).Should(gomega.Equal(int32(10)))
@@ -84,7 +84,7 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			parameters := grpc_application_go.InstanceParameterList{
 				Parameters: []*grpc_application_go.InstanceParameter{{ParameterName: "replicas", Value: "replicas test"}},
 			}
-			_, err := CreateParametrizedDescriptor(descriptor, &parameters)
+			_, err := CreateParametrizedDescriptor(descriptor, &parameters, nil)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
 		ginkgo.It("should not be able to create parametrized Descriptor with invalid parameter", func() {
@@ -92,7 +92,7 @@ var _ = ginkgo.Describe("Parameter tests", func() {
 			parameters := grpc_application_go.InstanceParameterList{
 				Parameters: []*grpc_application_go.InstanceParameter{{ParameterName: "invalid_param", Value: "10"}},
 			}
-			_, err := CreateParametrizedDescriptor(descriptor, &parameters)
+			_, err := CreateParametrizedDescriptor(descriptor, &parameters, nil)
 			gomega.Expect(err).NotTo(gomega.Succeed())
 		})
 		ginkgo.It("must recognize the parameters as valid", func() {

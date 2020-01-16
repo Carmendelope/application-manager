@@ -31,6 +31,7 @@ spec:
             - "run"
             - "--systemModelAddress=system-model.__NPH_NAMESPACE:8800"
             - "--conductorAddress=conductor.__NPH_NAMESPACE:5000"
+            - "--organizationManagerAddress=organization-manager.__NPH_NAMESPACE:5000"
             - "--queueAddress=broker.__NPH_NAMESPACE:6650"
             - "--unifiedLoggingAddress=unified-logging-coord.__NPH_NAMESPACE:8323"
           securityContext:

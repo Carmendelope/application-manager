@@ -28,6 +28,8 @@ type Config struct {
 	ConductorAddress string
 	// SystemModelAddress with the host:port to connect to System Model
 	SystemModelAddress string
+	// OrgManagerAddress with the host:port to connect to Organization Manager
+	OrgManagerAddress string
 	// Address where the queue system can be reached
 	QueueAddress string
 	// UnifiedLoggingAddress with the host:port to connect to the Unified Logging Coordinator component.
@@ -42,6 +44,10 @@ func (conf *Config) Validate() derrors.Error {
 
 	if conf.SystemModelAddress == "" {
 		return derrors.NewInvalidArgumentError("systemModelAddress must be set")
+	}
+
+	if conf.OrgManagerAddress == "" {
+		return derrors.NewInvalidArgumentError("organizationManagerAddress must be set")
 	}
 
 	if conf.QueueAddress == "" {
@@ -59,6 +65,7 @@ func (conf *Config) Print() {
 	log.Info().Int("port", conf.Port).Msg("gRPC port")
 	log.Info().Str("URL", conf.ConductorAddress).Msg("Conductor")
 	log.Info().Str("URL", conf.SystemModelAddress).Msg("System Model")
+	log.Info().Str("URL", conf.OrgManagerAddress).Msg("Organization Manager")
 	log.Info().Str("URL", conf.QueueAddress).Msg("Queue address")
 	log.Info().Str("URL", conf.UnifiedLoggingAddress).Msg("Unified Logging Coordinator Service")
 

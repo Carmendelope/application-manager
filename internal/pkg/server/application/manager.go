@@ -30,6 +30,7 @@ import (
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
 	"github.com/nalej/grpc-organization-go"
+	"github.com/nalej/grpc-organization-manager-go"
 	"github.com/nalej/grpc-utils/pkg/conversions"
 	"github.com/nalej/nalej-bus/pkg/queue/application/ops"
 	"github.com/rs/zerolog/log"
@@ -46,6 +47,7 @@ const OutboundNotDefined = "Deploy outbound connection not defined"
 // Manager structure with the required clients for roles operations.
 type Manager struct {
 	appClient       grpc_application_go.ApplicationsClient
+	orgClient       grpc_organization_manager_go.OrganizationsClient
 	conductorClient grpc_conductor_go.ConductorClient
 	clusterClient   grpc_infrastructure_go.ClustersClient
 	deviceClient    grpc_device_go.DevicesClient
@@ -57,13 +59,14 @@ type Manager struct {
 // NewManager creates a Manager using a set of clients.
 func NewManager(
 	appClient grpc_application_go.ApplicationsClient,
+	orgClient grpc_organization_manager_go.OrganizationsClient,
 	conductorClient grpc_conductor_go.ConductorClient,
 	clusterClient grpc_infrastructure_go.ClustersClient,
 	deviceClient grpc_device_go.DevicesClient,
 	appNetClient grpc_application_network_go.ApplicationNetworkClient,
 	appOpsProducer *ops.ApplicationOpsProducer,
 	appNetManager appnet.Manager) Manager {
-	return Manager{appClient, conductorClient, clusterClient, deviceClient, appNetClient, appOpsProducer, appNetManager}
+	return Manager{appClient, orgClient, conductorClient, clusterClient, deviceClient, appNetClient, appOpsProducer, appNetManager}
 }
 
 // AddAppDescriptor adds a new application descriptor to a given organization.
@@ -289,8 +292,10 @@ func (m *Manager) Deploy(deployRequest *grpc_application_manager_go.DeployReques
 		return nil, conversions.ToGRPCError(dErr)
 	}
 
+	orgSettings := entities.NewOrganizationSettings(deployRequest.OrganizationId, m.orgClient)
+
 	// Create it parametrized descriptor
-	parametrizedDesc, err := entities.CreateParametrizedDescriptor(desc, deployRequest.Parameters)
+	parametrizedDesc, err := entities.CreateParametrizedDescriptor(desc, deployRequest.Parameters, orgSettings)
 	if err != nil {
 		log.Error().Err(err).Msgf("error creating  parametrized descriptor %s.", deployRequest.AppDescriptorId)
 		return nil, err

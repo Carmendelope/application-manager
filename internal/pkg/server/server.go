@@ -30,6 +30,7 @@ import (
 	"github.com/nalej/grpc-conductor-go"
 	"github.com/nalej/grpc-device-go"
 	"github.com/nalej/grpc-infrastructure-go"
+	"github.com/nalej/grpc-organization-manager-go"
 	"github.com/nalej/grpc-unified-logging-go"
 	"github.com/nalej/nalej-bus/pkg/bus/pulsar-comcast"
 	"github.com/nalej/nalej-bus/pkg/queue/application/events"
@@ -56,6 +57,7 @@ func NewService(conf Config) *Service {
 // Clients structure with the gRPC clients for remote services.
 type Clients struct {
 	AppClient            grpc_application_go.ApplicationsClient
+	OrgClient            grpc_organization_manager_go.OrganizationsClient
 	ConductorClient      grpc_conductor_go.ConductorClient
 	ClusterClient        grpc_infrastructure_go.ClustersClient
 	DeviceClient         grpc_device_go.DevicesClient
@@ -124,6 +126,11 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 		return nil, derrors.AsError(err, "cannot create connection with the system model component")
 	}
 
+	orgConn, err := grpc.Dial(s.Configuration.OrgManagerAddress, grpc.WithInsecure())
+	if err != nil {
+		return nil, derrors.AsError(err, "cannot create connection with the organization-manager component")
+	}
+
 	aClient := grpc_application_go.NewApplicationsClient(smConn)
 	cClient := grpc_conductor_go.NewConductorClient(conductorConn)
 	clClient := grpc_infrastructure_go.NewClustersClient(smConn)
@@ -132,8 +139,9 @@ func (s *Service) GetClients() (*Clients, derrors.Error) {
 	coordClient := grpc_unified_logging_go.NewCoordinatorClient(coordConn)
 	ulClient := grpc_application_manager_go.NewUnifiedLoggingClient(ulConn)
 	ahlClient := grpc_application_history_logs_go.NewApplicationHistoryLogsClient(ahlConn)
+	orgClient := grpc_organization_manager_go.NewOrganizationsClient(orgConn)
 
-	return &Clients{aClient, cClient, clClient,
+	return &Clients{aClient, orgClient,cClient, clClient,
 		dvClient, appNetClient, coordClient, ulClient, ahlClient}, nil
 }
 
@@ -173,7 +181,7 @@ func (s *Service) Run() error {
 	}
 	unifiedLogHandler := unified_logging.NewHandler(*unifiedLoggingManager)
 
-	manager := application.NewManager(clients.AppClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
+	manager := application.NewManager(clients.AppClient, clients.OrgClient, clients.ConductorClient, clients.ClusterClient, clients.DeviceClient, clients.AppNetClient, busClients.AppOpsProducer, appNetManager)
 	handler := application.NewHandler(manager)
 
 	appEventsHandler := queue.NewAppEventsHandler(unifiedLoggingManager, busClients.AppEventsConsumer)

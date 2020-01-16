@@ -230,12 +230,20 @@
   version = "v0.0.45"
 
 [[projects]]
-  digest = "1:387d19966af24e7d1fb4b36fcef08323c5ea25f9ab51f41c435a53e60e681f6c"
+  digest = "1:7e26a8f455c4e7978f049bd0c2e53f7f1195e15f66fe1ba9f11bd278105ef803"
   name = "github.com/nalej/grpc-organization-go"
   packages = ["."]
   pruneopts = ""
-  revision = "6ff98153a51ca6d8c47512c2456f9f3b5ae31f9d"
-  version = "v0.0.29"
+  revision = "db43aba4f994f9c1b4740ff1c6126c636d5f5dd0"
+  version = "v0.0.34"
+
+[[projects]]
+  digest = "1:e93099df7b2c493f8a4cb0ff1e0948b382348ab07850d72480a7ebe406ed8d09"
+  name = "github.com/nalej/grpc-organization-manager-go"
+  packages = ["."]
+  pruneopts = ""
+  revision = "acf8c70e3c900214881f7189b89128da5d5f1e9c"
+  version = "v0.0.3"
 
 [[projects]]
   digest = "1:04665058968000b594204bad78216f04d1b575f8fefe558a4eeecc75964ebf62"
@@ -579,6 +587,7 @@
     "github.com/nalej/grpc-device-go",
     "github.com/nalej/grpc-infrastructure-go",
     "github.com/nalej/grpc-organization-go",
+    "github.com/nalej/grpc-organization-manager-go",
     "github.com/nalej/grpc-unified-logging-go",
     "github.com/nalej/grpc-utils/pkg/conversions",
     "github.com/nalej/grpc-utils/pkg/test",
