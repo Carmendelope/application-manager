@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"github.com/nalej/application-manager/internal/pkg/entities"
 	appnet "github.com/nalej/application-manager/internal/pkg/server/application-network"
-	"github.com/nalej/application-manager/internal/pkg/server/common"
 	"github.com/nalej/derrors"
 	"github.com/nalej/grpc-application-go"
 	"github.com/nalej/grpc-application-manager-go"
