@@ -1,8 +1,8 @@
 # Application Manager
 ​
-The application manager is in charge of managing operations related to the application lifecycle and the connections between applications. ​​
-The application manager receives messages from public-api as list/get descriptors and applications, deploy/undeploy instances, add and remove connections, etc. 
-Some of these requests can be satisfied in this component and others are sent to conductor and network-manager  
+The application manager handles the operations related to the application lifecycle and the connections between applications. ​​
+The application manager receives messages from `public-api` (list/get descriptors and applications, deploy/undeploy instances, add/remove connections, etc.) 
+Some of these requests can be satisfied in this component and others are sent to `conductor` and `network-manager`.  
 
 ## Getting Started
 
@@ -11,10 +11,9 @@ Some of these requests can be satisfied in this component and others are sent to
 ​
 Before installing this component, we need to have the following deployed:​
 
-* system-model: Application manager access system model to request, update, delete application and connection entities. 
-* conductor: required but not used (this dependency will be removed in next release)
-* nalej-bus: Application manager needs to connect to nalej-bus to send the messages related to the deploy and undeploy of an instance, 
-and messages related to add and remove connections
+* `system-model`: responsible for requesting, updating and deleting application and connection entities. 
+* `conductor`: required but not used (this dependency will be removed in the next release).
+* `nalej-bus`: necessary for sending the messages related to deploying and undeploying an instance, and to adding and removing connections.
 ​
 ### Build and compile
 ​
@@ -24,8 +23,7 @@ In order to build and compile this repository use the provided Makefile:
 make all
 ```
 ​
-This operation generates the binaries for this repo, download dependencies,
-run existing tests and generate ready-to-deploy Kubernetes files.
+This operation generates the binaries for this repo, downloads the required dependencies, runs existing tests and generates ready-to-deploy Kubernetes files.
 ​
 ### Run tests
 ​
@@ -51,7 +49,7 @@ dep ensure -update -v
 
 ### Integration tests
 
-Some integration test are included. To execute those, setup the following environment variables. The execution of 
+Some integration test are included. To execute them, setup the following environment variables. The execution of 
 integration tests may have collateral effects on the state of the platform. DO NOT execute those tests in production.
 ​
 
@@ -62,7 +60,7 @@ integration tests may have collateral effects on the state of the platform. DO N
  | RUN_INTEGRATION_TEST  | true | Run integration tests |
  | IT_SM_ADDRESS  | localhost:8800 | System Model Address |
  | IT_CONDUCTOR_ADDRESS | localhost:5000 | Conductor Address |
- | IT_BUS_ADDRESS | localhost:6655 | Nalej-Bus address |
+ | IT_BUS_ADDRESS | localhost:6655 | Nalej-Bus Address |
 
 ​
 ## Contributing
@@ -72,7 +70,7 @@ Please read [contributing.md](contributing.md) for details on our code of conduc
 ​
 ## Versioning
 ​
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/nalej/application-manager/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the available versions, see the [tags on this repository](https://github.com/nalej/application-manager/tags). 
 ​
 ## Authors
 ​
