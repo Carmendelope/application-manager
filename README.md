@@ -11,9 +11,9 @@ Some of these requests can be satisfied in this component and others are sent to
 ​
 Before installing this component, we need to have the following deployed:​
 
-* `system-model`: responsible for requesting, updating and deleting application and connection entities. 
-* `conductor`: required but not used (this dependency will be removed in the next release).
-* `nalej-bus`: necessary for sending the messages related to deploying and undeploying an instance, and to adding and removing connections.
+* [`system-model`](https://github.com/nalej/system-model): responsible for requesting, updating and deleting application and connection entities. 
+* [`conductor`](https://github.com/nalej/conductor): required but not used (this dependency will be removed in the next release).
+* [`nalej-bus`](https://github.com/nalej/nalej-bus): necessary for sending the messages related to deploying and undeploying an instance, and to adding and removing connections.
 ​
 ### Build and compile
 ​
